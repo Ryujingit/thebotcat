@@ -4,7 +4,7 @@ const Discord = require('discord.js');
 const client = new Discord.Client();
 
 //                  Ryujin                coolguy284            amrpowershot
-const developers = ['405091324572991498', '312737536546177025']; // to add: '571752439263526913'
+const developers = ['405091324572991498', '312737536546177025', '571752439263526913'];
 
 const badwords = [
   // [bad word, retailiation]
@@ -149,6 +149,13 @@ client.on('message', msg => {
     }
   }
   
+  else if (command == 'say') {
+    if (!developers.includes(msg.author.id) && msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025') return;
+    let text = argstring.slice(5);
+    msg.delete();
+    msg.channel.send(text);
+  }
+  
   else if (command == 'kick') {
     const user = msg.mentions.users.first();
     if (user == null) return;
@@ -194,7 +201,7 @@ client.on('message', msg => {
   }
   
   else if (command == 'eval') {
-    if (!developers.includes(msg.author.id))
+    if (!developers.includes(msg.author.id) && msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025')
       return msg.channel.send('You do not have permissions to run this command.');
     let cmd = argstring.slice(5), res;
     console.debug(`evaluating ${util.inspect(cmd)}`);
@@ -212,6 +219,20 @@ client.on('message', msg => {
         .setTitle('Eval Error')
         .setDescription(e.stack);
       msg.channel.send(richres);
+    }
+  }
+  
+  else if (command == 'eval_void') {
+    if (!developers.includes(msg.author.id) && msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025')
+      return msg.channel.send('You do not have permissions to run this command.');
+    let cmd = argstring.slice(5), res;
+    console.debug(`evaluating (output voided) ${util.inspect(cmd)}`);
+    try {
+      res = eval(cmd);
+      console.debug(res);
+    } catch (e) {
+      console.log('error in eval');
+      console.debug(e.stack);
     }
   }
   
