@@ -153,14 +153,14 @@ client.on('message', msg => {
   }
   
   else if (command == 'say') {
-    if (!developers.includes(msg.author.id) && msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025') return;
+    if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025' && !developers.includes(msg.author.id)) return;
     let text = argstring.slice(4);
     msg.delete();
     msg.channel.send(text);
   }
   
   else if (command == 'mute') {
-    if (!developers.includes(msg.author.id) && msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025') return;
+    if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025' && !developers.includes(msg.author.id)) return;
     if (/<@[0-9]{1,}>/.test(args[0])) {
       let user = args[0].slice(2, args[0].length - 1);
       mutelist.push(user);
@@ -169,7 +169,7 @@ client.on('message', msg => {
   }
   
   else if (command == 'unmute') {
-    if (!developers.includes(msg.author.id) && msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025') return;
+    if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025' && !developers.includes(msg.author.id)) return;
     if (/<@[0-9]{1,}>/.test(args[0])) {
       for (var i = 0; i < mutelist.length; i++) {
         let user = args[0].slice(2, args[0].length - 1);
@@ -227,6 +227,7 @@ client.on('message', msg => {
   }
   
   else if (command == 'wipedevelopers') {
+    if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025' && !developers.includes(msg.author.id)) return;
     developers.length = 0;
   }
   
