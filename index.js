@@ -8,6 +8,10 @@ const badwords = [
   ['faggot', 'You said fa***t.  Mods can see this message and you will get perm banned.'],
 ];
 
+const prefix = '!';
+
+const version = '1.1';
+
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
   
@@ -37,9 +41,8 @@ client.on('disconnect', () => {
   console.log(`Disconnect!`);
 });
 
-const prefix = '!';
-
 client.on('message', msg => {
+  try {
   if (msg.author.bot) return;
   
   // the code here is before the commands, its the screening for bad words part
@@ -98,6 +101,10 @@ client.on('message', msg => {
     }
   }
   
+  else if (command == 'version') {
+    msg.channel.send(`Thebotcat is version ${version}`);
+  }
+  
   else if (command == 'ping') {
     msg.channel.send('Checking Ping').then(m => {
       var ping = m.createdTimestamp - msg.createdTimestamp;
@@ -109,60 +116,60 @@ client.on('message', msg => {
   
   else if (command === 'avatar') {
     let targetMember;
-    if (!message.mentions.members.first()) {
-      targetMember = message.guild.members.get(message.author.id);
+    if (!msg.mentions.members.first()) {
+      targetMember = msg.guild.members.get(msg.author.id);
     } else {
-      targetMember = message.mentions.members.first()
+      targetMember = msg.mentions.members.first()
     }
 
     let avatarEmbed = new Discord.RichEmbed()
       .setImage(targetMember.user.displayAvatarURL)
       .setColor(targetMember.displayHexColor);
-    message.channel.send(avatarEmbed);
+    msg.channel.send(avatarEmbed);
   }
   
   else if (command == 'kick') {
-    const user = message.mentions.users.first();
+    const user = msg.mentions.users.first();
     if (user == null) return;
-    if (!message.member.hasPermission('KICK_MEMBERS'))
-      return message.channel.send('No permission!');
-    const member = message.mentions.members.first();
+    if (!msg.member.hasPermission('KICK_MEMBERS'))
+      return msg.channel.send('No permission!');
+    const member = msg.mentions.members.first();
     if (member == null) return;
     if (member.hasPermission('KICK_MEMBERS')) {
       const perm_failed = new Discord.RichEmbed()
         .setTitle('Access denied!')
         .setDescription('This user is a mod!');
-      return message.channel.send(perm_failed);
+      return msg.channel.send(perm_failed);
     }
     if (!client.hasPermission('KICK_MEMBERS'))
-      return message.channel.send('I cannot kick members');
+      return msg.channel.send('I cannot kick members');
     member.kick();
-    message.delete();
+    msg.delete();
     const kick = new Discord.RichEmbed()
       .setTitle("Goodbye!")
       .setDescription(`${member.displayName} has been successfully kicked`);
-    message.channel.send(kick);
+    msg.channel.send(kick);
   }
   
   else if (command == 'ban') {
-    const user = message.mentions.users.first();
+    const user = msg.mentions.users.first();
     if (user == null) return;
-    if (!message.member.hasPermission('BAN_MEMBERS'))
-      return message.channel.send('No permission!');
-    const member = message.mentions.members.first();
+    if (!msg.member.hasPermission('BAN_MEMBERS'))
+      return msg.channel.send('No permission!');
+    const member = msg.mentions.members.first();
     if (member == null) return;
     if (member.hasPermission("BAN_MEMBERS")) {
       const perm_failed = new Discord.RichEmbed()
         .setTitle('Access denied!')
         .setDescription('This user is a mod!')
-      return message.channel.send(perm_failed);
+      return msg.channel.send(perm_failed);
     }
     member.ban();
-    message.delete();
+    msg.delete();
     const ban = new Discord.RichEmbed()
       .setTitle("Goodbye!")
       .setDescription(`${member.displayName} has been stook with a ban hammer`);
-    message.channel.send(ban);
+    msg.channel.send(ban);
   }
   
   else if (command == 'joke') {
@@ -607,6 +614,10 @@ client.on('message', msg => {
       .setTitle('This is The thebotcats discord bot server if you wanna join click the link! https://discord.gg/NamrBZc')
       .setFooter('Server for thebotcat discord bot come along and say hi!');
     msg.channel.send(discord);
+  }
+  } catch (e) {
+    console.error('ERROR, something bad happened');
+    console.error(e.stack);
   }
 });
 
