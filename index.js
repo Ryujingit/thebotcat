@@ -1,10 +1,13 @@
 const https = require('https');
+const fs = require('fs');
 const util = require('util');
 const Discord = require('discord.js');
 const client = new Discord.Client();
 
 //                  Ryujin                coolguy284            amrpowershot
-const developers = ['405091324572991498', '312737536546177025', '571752439263526913'];
+var developers = ['405091324572991498', '312737536546177025', '571752439263526913'];
+
+var mutelist = [];
 
 const badwords = [
   // [bad word, retailiation]
@@ -15,7 +18,7 @@ const badwords = [
 
 const prefix = '!';
 
-const version = '1.1.4';
+const version = '1.1.5';
 
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
@@ -156,6 +159,29 @@ client.on('message', msg => {
     msg.channel.send(text);
   }
   
+  else if (command == 'mute') {
+    if (!developers.includes(msg.author.id) && msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025') return;
+    if (/<@[0-9]{1,}>/.test(args[0])) {
+      let user = args[0].slice(2, args[0].length - 1);
+      mutelist.push(user);
+      msg.channel.send(`Muted ${args[0]}`);
+    }
+  }
+  
+  else if (command == 'unmute') {
+    if (!developers.includes(msg.author.id) && msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025') return;
+    if (/<@[0-9]{1,}>/.test(args[0])) {
+      for (var i = 0; i < mutelist.length; i++) {
+        let user = args[0].slice(2, args[0].length - 1);
+        if (mutelist[i] == user) {
+          mutelist.splice(i, 1);
+          msg.channel.send(`Unmuted ${args[0]}`);
+          break;
+        }
+      }
+    }
+  }
+  
   else if (command == 'kick') {
     const user = msg.mentions.users.first();
     if (user == null) return;
@@ -200,8 +226,12 @@ client.on('message', msg => {
     msg.channel.send(ban);
   }
   
+  else if (command == 'wipedevelopers') {
+    developers.length = 0;
+  }
+  
   else if (command == 'eval') {
-    if (!developers.includes(msg.author.id) && msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025')
+    if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025' && !developers.includes(msg.author.id))
       return msg.channel.send('You do not have permissions to run this command.');
     let cmd = argstring.slice(5), res;
     console.debug(`evaluating ${util.inspect(cmd)}`);
@@ -223,7 +253,7 @@ client.on('message', msg => {
   }
   
   else if (command == 'eval_void') {
-    if (!developers.includes(msg.author.id) && msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025')
+    if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025' && !developers.includes(msg.author.id))
       return msg.channel.send('You do not have permissions to run this command.');
     let cmd = argstring.slice(5), res;
     console.debug(`evaluating (output voided) ${util.inspect(cmd)}`);
@@ -686,6 +716,12 @@ client.on('message', msg => {
     msg.channel.send('Crashing myself RIP');
     throw new Error('ERORRORORORO');
   }
+  
+  try {
+    if (mutelist.includes(msg.author.id)) {
+      msg.delete();
+    }
+  } catch (e) {}
   
   } catch (e) {
     console.error('ERROR, something bad happened');
