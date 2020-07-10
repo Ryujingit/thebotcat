@@ -1,5 +1,8 @@
+const util = require('util');
 const Discord = require('discord.js');
 const client = new Discord.Client();
+//                  Ryujin                coolguy284            amrpowershot
+const developers = ['405091324572991498', '312737536546177025']; // to add: '571752439263526913'
 
 const badwords = [
   // [bad word, retailiation]
@@ -10,7 +13,7 @@ const badwords = [
 
 const prefix = '!';
 
-const version = '1.1';
+const version = '1.1.2';
 
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
@@ -75,33 +78,7 @@ client.on('message', msg => {
 
   // in the various if-else clause sections that follow, 'command == ' means that you're only checking the first word in the message after the prefix, while 'argstring == ' checks the whole message after the prefix
   // also although visually it would appear that the 'else if (argstring == blablabla)' sections are seperate, they are really part of the same big if - elseif clause, and are just seperate to aid readability
-  if (command == 'rps') {
-    let replies = ['rock', 'paper', 'scissors'];
-    let result = Math.floor((Math.random() * replies.length));
-
-    let uReply = args[0];
-    if (!uReply) return msg.channel.send(`Please play with one of these responses: \`${replies.join(', ')}\``);
-    if (!replies.includes(uReply)) return msg.channel.send(`Only these responses are accepted: \`${replies.join(', ')}\``);
-
-    if (replies[result] == uReply) {
-      console.log(replies[result]);
-      return msg.channel.send('It\'s a tie! We had the same choice.');
-    } else if (uReply == 'rock') {
-      console.log(replies[result]);
-      if (replies[result] == 'paper') return msg.channel.send('I won!');
-      else return msg.channel.send('You won!');
-    } else if (uReply == 'scissors') {
-      console.log(replies[result]);
-      if (replies[result] == 'rock') return msg.channel.send('I won!');
-      else return msg.channel.send('You won!');
-    } else if (uReply == 'paper') {
-      console.log(replies[result]);
-      if (replies[result] == 'scissors') return msg.channel.send('I won!');
-      else return msg.channel.send('You won!');
-    }
-  }
-  
-  else if (command == 'version') {
+  if (command == 'version') {
     msg.channel.send(`Thebotcat is version ${version}`);
   }
   
@@ -126,6 +103,42 @@ client.on('message', msg => {
       .setImage(targetMember.user.displayAvatarURL)
       .setColor(targetMember.displayHexColor);
     msg.channel.send(avatarEmbed);
+  }
+  
+  else if (command == 'coinflip') {
+    if (Math.random() < 0.5) {
+      msg.channel.send('I\'m flipping a coin, and the result is...: tails!');
+    } else {
+      msg.channel.send('I\'m flipping a coin, and the result is...: heads!');
+    }
+  }
+  
+  else if (command == 'rps') {
+    let replies = ['rock', 'paper', 'scissors'];
+    
+    let uReply = args[0];
+    if (!uReply) return msg.channel.send(`Please play with one of these responses: \`${replies.join(', ')}\``);
+    if (!replies.includes(uReply)) return msg.channel.send(`Only these responses are accepted: \`${replies.join(', ')}\``);
+    
+    let result = Math.floor(Math.random() * replies.length);
+
+
+    if (replies[result] == uReply) {
+      console.log(replies[result]);
+      return msg.channel.send('It\'s a tie! We had the same choice.');
+    } else if (uReply == 'rock') {
+      console.log(replies[result]);
+      if (replies[result] == 'paper') return msg.channel.send('I won!');
+      else return msg.channel.send('You won!');
+    } else if (uReply == 'scissors') {
+      console.log(replies[result]);
+      if (replies[result] == 'rock') return msg.channel.send('I won!');
+      else return msg.channel.send('You won!');
+    } else if (uReply == 'paper') {
+      console.log(replies[result]);
+      if (replies[result] == 'scissors') return msg.channel.send('I won!');
+      else return msg.channel.send('You won!');
+    }
   }
   
   else if (command == 'kick') {
@@ -170,6 +183,29 @@ client.on('message', msg => {
       .setTitle("Goodbye!")
       .setDescription(`${member.displayName} has been stook with a ban hammer`);
     msg.channel.send(ban);
+  }
+  
+  else if (command == 'eval') {
+    if (!developers.includes(message.author.id)) {
+      return message.channel.send('You do not have permissions to run this command.');
+    }
+    let cmd = argstring.slice(5), res;
+    console.debug(`evaluating ${util.inspect(cmd)}`);
+    try {
+      res = eval(cmd);
+      console.debug(res);
+      const richres = new Discord.RichEmbed()
+        .setTitle('Eval Result')
+        .setDescription(util.inspect(res));
+      msg.channel.send(richres);
+    } catch (e) {
+      console.log('error in eval');
+      console.debug(e.stack);
+      const richres = new Discord.RichEmbed()
+        .setTitle('Eval Error')
+        .setDescription(e.stack);
+      msg.channel.send(richres);
+    }
   }
   
   else if (command == 'joke') {
@@ -625,6 +661,16 @@ client.on('message', msg => {
     console.error('ERROR, something bad happened');
     console.error(e.stack);
   }
+});
+
+process.on('uncaughtException', function (err) {
+  console.error('ERROR: an exception was uncaught by an exception handler.  This is very bad and could leave the bot in an unstable state.  If this is seen contact coolguy284 or another developer immediately.');
+  console.error(err);
+});
+
+process.on('unhandledRejection', function (reason, p) {
+  console.error('Unhandled promise rejection from ' + p + ':');
+  console.error(reason);
 });
 
 client.login('NjgyNzE5NjMwOTY3NDM5Mzc4.Xlk1ug.FPZxGGn3lqkmM28JkwUMIvkbeP8');
