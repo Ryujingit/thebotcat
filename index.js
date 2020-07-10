@@ -1,6 +1,8 @@
+const https = require('https');
 const util = require('util');
 const Discord = require('discord.js');
 const client = new Discord.Client();
+
 //                  Ryujin                coolguy284            amrpowershot
 const developers = ['405091324572991498', '312737536546177025']; // to add: '571752439263526913'
 
@@ -13,7 +15,7 @@ const badwords = [
 
 const prefix = '!';
 
-const version = '1.1.2';
+const version = '1.1.3';
 
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
@@ -23,7 +25,7 @@ client.on('ready', () => {
 
 client.on('guildCreate', guild => {
   console.log(`Joined a new guild: ${guild.name}`);
-
+  
   client.user.setActivity(`! | ${client.guilds.size} servers | wash your hands kids`);
   //Your other stuff like adding to guildArray
 });
@@ -31,7 +33,7 @@ client.on('guildCreate', guild => {
 //removed from a server
 client.on('guildDelete', guild => {
   console.log(`Left a guild: ${guild.name}`);
-
+  
   client.user.setActivity(`! | ${client.guilds.size} servers | wash your hands kids`);
   //remove from guildArray
 });
@@ -46,6 +48,7 @@ client.on('disconnect', () => {
 
 client.on('message', msg => {
   try {
+  
   if (msg.author.bot) return;
   
   // the code here is before the commands, its the screening for bad words part
@@ -68,14 +71,14 @@ client.on('message', msg => {
   }
   
   if (msg.content[0] !== prefix) return;
-
+  
   // argstring = the part after the prefix, command and args in one big string
   // command = the actual command
   // args = array of arguments
   const argstring = msg.content.slice(prefix.length).trim();
   const args = argstring.split(/ +/g);
   const command = args.shift().toLowerCase();
-
+  
   // in the various if-else clause sections that follow, 'command == ' means that you're only checking the first word in the message after the prefix, while 'argstring == ' checks the whole message after the prefix
   // also although visually it would appear that the 'else if (argstring == blablabla)' sections are seperate, they are really part of the same big if - elseif clause, and are just seperate to aid readability
   if (command == 'version') {
@@ -84,10 +87,16 @@ client.on('message', msg => {
   
   else if (command == 'ping') {
     msg.channel.send('Checking Ping').then(m => {
-      var ping = m.createdTimestamp - msg.createdTimestamp;
-      var botPing = Math.round(ping);
-
-      m.edit(`*Bot Ping:* **${ping}**\n*API Ping:* **${botPing}**`);
+      let beforerequest = Date.now(), afterrequest;
+      https.get('https://example.com', res => {
+        afterrequest = Date.now();
+        res.socket.destroy();
+        
+        var botPing = afterrequest - beforerequest;
+        var apiPing = m.createdTimestamp - msg.createdTimestamp;
+      
+        m.edit(`*Bot Ping:* **${botPing}**ms\n*API Ping:* **${apiPing}**ms`);
+      });
     });
   }
   
@@ -98,7 +107,7 @@ client.on('message', msg => {
     } else {
       targetMember = msg.mentions.members.first()
     }
-
+    
     let avatarEmbed = new Discord.RichEmbed()
       .setImage(targetMember.user.displayAvatarURL)
       .setColor(targetMember.displayHexColor);
@@ -121,8 +130,7 @@ client.on('message', msg => {
     if (!replies.includes(uReply)) return msg.channel.send(`Only these responses are accepted: \`${replies.join(', ')}\``);
     
     let result = Math.floor(Math.random() * replies.length);
-
-
+    
     if (replies[result] == uReply) {
       console.log(replies[result]);
       return msg.channel.send('It\'s a tie! We had the same choice.');
@@ -299,11 +307,11 @@ client.on('message', msg => {
       .setDescription('The actual fuck up');
     msg.channel.send(shut);
   }
-
+  
   else if (argstring === 'unretard') {
     msg.reply('Sorry But i am unable to do that.');
   }
-
+  
   else if (argstring === 'techku') {
     msg.reply('what are you doing here bitch lil bitch ass little bitch smh head bitch go away bitch what you say bitch smh my head smh smh bitch bitch bitch bitch boi stupid little bitch ass bitch bitch bitch boi little bitch');
   }
