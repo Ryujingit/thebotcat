@@ -615,6 +615,12 @@ client.on('message', msg => {
       .setFooter('Server for thebotcat discord bot come along and say hi!');
     msg.channel.send(discord);
   }
+  
+  else if (command == 'crash') {
+    msg.channel.send('Crashing myself RIP');
+    throw new Error('ERORRORORORO');
+  }
+  
   } catch (e) {
     console.error('ERROR, something bad happened');
     console.error(e.stack);
