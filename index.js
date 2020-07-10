@@ -163,7 +163,7 @@ client.on('message', msg => {
     }
     member.ban();
     message.delete();
-    const ban = new Discord.RichEmbed();
+    const ban = new Discord.RichEmbed()
       .setTitle("Goodbye!")
       .setDescription(`${member.displayName} has been stook with a ban hammer`);
     message.channel.send(ban);
