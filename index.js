@@ -8,10 +8,6 @@ const badwords = [
   ['faggot', 'You said fa***t.  Mods can see this message and you will get perm banned.'],
 ];
 
-// The fact that you have to increase the maximum number of listeners shows that you're doing something super hacky, which is what I'm fixing (the whole register an event listener for every single command thing)
-// Im also making your code consistent, i.e. using the same type of quote, stuff like that
-client.setMaxListeners(999);
-
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
   
