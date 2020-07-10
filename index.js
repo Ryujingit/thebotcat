@@ -614,16 +614,4 @@ client.on('message', msg => {
   }
 });
 
-client.on('message', message => {
-  if (!message.content.startsWith(prefix)) return;  
-  const withoutPrefix = message.content.slice(prefix.length);
-  const split = withoutPrefix.split(/ +/);
-  const command = split[0];
-  const args = split.slice(1);    
-
-
-
-  
-}); 
-
 client.login('NjgyNzE5NjMwOTY3NDM5Mzc4.Xlk1ug.FPZxGGn3lqkmM28JkwUMIvkbeP8');
