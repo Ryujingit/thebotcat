@@ -186,9 +186,8 @@ client.on('message', msg => {
   }
   
   else if (command == 'eval') {
-    if (!developers.includes(message.author.id)) {
+    if (!developers.includes(message.author.id))
       return message.channel.send('You do not have permissions to run this command.');
-    }
     let cmd = argstring.slice(5), res;
     console.debug(`evaluating ${util.inspect(cmd)}`);
     try {
@@ -653,6 +652,8 @@ client.on('message', msg => {
   }
   
   else if (command == 'crash') {
+    if (!developers.includes(msg.author.id))
+      return msg.reply('Only developers can test crashing thebotcat.');
     msg.channel.send('Crashing myself RIP');
     throw new Error('ERORRORORORO');
   }
