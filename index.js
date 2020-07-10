@@ -15,7 +15,7 @@ const badwords = [
 
 const prefix = '!';
 
-const version = '1.1.3';
+const version = '1.1.4';
 
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
@@ -151,7 +151,7 @@ client.on('message', msg => {
   
   else if (command == 'say') {
     if (!developers.includes(msg.author.id) && msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025') return;
-    let text = argstring.slice(5);
+    let text = argstring.slice(4);
     msg.delete();
     msg.channel.send(text);
   }
