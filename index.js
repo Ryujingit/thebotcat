@@ -3,6 +3,7 @@ var starttime = new Date();
 var https = require('https');
 var fs = require('fs');
 var util = require('util');
+var cp = require('child_process');
 var Discord = require('discord.js');
 var client = new Discord.Client();
 
@@ -20,11 +21,13 @@ var badwords = [
 
 var prefix = '!';
 
-var version = '1.2.1';
+var version = '1.2.1b';
 
 var commands = [];
 
-Object.assign(global, { starttime, https, fs, util, Discord, client, developers, mutelist, badwords, commands });
+var procs = [];
+
+Object.assign(global, { starttime, https, fs, util, cp, Discord, client, developers, mutelist, badwords, commands, procs });
 Object.defineProperties(global, {
   prefix: {
     configurable: true,
