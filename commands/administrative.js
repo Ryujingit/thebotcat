@@ -10,6 +10,17 @@ module.exports = [
     }
   },
   {
+    name: 'sayr',
+    full_string: false,
+    execute(msg, argstring, command, args) {
+      if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025' && !developers.includes(msg.author.id)) return;
+      let argr = argstring.split(' ');
+      let channelid = argr[0].slice(2, argr[0].length - 1);
+      let text = argr.slice(1).join(' ');
+      client.channels.get(channelid).send(text);
+    }
+  },
+  {
     name: 'mute',
     full_string: false,
     execute(msg, argstring, command, args) {
