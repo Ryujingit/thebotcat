@@ -100,7 +100,7 @@ var messageHandler = msg => {
     }
   }
   
-  if (msg.content[0] !== prefix) return;
+  if (!msg.content.startsWith(prefix)) return;
   
   // argstring = the part after the prefix, command and args in one big string
   // command = the actual command
