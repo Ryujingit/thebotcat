@@ -21,7 +21,7 @@ var badwords = [
 
 var prefix = '!';
 
-var version = '1.2.1b';
+var version = '1.2.2';
 
 var commands = [];
 
