@@ -152,6 +152,35 @@ module.exports = [
     }
   },
   {
+    name: 'exec',
+    full_string: false,
+    execute(msg, argstring, command, args) {
+      if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025' && !developers.includes(msg.author.id))
+        return msg.channel.send('You do not have permissions to run this command.');
+      let cmd = argstring.slice(5), res;
+      console.debug(`shell exec ${util.inspect(cmd)}`);
+      let proc = cp.exec(cmd, { timeout: 20000, windowsHide: true }, (err, stdout, stderr) => {
+        procs.splice(procs.indexOf(proc), 1);
+        if (err) {
+          console.log('error in shell exec');
+          console.debug(err.stack);
+          var richres = new Discord.RichEmbed()
+            .setTitle('Shell Command Error')
+            .setDescription(err.stack);
+          msg.channel.send(richres);
+          return;
+        }
+        stdout = stdout.toString(); stderr = stderr.toString();
+        console.debug(`shell command result\nstdout:\n${util.inspect(stdout)\nstderr:\n${util.inspect(stderr)}}`);
+        var richres = new Discord.RichEmbed()
+          .setTitle('Shell Command Result')
+          .setDescription(`*stdout*:\n${util.inspect(stdout)\n*stderr*:\n${util.inspect(stderr)}}`);
+        msg.channel.send(richres);
+      });
+      procs.push(proc);
+    }
+  },
+  {
     name: 'crash',
     full_string: false,
     execute(msg, argstring, command, args) {
