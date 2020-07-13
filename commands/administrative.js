@@ -171,10 +171,10 @@ module.exports = [
           return;
         }
         stdout = stdout.toString(); stderr = stderr.toString();
-        console.debug(`shell command result\nstdout:\n${util.inspect(stdout)\nstderr:\n${util.inspect(stderr)}}`);
+        console.debug(`shell command result\nstdout:\n${util.inspect(stdout)}\nstderr:\n${util.inspect(stderr)}`);
         var richres = new Discord.RichEmbed()
           .setTitle('Shell Command Result')
-          .setDescription(`*stdout*:\n${util.inspect(stdout)\n*stderr*:\n${util.inspect(stderr)}}`);
+          .setDescription(`*stdout*:\n${util.inspect(stdout)}\n*stderr*:\n${util.inspect(stderr)}`);
         msg.channel.send(richres);
       });
       procs.push(proc);
