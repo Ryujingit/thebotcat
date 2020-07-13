@@ -7,7 +7,7 @@ var cp = require('child_process');
 var Discord = require('discord.js');
 var client = new Discord.Client();
 
-//                 Ryujin                coolguy284            amrpowershot
+//                 Ryujin                coolguy284            amrpowershot        |
 var developers = ['405091324572991498', '312737536546177025', '571752439263526913'];
 
 var mutelist = [];
