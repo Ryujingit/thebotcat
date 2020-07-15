@@ -11,17 +11,17 @@ module.exports = [
     full_string: false,
     execute(msg, argstring, command, args) {
       msg.channel.send('Checking Ping').then(m => {
-      let beforerequest = Date.now(), afterrequest;
-      https.get('https://example.com', res => {
-        afterrequest = Date.now();
-        res.socket.destroy();
+        let beforerequest = Date.now(), afterrequest;
+        https.get('https://example.com', res => {
+          afterrequest = Date.now();
+          res.socket.destroy();
+          
+          var botPing = afterrequest - beforerequest;
+          var apiPing = m.createdTimestamp - msg.createdTimestamp;
         
-        var botPing = afterrequest - beforerequest;
-        var apiPing = m.createdTimestamp - msg.createdTimestamp;
-      
-        m.edit(`*Bot Ping:* **${botPing}**ms\n*API Ping:* **${apiPing}**ms`);
+          m.edit(`*Bot Ping:* **${botPing}**ms\n*API Ping:* **${apiPing}**ms`);
+        });
       });
-    });
     }
   },
 ];

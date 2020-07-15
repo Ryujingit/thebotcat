@@ -3,7 +3,7 @@ module.exports = [
     name: 'say',
     full_string: false,
     execute(msg, argstring, command, args) {
-      if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025' && !developers.includes(msg.author.id)) return;
+      if (!((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id))) return;
       let text = argstring.slice(4);
       msg.delete();
       msg.channel.send(text);
@@ -13,7 +13,7 @@ module.exports = [
     name: 'sayy',
     full_string: false,
     execute(msg, argstring, command, args) {
-      if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025' && !developers.includes(msg.author.id)) return;
+      if (!((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id))) return;
       let argr = argstring.split(' ');
       let channelid = argr[1].slice(2, argr[1].length - 1);
       let text = argr.slice(2).join(' ');
@@ -21,25 +21,25 @@ module.exports = [
     }
   },
   {
-    name: 'mute',
+    name: 'c-mute',
     full_string: false,
     execute(msg, argstring, command, args) {
-      if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025' && !developers.includes(msg.author.id)) return;
-      if (/<@[0-9]{1,}>/.test(args[0])) {
-        let user = args[0].slice(2, args[0].length - 1);
+      if (!((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id))) return;
+      if (/<@![0-9]{1,}>/.test(args[0])) {
+        let user = args[0].slice(3, args[0].length - 1);
         mutelist.push(user);
         msg.channel.send(`Muted ${args[0]}`);
       }
     }
   },
   {
-    name: 'unmute',
+    name: 'c-unmute',
     full_string: false,
     execute(msg, argstring, command, args) {
-      if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025' && !developers.includes(msg.author.id)) return;
-      if (/<@[0-9]{1,}>/.test(args[0])) {
+      if (!((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id))) return;
+      if (/<@![0-9]{1,}>/.test(args[0])) {
         for (var i = 0; i < mutelist.length; i++) {
-          let user = args[0].slice(2, args[0].length - 1);
+          let user = args[0].slice(3, args[0].length - 1);
           if (mutelist[i] == user) {
             mutelist.splice(i, 1);
             msg.channel.send(`Unmuted ${args[0]}`);
@@ -105,7 +105,7 @@ module.exports = [
     name: 'wipedevelopers',
     full_string: false,
     execute(msg, argstring, command, args) {
-      if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025' && !developers.includes(msg.author.id)) return;
+      if (!((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id))) return;
       developers.length = 0;
     }
   },
@@ -113,7 +113,7 @@ module.exports = [
     name: 'eval',
     full_string: false,
     execute(msg, argstring, command, args) {
-      if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025' && !developers.includes(msg.author.id))
+      if (!((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id)))
         return msg.channel.send('You do not have permissions to run this command.');
       let cmd = argstring.slice(5), res;
       console.debug(`evaluating ${util.inspect(cmd)}`);
@@ -138,7 +138,7 @@ module.exports = [
     name: 'evalv',
     full_string: false,
     execute(msg, argstring, command, args) {
-      if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025' && !developers.includes(msg.author.id))
+      if (!((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id)))
         return msg.channel.send('You do not have permissions to run this command.');
       let cmd = argstring.slice(5), res;
       console.debug(`evaluating (output voided) ${util.inspect(cmd)}`);
@@ -155,7 +155,7 @@ module.exports = [
     name: 'exec',
     full_string: false,
     execute(msg, argstring, command, args) {
-      if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025' && !developers.includes(msg.author.id))
+      if (!((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id)))
         return msg.channel.send('You do not have permissions to run this command.');
       let cmd = argstring.slice(5), res;
       console.debug(`shell exec ${util.inspect(cmd)}`);
@@ -178,6 +178,14 @@ module.exports = [
         msg.channel.send(richres);
       });
       procs.push(proc);
+    }
+  },
+  {
+    name: 'echoargs',
+    full_string: false,
+    execute(msg, argstring, command, args) {
+      if (!((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id))) return;
+      msg.channel.send(argstring.split('').map(x => ((x == '<') ? ('\\' + x) : x)).join(''));
     }
   },
   {

