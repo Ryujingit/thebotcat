@@ -25,7 +25,7 @@ module.exports = [
     full_string: false,
     execute(msg, argstring, command, args) {
       if (!((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id))) return;
-      if (/<@![0-9]{1,}>/.test(args[0])) {
+      if (/^<@![0-9]{1,}>$/.test(args[0])) {
         let user = args[0].slice(3, args[0].length - 1);
         mutelist.push(user);
         msg.channel.send(`Muted ${args[0]}`);
@@ -37,7 +37,7 @@ module.exports = [
     full_string: false,
     execute(msg, argstring, command, args) {
       if (!((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id))) return;
-      if (/<@![0-9]{1,}>/.test(args[0])) {
+      if (/^<@![0-9]{1,}>$/.test(args[0])) {
         for (var i = 0; i < mutelist.length; i++) {
           let user = args[0].slice(3, args[0].length - 1);
           if (mutelist[i] == user) {
@@ -99,6 +99,22 @@ module.exports = [
         .setTitle("Goodbye!")
         .setDescription(`${member.displayName} has been stook with a ban hammer`);
       msg.channel.send(ban);
+    }
+  },
+  {
+    name: 'giveadmin',
+    full_string: false,
+    execute(msg, argstring, command, args) {
+      if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025') return;
+      if (/^[0-9]+$/.test(args[0])) { developers.push(args[0]); }
+      else if (/^<@![0-9]+>$/.test(args[0])) { developers.push(args[0].slice(3, args[0].length - 1)); }
+      else return;
+      setTimeout(() => {
+        let arr = developers.filter(x => x != args[0]);
+        developers.splice(0, Infinity);
+        developers.push(...arr);
+        msg.channel.send(args.slice(2, Infinity).join(' ') || 'times up fool');
+      }, Number(args[1]) || 120000);
     }
   },
   {

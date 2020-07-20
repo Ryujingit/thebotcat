@@ -527,6 +527,19 @@ module.exports = [
     }
   },
   {
+    name: 'hack',
+    full_string: false,
+    execute(msg, argstring, command, args) {
+      if (!args[0] || args[0].toLowerCase() == 'thebotcat') {
+        msg.reply('dont hack me plz');
+      } else if (args[0].toLowerCase() == 'ryujin') {
+        msg.reply('bruh');
+      } else if (args[0].toLowerCase() == 'coolguy284') {
+        msg.reply('bruhhurb');
+      }
+    }
+  },
+  {
     name: 'me lon',
     full_string: false,
     execute(msg, argstring, command, args) {
