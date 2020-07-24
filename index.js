@@ -21,7 +21,7 @@ var badwords = [
 
 var prefix = '!';
 
-var version = '1.3.0';
+var version = '1.3.1';
 
 var commands = [];
 
@@ -42,7 +42,7 @@ var props = {
     uwu: false,
     ez: false,
     pp: false,
-    coffee: true,
+    coffee: false,
   },
   saved: null,
   savedstringify: null,
@@ -110,7 +110,7 @@ var infomsg = function (msg, val) {
   }
 };
 
-Object.assign(global, { starttime, https, fs, util, cp, Discord, client, developers, mutelist, badwords, commands, procs, props, propsSave, schedulePropsSave, indexeval, addBadWord, removeBadWord, addCommand, addCommands, removeCommand, removeCommands, messageHandlers });
+Object.assign(global, { starttime, https, fs, util, cp, Discord, client, developers, mutelist, badwords, commands, procs, props, propsSave, schedulePropsSave, indexeval, addBadWord, removeBadWord, addCommand, addCommands, removeCommand, removeCommands });
 Object.defineProperties(global, {
   prefix: {
     configurable: true,
@@ -158,6 +158,8 @@ addCommands(require('./commands/content.js'));
 
 var messageHandlers = [];
 
+global.messageHandlers = messageHandlers;
+
 var messageHandler = msg => {
   if (msg.guild.id == '631990565550161951') return;
   
@@ -193,11 +195,14 @@ var messageHandler = msg => {
     if (messageHandlers[i](msg, i) === 0) return;
   }
   
-  try {
-    if (mutelist.includes(msg.author.id) || props.saved.guilds[msg.guild.id] && props.saved.guilds[msg.guild.id].mutelist.includes(msg.author.id)) {
-      msg.delete();
-    }
-  } catch (e) { console.error(e); }
+  if (mutelist.includes(msg.author.id) || 
+      props.saved.guilds[msg.guild.id] && (
+        props.saved.guilds[msg.guild.id].mutelist.includes(msg.author.id) ||
+        props.saved.guilds[msg.guild.id].lockedchannels.includes(msg.channel.id)
+      )
+    ) {
+    msg.delete();
+  }
   
   // this is the screening for bad words part
   if (props.badwordsscreening & 4 && msg.content == badwords[0][0] && !(props.adminabuse.ignoreblacklist1 && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025' || developers.includes(msg.author.id)))) {

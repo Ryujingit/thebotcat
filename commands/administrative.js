@@ -30,8 +30,12 @@ module.exports = [
       if (!((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id))) return;
       var user;
       if (!(user = msg.mentions.users.first())) return;
-      mutelist.push(user.id);
-      msg.channel.send(`Globally muted ${user.tag}`);
+      if (!mutelist.includes(user.id)) {
+        mutelist.push(user.id);
+        msg.channel.send(`Globally muted ${user.tag}`);
+      } else {
+        msg.channel.send(`${user.tag} already globally muted`);
+      }
     }
   },
   {
@@ -60,10 +64,14 @@ module.exports = [
       var user;
       if (!(user = msg.mentions.users.first())) return;
       if (!props.saved.guilds[msg.guild.id]) return msg.channel.send('Error: cannot mute, guild not in database');
-      if (!(((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id)) || msg.member.hasPermission('ADMINISTRATOR'))) return msg.channel.send('You do not have permission to run this command.');;
-      props.saved.guilds[msg.guild.id].mutelist.push(user.id);
-      msg.channel.send(`Muted ${user.tag}`);
-      schedulePropsSave();
+      if (!(((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id)) || msg.member.hasPermission('ADMINISTRATOR'))) return msg.channel.send('You do not have permission to run this command.');
+      if (!props.saved.guilds[msg.guild.id].mutelist.includes(user.id)) {
+        props.saved.guilds[msg.guild.id].mutelist.push(user.id);
+        msg.channel.send(`Muted ${user.tag}`);
+        schedulePropsSave();
+      } else {
+        msg.channel.send(`${user.tag} already muted`);
+      }
     }
   },
   {
@@ -75,15 +83,79 @@ module.exports = [
       var user;
       if (!(user = msg.mentions.users.first())) return;
       if (!props.saved.guilds[msg.guild.id]) return msg.channel.send('Error: cannot mute, guild not in database');
-      if (!(((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id)) || msg.member.hasPermission('ADMINISTRATOR'))) return msg.channel.send('You do not have permission to run this command.');;
+      if (!(((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id)) || msg.member.hasPermission('ADMINISTRATOR'))) return msg.channel.send('You do not have permission to run this command.');
       let ind;
       if ((ind = props.saved.guilds[msg.guild.id].mutelist.indexOf(user.id)) != -1) {
         props.saved.guilds[msg.guild.id].mutelist.splice(ind, 1);
         msg.channel.send(`Unmuted ${user.tag}`);
+        schedulePropsSave();
       } else {
         msg.channel.send(`${user.tag} not muted`);
       }
-      schedulePropsSave();
+    }
+  },
+  {
+    name: 'lock',
+    full_string: false,
+    description: '`!lock` to auto-delete messages in this channel\n`!lock #channel` to auto-delete messages in a specific channel',
+    public: true,
+    execute(msg, argstring, command, args) {
+      if (args.length == 0) {
+        if (!props.saved.guilds[msg.guild.id]) return msg.channel.send('Error: cannot lock channel, guild not in database');
+        if (!(((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id)) || msg.member.hasPermission('MANAGE_CHANNELS'))) return msg.channel.send('You do not have permission to run this command.');
+        if (!props.saved.guilds[msg.guild.id].lockedchannels.includes(msg.channel.id)) {
+          props.saved.guilds[msg.guild.id].lockedchannels.push(msg.channel.id);
+          msg.channel.send(`Locked channel <#${msg.channel.id}> (id ${msg.channel.id})`);
+          schedulePropsSave();
+        } else {
+          msg.channel.send(`Channel <#${msg.channel.id}> (id ${msg.channel.id}) already locked`);
+        }
+      } else if (/<#[0-9]+>/.test(args[0])) {
+        let channelid = args[0].slice(2, args[0].length - 1);
+        if (msg.guild.channels.find(x => x.id == channelid)) {
+          if (!(((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id)) || msg.member.hasPermission('MANAGE_CHANNELS'))) return msg.channel.send('You do not have permission to run this command.');
+          if (!props.saved.guilds[msg.guild.id].lockedchannels.includes(channelid)) {
+            props.saved.guilds[msg.guild.id].lockedchannels.push(msg.channel.id);
+            msg.channel.send(`Locked channel <#${channelid}> (id ${channelid})`);
+            schedulePropsSave();
+          } else {
+            msg.channel.send(`Channel <#${channelid}> (id ${channelid}) already locked`);
+          }
+        } else return msg.channel.send('Cannot lock channel outside of this guild.');
+      }
+    }
+  },
+  {
+    name: 'unlock',
+    full_string: false,
+    description: '`!unlock` to stop auto-deleting messages in this channel\n`!lock #channel` to stop auto-deleting messages in a specific channel',
+    public: true,
+    execute(msg, argstring, command, args) {
+      if (args.length == 0) {
+        if (!props.saved.guilds[msg.guild.id]) return msg.channel.send('Error: cannot lock channel, guild not in database');
+        if (!(((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id)) || msg.member.hasPermission('MANAGE_CHANNELS'))) return msg.channel.send('You do not have permission to run this command.');
+        let ind;
+        if ((ind = props.saved.guilds[msg.guild.id].lockedchannels.indexOf(msg.channel.id)) != -1) {
+          props.saved.guilds[msg.guild.id].lockedchannels.splice(ind, 1);
+          msg.channel.send(`Unlocked channel <#${msg.channel.id}> (id ${msg.channel.id})`);
+          schedulePropsSave();
+        } else {
+          msg.channel.send(`Channel <#${msg.channel.id}> (id ${msg.channel.id}) not locked`);
+        }
+      } else if (/<#[0-9]+>/.test(args[0])) {
+        let channelid = args[0].slice(2, args[0].length - 1);
+        if (msg.guild.channels.find(x => x.id == channelid)) {
+          if (!(((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id)) || msg.member.hasPermission('MANAGE_CHANNELS'))) return msg.channel.send('You do not have permission to run this command.');
+          let ind;
+          if ((ind = props.saved.guilds[msg.guild.id].lockedchannels.indexOf(channelid)) != -1) {
+            props.saved.guilds[msg.guild.id].lockedchannels.splice(ind, 1);
+            msg.channel.send(`Unlocked channel <#${channelid}> (id ${channelid})`);
+            schedulePropsSave();
+          } else {
+            msg.channel.send(`Channel <#${channelid}> (id ${channelid}) not locked`);
+          }
+        } else return msg.channel.send('Cannot unlock channel outside of this guild.');
+      }
     }
   },
   {
