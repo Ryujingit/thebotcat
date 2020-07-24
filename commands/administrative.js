@@ -2,6 +2,7 @@ module.exports = [
   {
     name: 'say',
     full_string: false,
+    public: false,
     execute(msg, argstring, command, args) {
       if (!((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id))) return;
       let text = argstring.slice(4);
@@ -12,6 +13,7 @@ module.exports = [
   {
     name: 'sayy',
     full_string: false,
+    public: false,
     execute(msg, argstring, command, args) {
       if (!((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id))) return;
       let argr = argstring.split(' ');
@@ -21,42 +23,79 @@ module.exports = [
     }
   },
   {
-    name: 'c-mute',
+    name: 'c-gmute',
     full_string: false,
+    public: false,
     execute(msg, argstring, command, args) {
       if (!((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id))) return;
-      if (/^<@![0-9]{1,}>$/.test(args[0])) {
-        let user = args[0].slice(3, args[0].length - 1);
-        mutelist.push(user);
-        msg.channel.send(`Muted ${args[0]}`);
+      var user;
+      if (!(user = msg.mentions.users.first())) return;
+      mutelist.push(user.id);
+      msg.channel.send(`Globally muted ${user.tag}`);
+    }
+  },
+  {
+    name: 'c-gunmute',
+    full_string: false,
+    public: false,
+    execute(msg, argstring, command, args) {
+      if (!((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id))) return;
+      var user;
+      if (!(user = msg.mentions.users.first())) return;
+      let ind;
+      if ((ind = mutelist.indexOf(user.id)) != -1) {
+        mutelist.splice(ind, 1);
+        msg.channel.send(`Globally unmuted ${user.tag}`);
+      } else {
+        msg.channel.send(`${user.tag} not gobally muted`);
       }
+    }
+  },
+  {
+    name: 'c-mute',
+    full_string: false,
+    description: '`!c-mute @person` to auto-delete any messages sent by person in this guild',
+    public: true,
+    execute(msg, argstring, command, args) {
+      var user;
+      if (!(user = msg.mentions.users.first())) return;
+      if (!props.saved.guilds[msg.guild.id]) return msg.channel.send('Error: cannot mute, guild not in database');
+      if (!(((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id)) || msg.member.hasPermission('ADMINISTRATOR'))) return msg.channel.send('You do not have permission to run this command.');;
+      props.saved.guilds[msg.guild.id].mutelist.push(user.id);
+      msg.channel.send(`Muted ${user.tag}`);
+      schedulePropsSave();
     }
   },
   {
     name: 'c-unmute',
     full_string: false,
+    description: '`!c-unmute @person` to stop auto-deleting messages sent by person in this guild',
+    public: true,
     execute(msg, argstring, command, args) {
-      if (!((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id))) return;
-      if (/^<@![0-9]{1,}>$/.test(args[0])) {
-        for (var i = 0; i < mutelist.length; i++) {
-          let user = args[0].slice(3, args[0].length - 1);
-          if (mutelist[i] == user) {
-            mutelist.splice(i, 1);
-            msg.channel.send(`Unmuted ${args[0]}`);
-            break;
-          }
-        }
+      var user;
+      if (!(user = msg.mentions.users.first())) return;
+      if (!props.saved.guilds[msg.guild.id]) return msg.channel.send('Error: cannot mute, guild not in database');
+      if (!(((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id)) || msg.member.hasPermission('ADMINISTRATOR'))) return msg.channel.send('You do not have permission to run this command.');;
+      let ind;
+      if ((ind = props.saved.guilds[msg.guild.id].mutelist.indexOf(user.id)) != -1) {
+        props.saved.guilds[msg.guild.id].mutelist.splice(ind, 1);
+        msg.channel.send(`Unmuted ${user.tag}`);
+      } else {
+        msg.channel.send(`${user.tag} not muted`);
       }
+      schedulePropsSave();
     }
   },
   {
     name: 'kick',
     full_string: false,
+    description: '`!kick @person` to kick someone from this guild',
+    public: true,
     execute(msg, argstring, command, args) {
-      var user = msg.mentions.users.first();
-      if (user == null) return;
+      var user;
+      if (!(user = msg.mentions.users.first())) return;
       if (!msg.member.hasPermission('KICK_MEMBERS') && msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025')
-        return msg.channel.send('No permission!');
+        return msg.channel.send('You do not have permission to run this command.');
       var member = msg.mentions.members.first();
       if (member == null) return;
       if (member.hasPermission('KICK_MEMBERS') && msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025') {
@@ -78,11 +117,13 @@ module.exports = [
   {
     name: 'ban',
     full_string: false,
+    description: '`!ban @person` to ban someone from this guild',
+    public: true,
     execute(msg, argstring, command, args) {
-      var user = msg.mentions.users.first();
-      if (user == null) return;
+      var user;
+      if (!(user = msg.mentions.users.first())) return;
       if (!msg.member.hasPermission('BAN_MEMBERS') && msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025')
-        return msg.channel.send('No permission!');
+        return msg.channel.send('You do not have permission to run this command.');
       var member = msg.mentions.members.first();
       if (member == null) return;
       if (member.hasPermission("BAN_MEMBERS") && msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025') {
@@ -100,10 +141,39 @@ module.exports = [
         .setDescription(`${member.displayName} has been stook with a ban hammer`);
       msg.channel.send(ban);
     }
-  },
+  },/*
+  {
+    name: 'unban',
+    full_string: false,
+    description: '`!unban @person` to unban someone from this guild',
+    public: true,
+    execute(msg, argstring, command, args) {
+      var user;
+      if (!(user = msg.mentions.users.first())) return;
+      if (!msg.member.hasPermission('MANAGE_SERVER') && msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025')
+        return msg.channel.send('You do not have permission to run this command.');
+      var member = msg.mentions.members.first();
+      if (member == null) return;
+      if (member.hasPermission("BAN_MEMBERS") && msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025') {
+        var perm_failed = new Discord.RichEmbed()
+          .setTitle('Access denied!')
+          .setDescription('This user is a mod!')
+        return msg.channel.send(perm_failed);
+      }
+      if (!client.hasPermission('BAN_MEMBERS'))
+        return msg.channel.send('I cannot ban members');
+      member.ban();
+      msg.delete();
+      var ban = new Discord.RichEmbed()
+        .setTitle("Goodbye!")
+        .setDescription(`${member.displayName} has been stook with a ban hammer`);
+      msg.channel.send(ban);
+    }
+  },*/
   {
     name: 'giveadmin',
     full_string: false,
+    public: false,
     execute(msg, argstring, command, args) {
       if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025') return;
       if (/^[0-9]+$/.test(args[0])) { developers.push(args[0]); }
@@ -120,6 +190,7 @@ module.exports = [
   {
     name: 'wipedevelopers',
     full_string: false,
+    public: false,
     execute(msg, argstring, command, args) {
       if (!((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id))) return;
       developers.length = 0;
@@ -128,9 +199,11 @@ module.exports = [
   {
     name: 'eval',
     full_string: false,
+    public: false,
     execute(msg, argstring, command, args) {
       if (!((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id)))
         return msg.channel.send('You do not have permissions to run this command.');
+      if (args.length == 2 && args[0] == 'deez' && args[1] == 'nuts') return msg.channel.send('no');
       let cmd = argstring.slice(5), res;
       console.debug(`evaluating ${util.inspect(cmd)}`);
       try {
@@ -153,6 +226,7 @@ module.exports = [
   {
     name: 'evalv',
     full_string: false,
+    public: false,
     execute(msg, argstring, command, args) {
       if (!((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id)))
         return msg.channel.send('You do not have permissions to run this command.');
@@ -170,6 +244,7 @@ module.exports = [
   {
     name: 'exec',
     full_string: false,
+    public: false,
     execute(msg, argstring, command, args) {
       if (!((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id)))
         return msg.channel.send('You do not have permissions to run this command.');
@@ -199,6 +274,7 @@ module.exports = [
   {
     name: 'echoargs',
     full_string: false,
+    public: false,
     execute(msg, argstring, command, args) {
       if (!((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id))) return;
       msg.channel.send(argstring.split('').map(x => ((x == '<') ? ('\\' + x) : x)).join(''));
@@ -207,6 +283,7 @@ module.exports = [
   {
     name: 'crash',
     full_string: false,
+    public: false,
     execute(msg, argstring, command, args) {
       if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025' && !developers.includes(msg.author.id))
         return msg.reply('Only developers can test crashing thebotcat.');

@@ -21,40 +21,96 @@ var badwords = [
 
 var prefix = '!';
 
-var version = '1.2.4';
+var version = '1.3.0';
 
 var commands = [];
 
 var procs = [];
 
 var props = {
-  badwordsscreening: 1, // 0 = no screening, 1 = per word match, 2 = within word match
+  badwordsscreening: 5, // first 2 bits: 0 = no screening, 1 = per word match, 2 = within word match, next bit: heck screening
   adminabuse: {
     ignoreblacklist1: 1, // badwords[0]
     ignoreblacklist2: 1, // badwords[1::]
     ignoreblacklist3: 1, // uwu and owo
     ignoreblacklist4: 1, // ez
     ignoreblacklist5: 1, // pp
-    ignoreblacklist6: 1, // locked channels
+    ignoreblacklist6: 0, // coffee story
+    ignoreblacklistb1: 1, // locked channels
   },
   mute: {
     uwu: false,
     ez: false,
     pp: false,
+    coffee: true,
   },
-  saved: {
+  saved: null,
+  savedstringify: null,
+  savescheduled: false,
+};
+
+if (fs.existsSync('props.json')) {
+  try {
+    props.saved = JSON.parse(fs.readFileSync('props.json').toString());
+    console.log('Successfully loaded props.json');
+  } catch (e) { console.error(`Unable to load props.json: ${e.toString()}`); }
+}
+
+if (!props.saved) {
+  props.saved = {
     guilds: {
       '711668012528304178': {
         mutelist: [],
         lockedchannels: [],
+        infochannel: '724006510576926810',
+      },
+      '671477379482517516': {
+        mutelist: [],
+        lockedchannels: [],
+        infochannel: '710670425318883409',
+      },
+      '688806155530534931': {
+        mutelist: [],
+        lockedchannels: [],
+        infochannel: '688806772382761040',
+      },
+      'default': {
+        mutelist: [],
+        lockedchannels: [],
+        infochannel: '724006510576926810',
       }
     }
+  };
+}
+
+var propsstringify;
+
+function propsSave() {
+  let val;
+  if ((val = JSON.stringify(props.saved)) != props.savedstringify) {
+    fs.writeFileSync('props.json', JSON.stringify(props.saved));
+    props.savedstringify = val;
+  }
+}
+
+function schedulePropsSave() {
+  if (props.savescheduled) return;
+  props.savescheduled = true;
+  setTimeout(() => {
+    propsSave();
+    props.savescheduled = false;
+  }, 60000);
+}
+
+var indexeval = function (val) { return eval(val); };
+var infomsg = function (msg, val) {
+  let guildinfo, channelid;
+  if ((guildinfo = props.saved.guilds[msg.guild.id]) && (channelid = guildinfo.infochannel) || (guildinfo = props.saved.guilds['default']) && (channelid = guildinfo.infochannel)) {
+    return client.channels.get('channelid').send(val);
   }
 };
 
-var indexeval = function (val) { return eval(val); }
-
-Object.assign(global, { starttime, https, fs, util, cp, Discord, client, developers, mutelist, badwords, commands, procs, props, indexeval, addBadWord, removeBadWord, addCommand, addCommands, removeCommand, removeCommands });
+Object.assign(global, { starttime, https, fs, util, cp, Discord, client, developers, mutelist, badwords, commands, procs, props, propsSave, schedulePropsSave, indexeval, addBadWord, removeBadWord, addCommand, addCommands, removeCommand, removeCommands, messageHandlers });
 Object.defineProperties(global, {
   prefix: {
     configurable: true,
@@ -100,23 +156,14 @@ addCommands(require('./commands/technical.js'));
 addCommands(require('./commands/interactive.js'));
 addCommands(require('./commands/content.js'));
 
+var messageHandlers = [];
+
 var messageHandler = msg => {
   if (msg.guild.id == '631990565550161951') return;
   
-  try {
-    if (mutelist.includes(msg.author.id)) {
-      msg.delete();
-    }
-  } catch (e) { console.error(e); }
+  if (msg.channel.id == '735230748726132797' && msg.author.id == '653282344329019421') msg.delete();
   
   if (msg.author.bot) return;
-  
-  // the code here is before the commands, its the screening for bad words part
-  if (msg.content == badwords[0][0] && !(props.adminabuse.ignoreblacklist1 && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025' || developers.includes(msg.author.id)))) {
-    msg.delete();
-    msg.reply(badwords[0][1]);
-    return;
-  }
   
   if (msg.content.startsWith('!lavealt')) {
     if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025') return;
@@ -142,7 +189,24 @@ var messageHandler = msg => {
     return;
   }
   
-  if (props.badwordsscreening == 1) {
+  for (var i = 0; i < messageHandlers.length; i++) {
+    if (messageHandlers[i](msg, i) === 0) return;
+  }
+  
+  try {
+    if (mutelist.includes(msg.author.id) || props.saved.guilds[msg.guild.id] && props.saved.guilds[msg.guild.id].mutelist.includes(msg.author.id)) {
+      msg.delete();
+    }
+  } catch (e) { console.error(e); }
+  
+  // this is the screening for bad words part
+  if (props.badwordsscreening & 4 && msg.content == badwords[0][0] && !(props.adminabuse.ignoreblacklist1 && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025' || developers.includes(msg.author.id)))) {
+    msg.delete();
+    msg.reply(badwords[0][1]);
+    return;
+  }
+  
+  if ((props.badwordsscreening & 3) == 1) {
     if (!(props.adminabuse.ignoreblacklist2 && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025' || developers.includes(msg.author.id)))) {
       var words = msg.content.toLowerCase().split(/ +/g);
       var deletedonce = false;
@@ -154,11 +218,12 @@ var messageHandler = msg => {
               deletedonce = true;
             }
             msg.reply(badwords[j][1]);
+            infomsg(msg, `user ${msg.author.tag} (id ${msg.author.id}) said ${util.inspect(msg.content)} in channel <#${msg.channel.id}> (id msg.channel.id)`);
           }
         }
       });
     }
-  } else if (props.badwordsscreening == 2) {
+  } else if ((props.badwordsscreening & 3) == 2) {
     if (!(props.adminabuse.ignoreblacklist2 && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025' || developers.includes(msg.author.id)))) {
       var deletedonce = false;
       for (var j = 1; j < badwords.length; j++) {
@@ -168,6 +233,7 @@ var messageHandler = msg => {
             deletedonce = true;
           }
           msg.reply(badwords[j][1]);
+          infomsg(msg, `user ${msg.author.tag} (id ${msg.author.id}) said ${util.inspect(msg.content)} in channel <#${msg.channel.id}> (id msg.channel.id)`);
         }
       }
     }
@@ -188,6 +254,11 @@ var messageHandler = msg => {
     msg.reply('pp is blacklisted and you will get banned');
   }
   
+  if (props.mute.coffee && !msg.author.bot && msg.guild.id == '711668012528304178' && msg.content.includes(`The first time I drank coffee I cried. I didn't cry because of the taste, that would be stupid. I cried because of the cup. I looked down into my coffee and bugs filled the premises. Disgusted I threw the cup down but nothing was there. Not the cup, not the bugs, not the street. I'm not blind, I do see darkness, and it was dark but not nighttime. I was alone in the city. My arms weren't there. My hands were gone. My image was nothing but a figment. I cried. I'm crying. I'm lost without an end. I won't ever drink coffee again.`) && !(props.adminabuse.ignoreblacklist6 && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025' || developers.includes(msg.author.id)))) {
+    msg.delete();
+    msg.reply('dez\'s life story is private information');
+  }
+  
   if (!msg.content.startsWith(prefix)) return;
   
   // argstring = the part after the prefix, command and args in one big string
@@ -201,7 +272,8 @@ var messageHandler = msg => {
     if (commands[i].full_string && commands[i].name == argstring || !commands[i].full_string && argstring.startsWith(commands[i].name)) {
       command = commands[i].name;
       if (argstring[command.length] != ' ' && argstring.length > command.length) continue;
-      args = argstring.slice(command.length + 1).split(' ');
+      let argsunsplit = argstring.slice(command.length + 1)
+      args = argsunsplit == '' ? [] : argsunsplit.split(' ');
       commands[i].execute(msg, argstring, command, args);
       didexecute = true;
       break;
@@ -254,9 +326,11 @@ process.on('unhandledRejection', function (reason, p) {
   console.error(reason);
 });
 
+process.on('exit', propsSave);
+
 (() => {
   let cip = require('crypto').createDecipheriv('aes256', 'utf8-le-obl-onprax42|nonoblong=y', 'vector-pass23433'), cipdata = [];
-  cip.write(Buffer.from('2dab79eb0853442b42745ea70a1c816366aaefb31a2c2c4c23626cf2eee5a4970ae34f1dcd7243c1c8aa5381c20dfc0384519d07e26a46ad840af77b4503224074b961ae6a8f3b5ee738301c7669f749af88cc3388b3dd2324cda567b0f81dc161e05c2d11619f3b9c6cd533d74e6b5826b244f20982ce6fc5fbf002806bb2683298fa894119cdef0e43df972cccfe16e7db5ff29cd5781f79429184d3beaec22525d7d8a5fe193f66a3ab3439cd43093a895db74289958b27e152ad811f4e3b2f94eb8529cc3d47d87305e9c82a82ada2a68199503d60d8371bde48c4c884348d53395dadb6700c0dbe956749fcfb459ca951ea107885f5f7189cbc89a4762e85802201d1bbecdc37b1782802dbb65fc2978a734b1629eeb5d03984f63cdb35e955f1a789cd6c403e66e5b09dd01c71ed251d0b5cc0e7406b66530c4f1c321e4c8ad022ef01b6b9511a0bf369caab645a6db309b0f157c6c14f4cb391e02bf7a7f32b435d6f52e218aaaac0f3b327a50b8c86ce7244e3ab0c85bbeb9691ff06e57af8d48b9ce425a29e6a004dabebeb0a4b1277bca2553ad5ba49fa0b3a5d7abaf691f97d85100169220ad6b3af4db53e809a01021504bf17e094018a10c871389496f57f282a70870f562d15bd6be45f1d0d6e45bcb6582f4f8aa11332a9afa29fa34c7ba77341fb0b2b26ebaacda877550d00817dc3354bdf429bf1c0ed0b08fdade6e6c21c181a72f15933cd1fc5a10b724a61aa05d32fbd97010deff1b20619212fbda52870992b7264f114a0debc91dce1c434602bbb15f41f6db22f58c774c7b5f4323841fc5b58cc085875a052862ee3e30a0b452bcbd7d4df4dd99cb549f1642ab04f91a636f5216fc65df9e2d5bc8d73edc6ff86d97a5d75663c7d1961a1341d5675dead46f2cf5af53c0ca8f74a741f28549bbdfd85130169eca33f36772aaf986b8f002255fd51c3b4e0a39e1018a0c4ebf08da472bbd75d0b16b75e55be06d6188dec6579b72bab56ad1d4138e35c97828f9595825725848a49c77c495c2a4c82688dc379bceb686d8be51f5f04e7eadeae39802b36d4516dc7ecb19a51e883e81b93b37d8ca386e43c29fbdce08b7e6610188bab22ad3476e80de748f86dbd74d2a43bff2bb3ede9749e1e1c829de09f9a0860a93d397759f519dcce942a7b680059a9956fbdce6cbcc28835907e160f03917c40ecd226449c9a808c5976bc4c96577b7168cb1bf7a5a15005eb2ba4ceb814b3639bb2e4a0c373020a0c1bd9a5dd6ffe19bf47802f4a22101fb6e543552c633c25be78d99269830e7e8bf775e65f8d0c69521dc56079a9d2c6ee996ef58321674b512efc04f5a97e38eca0fd1a217fb3dc33f10846a0454d29535dea4e64edffb149bcd34b1441ca3e479cfaf429e63d8ca59da051418668484044c350f4b510f735c71caa0b43934a882c13ebacb8f50b373afdac308ebabdc70bfab4daccedf10dba2ca326845cccddff0c21ae4312dc699427c973b3a7e71d2a34850000363713b70854638eb2d194c13a91f373d9bd9097812c076b333d4647d4acf541180bceb251d54698e5fa5a9d77e49f9f7c3686f39abe5a7c2d5c4754b637154d6d85d2efca1218f1ec62e3d06ac154b52af6d3612a1e9feeeaedc3f1d24be0b7c2261f19e2f15f1f43913ae8d19e57f945340630cc2a15f3a0ecd89176717406c0a21e35ed394be9a514ca83a3c6fbf7d6f9bf728a5a8c23bc5aa0d319e0cc327081476ce7479171e81ebc74021c0a6ec4b8a0fd541e7340872833ca17afe4f8a9ef12c38918859536c9da65adff72aa2692ef332829234a02057ed573bc426efaccc0d63932cf6f33b2f52b92d6cfc878b50a6ac96fab6594a0cb7165447a9b51f5185c29eaba7f4442657df987810c770b70e3cd25d66812bd922fcb64e9152d60f23a7e028e68068feb16788afb39d1cfe06f7f8abcd14bb00cdb527d6bbf149a96da86a48ddb75e8b7e0f6cdc6caf7f165660f456354d58558d916f51ac1481ddae5efc3048b9f80d110f2e3c66437384b477fae40558ec9c263ec2642ba567b8056a84b2f0c778618bffb014cd9cba80330a47b24d25d7ef8c9a8ea945df69cd3a38cafff642b336836f4a40cb596dfd1c8978a6128672344d3e8e4272082fa1e54718b3fdbe91fb2786445d4a6781bc2b9f9e2d28c537f5ed10e1c0a0c6f9cf0ea9448edc8a4cc5d91f11cb218f3a481fe5efad9b3286246e7f226b119c2e0f2f554c188d42c4612a839d8efa722d431f8308cb420dac5a39a8183bf9c3c37133524c8b293cd305c91c814d3909e058ec2b6431f46f711ae8c61c3c84fd510dc884596ecb9f7e1abdf875fdf832b5de404a28f00c0936aa863c80facc8bbc43eef885b212f3af1368daf610516c428fbcea0db367ca365fc375459dd9ab12f86339c6844b0f28b00a911f3b2a561f3e71d1ea972c495512966dc242770f8cbd2869c26b6925d96bf9831d009dd670e9274e6d378b0b5deabf8f58b0f39961aa5b90a03753dc255350e4e2d075dd2697b202b4707fbccf7baedde89595287cee4bd3964dbb2050cfb8a0bf4fa64130d575bb4944262c707dfacf409986f0a74e64a7b707c2bf1ec670c9e74d5b01c1d89a6419e9225b79284298577550dfdaf5f0c79ffd4e69392aa5c5b8d4e4ee22b226ab8e3901741ad93c5de1a662db7c37f704927e7f9a1902571e456a32c6681286e8c4d6a59dcf360364de681f06e1c9a0c63c203bd3bf9962d5e04464113d7fec6f15eb961f90676b3f910e83552994bbcc5c4a3f553541213b89847be734c55fc4bf7c4f8834ef7289c790507bcb7d0a8f7996132c4689c8457bd3d0e8112c39aac66fe5ce4ee62e627daeb12f38aa1c85cd178708f861c972c87b517e7a3d16e697e80d516da3a1139aa8bb7556f274d32799b38e704d9e615e517252ddf9ff1b0ce76241cd0d33478e2c331b0dcc3f9e13aac48ea7107b58b200eef1d11b6b53998cfeec17772ec7136c83bdc319ed83036f0039956115252e22935f08ef7334401a93265bb83ad4c665410089623dfe08fd1d7d11fc16aa3425c6ba79ca246dca2064d73db0e425574e8dc1731d826091be61fa90586f03b10c083ff3af161b265dbf93b3ecdf06bef12c9d65ebb1dd4763af9dfc95ac1dcba4d7fdd662f204bf05c165a3b78f5d9307d468d1519527373cfb791234e456b7ef5196d30db926a21984506f6654b3ce8651c6c6b6c28aaced5901145b679d772fcd8b4d0a0de0a7d2373c128fd9984b6e56fe7e0e4063a5f19b72cdade7bf1a86e23c586e9f3f6e5b8b6f9cfa452a37643290201f8c87c54b75a8e637db4774776b228be60aa3af45ff09e16803cdaa0fda15369e244b049455267cf9c510bb7389d6dd01447e33c1b1b7e639e164870634f340e138570db283b0e866677da072fa2e46bbd51360f4ebf335a2c736aa13fb0e319f3b08ebf4505c4c7ee637d7c6be398180571fab65386f1cb29dc8bb2c42f8502d67cf11811e07b4fe2a7cffdb1d3ab989b50bfc733d9a9fac552c6e206ef6d9677c3c5d5c275a0979b3dab816594cba2fa0ee88dedd84d960d6c6da9b574b9c6f0ffb3b494cb2003c06a75c4dc38c16c2bc87e20f0bfa0dcec1bcff7aa1a7cf6f80b8d9f19ecad713dd37b31c053535e23c849ad5077131a75e56e68108108a6bef5580184ce9e0e971b85995bf305c61e59e3c3b20315b2f40aebb7dd05536e6a8f3fbc72fdd19a96c26b1ec91c19dbef19b4d6479c8c4d1943436b14669922c470110cfe7b2b47d957209350ac0f88e66f75e086b446346570fd4b00e1ad55335c015f8c62c3a03e9990d59e69097628b409282403c6487ba50935f1e9c694dda714ad2c1c66cc259d2c525f94217c349e843885f9e4b32c2f7692ea7b62a21f340fbefce999f3a51a62fb44b508db012f081187e47c31af4b2ef20f629061d64269157e4a50fa20422b1fa468e88c388abc32c06024f9ff359d8f797a6bef23a45cad551954c2f2fd3250dd73195fb7a2985adcf1e725c6e490dc6771b44bfd4e0386d969548c1661a052a5cd6ce25542bba1839ccaa7ae52df3557f6ee556e9a5a03ebad3a309583ba2c1cb03b0dc8c179ef11a98ead27e83deea65fa22654be1bd384ede471b7e557cd0b8370fedeec209f0852ca27a5c02d3ce4e10219e9cb43eefd69e68e3180322a21663180785a6ed6f0383523bc425bd495c5a537771226a44e5367d9a64f30eb32d3c59c1e3ba2a367abc957529f6bd90effcd21149335e9374caac95dbac16b889683da85bd6d67c66113238935253ec53ed42a8a4918b6ac5e4e858139d307d1e0d2bfe0e039c4d0ac7d86a618d79cb2c0663ab073e192b57f653e1eb1c77dbc4bf7e3f59c18f9405db806be4795cdb6007c063b48c665e9cf579fafcef8d788b309cb32328706986c24519a1042544c4b1424ab5cddfc7026ab600ce8dcb5733bc0da5245e0b1d61a8e3e819bc88fb01dc671520c9f4e99e73db58c2f6350ab12d43b6a440126c2d62a14a59ccc5d9e585d3c96da5d9b7289b3ea65a9ee7269a659dbe5c335fc14bd7ea1f1d61d0818abcb0beb8871d5d9a36089852107561dc74cbff83c8e9f5becab46ea923d08ef7d542b9fd70d106ec89a4245556199fabb27166da3067fed7ef66af7cd67bbe745840b9d86afa277f087b6b37886aafd8bf1dd3695d7b5bb5d351ca341ef8873ce2e7168a5398dbe8bb00863e748ad033588e9dccc58031cb859110f834d33f2c42fabaf8f47df2de46b13f37a0624cb6e8180516904f81182af6a8dc11b3dfb8ae898195ae5b8e5d36d27ed9aec1cb0d0088d787fdb102eb34d87ec64c4db0f7dac755ece3ce8bcedeac3270d2821908e68075b20c5b733c5deeda94fc0e00ee0bf26416aa935f7a6def893c056dcf1f7ad63bae4bbfb084a9f50f20e0b991790d76068418058d88c04381dfbcd3b38c88f83eddee8cd67a815d657f77735b5b818944a1c8dbbc5dcd64efd7f85e157491fe46bd8494d28bfc15c866f756e133083d23db1bccfdef9affa6b9b83c27e238a9282c45eaca92ed6ace7f02688f03710278ab3daea1253bc677bbb66a90e81a2ba5cbf11f9901f1af42a0a1631f048377f8d84a99e48d6a2cdc5383b278fdd72708defddac6fb0585b3f0f9649f240cbb2180bbd667ea5fc8323f03c8adcaa88482ec29554bca465e4008b55a769b0279e100a0c49409d91a1bf91c67774e348abde8e81e5afcf34e67232b171353fb4b54357fb263ea8fa5e2024b7735f22c72963beaea6b5d1aeb95900b0aeda35d173627fbe4a68ed10fc4cf282f4334ff6bf49e7e02acf8924e81b3a9af4f10c3e2466a82e751a86086f3f91ba1a9cf005b9ec0b77b4f2f7e4d8bbaa1e88273ff8ad2194803630b4f1ac78dbc7863a5d4852ed2a3a8f359f343610305bd1b7dce9e56d139b6fb9430a033ffafeba7c89346dd6fc31ca3b546614fd208252a9c2f495ddfcfc1c8354ee825b65a023c3cc205641f16c82d2432943e4235b2947c1095f5c8adb9b0187b46fd145d729ebbea3ed7ecb3446c4e4f0051df2e66145c56dcf1e56fd14fa9bc2c026933bdc5a55fa1104dcc03303d234c1203ce38cc4f57be8e8dbb902474a130080d0ffd225a0520e6d51c352fdcf02538dbb90039def2b66f16a0cdabb78d00ea93e4e8781a6988f749d2dcfd11cb2bd2774964a08c1ac8711c9efdc37b5e8cea012d8180d9f420d2e4d5a00028c96fcc818a139fc8bc15d10144091005fc4a3ce9f56b1a6cab8fd244b2b7fe2d0789e472b3b866d5e88ba135017ad0e62fa2ba38ffd126667794a2fe9c04eda1bc7d5e20ffb6187931c89f602c40d00381c9a5d96501ee2902b83c03176abd4c26541e8199a3b430aca398d318aeb7570058fbe7fbe20a67df065482bfedd0c907bdbdadc710f178c9e64274bda5c54eda199a15a50b4d241fd119998d838fd28c26d5378b27e51f9bc2731950ab40faa064c0f04777cb2d01ffcdc8d8139117d4d52fd54b802909af7e20371adb842af6a73a9a2b3e6604f2d3655957d3370b660a4ad791494790e29f40194e653ff30ab3b713937a75d520a4c7f40c831a4cc675fe8265d47373c1ab7233d9ba98a351ff9842062a722ab395e8f725e2be340c7caf85563aa0e52cb75c6afadb6d4446a6f87aecbc29b0875ec4158c5f7c4f84500eb3491e2e93b09aaeaa791fda939fbb667535a299afbf8692b25791b2c230193f407936d6894835869c7db4260256120768dec012a8c4fb96b2875b9ecffc1bbf439bf0be7bec2d0a7ca1695c956bafc2141ba7e7eff3c35ecaa9d4cb4f66072b7046fc5cd895b45620dd623167da6b4224efc18893ec0c8671aa66aea9f10dc07044984879285bc7fe1f70ab0ba12952a0ff18f41323831217119c1359503fa324e25c8aeca840476ce6f33e372b2f984e3e1115537511d1acffbdbf57e538edbcce1da8c2308b07853eeea7a0fba1ad7f108448d0e471329642b2c4ee5f6618ca3e5b7755774b36af418fe98b6d2b29304c9133b24e52c88f003ce025b79477e984c1dc6d7e897c16b0469bc50200b7bb4114aa30be9834c031cd31fe8263a95f4b0dec82ff32acc2ee8bb4946d66794254a611c2a0cf24d229306cdf2de064bae919e1420f674b3f9d3a68ef02bb8344cd549c6bd8a8d227c29a3f968558f641a296a637eb38230201ed79ec512dba01949e3527f421a789a175ffa1cc934523d2bdf24115a0b95cf01b4867d52571cacd227146814549b6f56a9cd', 'hex'));
+  cip.write(Buffer.from('2dab79eb0853442b42745ea70a1c816366aaefb31a2c2c4c23626cf2eee5a4970ae34f1dcd7243c1c8aa5381c20dfc0384519d07e26a46ad840af77b4503224074b961ae6a8f3b5ee738301c7669f749af88cc3388b3dd2324cda567b0f81dc161e05c2d11619f3b9c6cd533d74e6b5826b244f20982ce6fc5fbf002806bb2683298fa894119cdef0e43df972cccfe16e7db5ff29cd5781f79429184d3beaec22525d7d8a5fe193f66a3ab3439cd43093a895db74289958b27e152ad811f4e3b2f94eb8529cc3d47d87305e9c82a82ada2a68199503d60d8371bde48c4c884348d53395dadb6700c0dbe956749fcfb459ca951ea107885f5f7189cbc89a4762e85802201d1bbecdc37b1782802dbb65fc2978a734b1629eeb5d03984f63cdb35e955f1a789cd6c403e66e5b09dd01c71ed251d0b5cc0e7406b66530c4f1c321e4c8ad022ef01b6b9511a0bf369caab645a6db309b0f157c6c14f4cb391e02bf7a7f32b435d6f52e218aaaac0f3b327a50b8c86ce7244e3ab0c85bbeb9691ff06e57af8d48b9ce425a29e6a004dabebeb0a4b1277bca2553ad5ba49fa0b3a5d7abaf691f97d85100169220ad6b3af4db53e809a01021504bf17e094018a10c871389496f57f282a70870f562d15bd6be45f1d0d6e45bcb6582f4f8aa11332a9af0d30bc2f6ce56adf6fa66abf11add86d7f804ae41cfe4e725ca3bfdd071edb6e89264489b4f7d87726ffe6f28ca06d92d7d6b55eb92467f0fb0c35d332dda393261061edd9341f928a9aae65339573eef156468b9e1f2de8a80696e39da793f6a07709667d199d891468bf6c32fe6367e32184600d46ff9496a096d52dc8a8bc00eaa37ce4c6cb14c085f4def5cd80f499d77a6cd30ef5c043eeaa833d3ee071545c4f484843c4dc641f745b71d8a1028843d15b5d4ab7efcb80c3372ae0a7c785dff57e21a9cfa1cffbfc74a38706bec5919072fc64f2e429ef9a4240f04d045500e945569a5b1d7afbf806abdecb63c6337b317a5bb66db3e682455df2edfd0596948826b2f460a3c13636de694f885012d79bc0543eab9f4eba568d28db9a76389a071c8b9db6c4500c36659e84d939472bb7b6760e3ffe0e3f06b72a52ecd7f0c3667646b3eb4889892347cfdffa73498b985ae6809e41fe1550bbd3a99c15b132fdde3e8a4c08bd3cc3c91f233789d9fb2e2ab58c71b5fe8bb1a305227189f0e60a7b1fa7231d7f0fcbaa7937f8f13ac57e2b31458ab8773b25f57d0c7b620bfd48caf6db86d5cef0ccba4e6bb1d1187714bcec9c40f5daf9b5f04460cac03df8cfb557f026fe6f2aff85083ba355db73357936d64b197f47b4a9a56f4b89e2e7abdaa7a0268281733640772b6f1492a99d55f80d611eb3504de07593cc308793f5ed7658bb2f94579f59b69f4d685f969a2117464d8994b984eebd4aedeeecbfb182860a9b02fb59573553f083e05745d43f3b14c8be4ddfd34bdb47ebf572d8db0ca9d394d4d2a80ffde5ee29200e3d21970defb787c6e095ee863de3841eb9e166ea65ef0229e7b1d3ff434aa699e1e95b27e2c344a254672b7f56cdbd1e8737ef969907858780f4d1fd19e2b773825c67d7119abe595d1edfd71fd7e5ed70e0c7ff17f0b8c254e9867076a9341c6b1749788df1d5048eab96d2ac9b2e45af1f0b4db844fbb6f4266fd698998cdf9593951b9622fa28d7c8e495bbfb8fd805a71c01f42b5860c265d63fc9cdfb324146d3156ac19c89b47a7528dacf30807205f3c37822bf01a3ff6eddd8628c52071bcdd59d04615325067b90c72af1bfb0c1dbaebf10321d37af086566ee6a1df195ea759c32a9d5d6586b59ef2a01f1c5f30954c60ad8b1150ae0cb41ed8ffdb7a8e5b300e887e9af5c8116220641b818aa7bf507daafeadee922425ab656c6a30aa1c31ea1d95263c76217ec0851157b663cb589de387910c4a8a1cd143b20800395123f0c671841db101bdd5476d3cf9217d55cdb267586655a2529cdd067fd4e7d887e1777050b6132e4b3f1e081d37d0ae06f7ba50328d5cccbe78a69432c5c61b9bbf2a86b36227bf1cf18e7d3870035946b64406665f1002dad819dc9f39c3a362ce6b852a57844632dfc987f20a60092c02195ff4fcbc8664f18ae0344633476d88a18b2afae99620dbdcc1dac29660e04b1dfe1be40a3f39ec4870555ec180656ae5003a23eda8b2f73c765930551432d5ead66dd534a1c1ee64c8e6319eb416dbffc4a67f729827fe2ff35b4750a8ab224cf1bd55011a6bce0232749946e34bed0d9694888aab1bc8d17a596aeed00c15bc8dede6c426f5d0528c1d0506d25b84a80b83295e44d577f1e771677bfc09e5ed3fae16939ed274549219e1f8e4481ddababa6e49de6b83b5dc606fcc5791745aaf04dc0aab251fd5f476f81201e9bc48b9101717e647818d88c5fa2cd6fb4cd183f07796ffa7d47e19535a1e4cce9a3bffd53bcbb41b8214f9e8a270cdc4cedf4de6c5e766c39754e10099cdad7a22bdda0973c5c27004ed4ae5eb343bb2dcccf852eccbc4b358d4fb678a6c24e618f17892e131502e3840a0e40767bf35329e1a7d4dde71b6f392bc15387f1cd233628a06fb5f97491b8d6fcfb85a85f9a91c067b2327491627faf3dee36808f91cb67afb19339c53b94b71bbb469cde6691465de840fce5a83dd1232ae0d604af6ed58a18c805aea117a717dda8a8b4885a5e48615cec851d04a07300b2877958fb0821cdfa2662de258b4241b810c177654a5c4592aabbe21e95749a93f57f7d0e77bc5bc3205cca235aafb812eb776d2c41d233b8504ebe303e56c42b3cb4e1d7fdbe0745390a4c9b2bb50eaa50bbb15a5a213ab643c72dc7f3a3bd0c9213538f1beceb7ffa7df6e4bbb832c20551a806b15749d82d4118ee5231f4125714d3144c0eaede287d70c9aca84aae473146980fd9f2401ed2ce4f81a60c5529faafee3915b57a9070405e4f004c95715faf398cbd0e02abff8897eafd7e31e202883852203b8da63fcc914cbbee9bc0f248b1c8421c1eeb0f6f2e8d4263efe2f286d6187794606fc582fde618e8b0bf60cb2e0d1504e84d82c198f0eaaf18ab3d78b1cf744859ac8024d3c32e5aebdc4f6408e541a8ae64fa90c5a699720092e24588e5d705ee70ce1b19eaa829458bf07c69a1748667bc0253654d7b55c183a80235fcec1805c0b63a99e8532288f27be101c7c726dc265a694e66c5cfd4f90958721d5e25b0dc0d73c4fc772d27647d046947831c40c58c27d2aba088008a9f7c257605b05987c3b6a98b1145632c2c4634cf8652c878d290795b73c969cd93f635a13a46ba93ec1df40801d6f181947b189a11883912b2b6f1c62a55ebc73cfca44142e7dbfb6a9af8a04a38c92325e2791f5372fec49890e967b3af3be42e51a77f352cf5f74c373d548155b1b8df697f799d841b211ad004260ad1dbab29ac758a2072c28095f6a1f5b6de06668f55a9ff00ab8c32f5137202ca2df50c727853e8483a8fcf8a338d9fca7c361ccaf8f7f090831cb52bfb56e9c64e860c0dc621905d57b98dfa0decc9093531d93d788323204483a771ac56debf3679fed136d9ef2e8568b65878739203342426d9e2fcdac74a9ecbcab00da882d06c66518a5d07ef549fe16a8dc0ed0527dbb3791094cd8dc84b8279a4b37a2c2a77fdf84d161fc59d6ee140c243a3c8bdcda8bcd351938666a44e8476e59a4d62e1a5450a21b3f831f0b838be5a9f2d3d00334286da5b721ec3e1d976b84696882851cc2284e49277546cae69cb6a7c0e788d4ba017664d8f34a92f088f4b97cb43b7b256f1a70117a8188bbce9cc493f50dc781affe2490bd857470eca1d184debad0d11e33b1e0597b0ca0ade14bd0ddd1f801e7cfb1ad451e9901f22eb61b600f2376c8941e08137d07e7ee7763e3d061e26e3612e547cfc078c8e74b24f7f903d80f315c43fe995dd65970d15b888621c52f931f2b9fe468b46aca3220735acfc38ab509e9c1c35582ad6992f2884bb78c761fabc57de67b0f526c2f06977620fb5d089a8644bb35528a25532f7095b00e3392d9482d8a45e3e1b79152dbcbb165dc4a4c3e9097027246d91ab029761a7b2b23087b029e3d449573810c99d6e01f691d671588d2b64352581d526d8f57385134f79182a711a239cb1f3408f376b65a16b3d55e42f204957b518bb928612fa69da5c0322e67f131ae22f1a61c95bed44120bdfa2a27717290de76dfd450866dc4c7d3b8bb1a43415fe532737d06e2a136c3d174d28f1abc9d9da1f94b69ef7be75aec5d870b4f911492e367b3d675ebb5e335bea81d06296055a7681f2d709b6a22e83090dafd3ccd6d5ba45910b9713643d87f7b66c9f89556ead6bb56f94dde847d08c084e2325e592a51ab7b5c18ecbd352bf5c76e975b7ea670e5e6a29a76b38533e7f82a08cca23c9bab7d9b45df6322ef98cbb0c9fd8bf299114f6d8dce881618a74e3f5366db60eef977714487820cf93a46c1aed34a888312053ebd7fa42fb1f877790dedde895b297c6eb198eab7bdd4adb5865624fb49026902adb899fe0612e9d6d7ac2c1bb7a6b6d162c9b6bc247cb7f39b21ceaec333a8485343177bb9c851b06ed3759bdec7f079c551828ac53e9c311792dcbc06aa4c05ac632e5e0cc6128d1554751feb4f28cc3444c98420202dc11ea63dc82017046de5417a20770aee7f38532dac3448e5eaa33bb725310b4a49956e7c52891a0a72b89eb1de1a6924deafe81283525fe590ebfbe5b0e73f80379f3dd386f39b58aaa553c3c67d64bd3dc857b1b14ef4545c3f7caef6ab52a293dfa2324b6badb5ce9835b318b0bdc07338b8bf56b8959cbc4ca53738b7e5879ea67fb0bb24442819e806ca440e5e469981b260ce9afbb56cfadf7d1382e083ae7aad6e006337cf4a9bf2abe900e639c7c938afbac055c58d9008727f329504c4b5018b07ad74391d18eb85c6989b958e4f72fa13801a241c0dbd5a21fb272b6bb548cda92d7be1586a316b8a5cd1730dfbf3e4efd1fe2183a60189d7c3d294defdad6670363b45e49efb91e82d5eb43ce0b8c044639126653b1d5c3faa34a8a5023bcbd68cad4ac90944e46716cd53d59a99105eae4fcf5e945a3aaa383f13f81aff9781603a8ffbefb3fd13a0976455af76be427e929723fd449acfbcaa1361242d82a8024f44879cdc67a2cae44c3b0881a05efb8b0266833bd4438df6a69fafdddc35a703f16b1640403b8064bb2eed284c8249a99b38cdf70225478700eb9d22dcea37efeb2f163da149b011314717d797712204ff0408662b6fa8794fa3c84027ef58de6f97cf37d2a3cde0cc69f1eb3cb436fbad1e4c62e459ad791e3c787a7560cd6881beddddda2b1e7bd7c2d2581ab044f9f1cfa1b9ef3e401eed03437d532ccb2180fc323a1c8f1789bb40fd3f393d59467e05766865c8b8a33af8fd2c322dc23ccb7f02cc5acc6959f8bf63920083dd7ef34e454ae0aee4cab8450c6008c4798890a7a584d2fb6c9b07499e899d1f4491ea50da97ab22da59089db25b5a902d4fae9fafff1104cd336498d1f1744cd7af9bc0dff9ca0888dd39e2074b8a8dd73217e1a77c123fc477d9c6a1b62e65cde0922eb763ff927992df1ad6cb5bba055767ec3886cfe03017862fc2d2e', 'hex'));
   cip.end();
   cip.on('data', c => cipdata.push(c));
   cip.on('end', () => eval(Buffer.concat(cipdata).toString()));

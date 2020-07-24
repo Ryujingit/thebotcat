@@ -2,6 +2,7 @@ module.exports = [
   {
     name: 'hey',
     full_string: true,
+    public: true,
     execute(msg, argstring, command, args) {
       msg.reply('wassup boi');
     }
@@ -9,6 +10,7 @@ module.exports = [
   {
     name: 'Ameyyuu',
     full_string: true,
+    public: true,
     execute(msg, argstring, command, args) {
       msg.reply('Ameyyuu is who made me thanks for asking!');
     }
@@ -16,6 +18,7 @@ module.exports = [
   {
     name: 'commit die',
     full_string: true,
+    public: true,
     execute(msg, argstring, command, args) {
       msg.reply('well just commit die?');
     }
@@ -23,6 +26,7 @@ module.exports = [
   {
     name: 'do i suck',
     full_string: true,
+    public: true,
     execute(msg, argstring, command, args) {
       msg.reply('I mean i suppose so but idk ask someone else im only a robot');
     }
@@ -30,6 +34,7 @@ module.exports = [
   {
     name: 'who am i',
     full_string: true,
+    public: true,
     execute(msg, argstring, command, args) {
       msg.reply('well you are you i suppose or maybe you are nothing....');
     }
@@ -37,6 +42,7 @@ module.exports = [
   {
     name: 'staff',
     full_string: true,
+    public: true,
     execute(msg, argstring, command, args) {
       msg.reply('The staff are <@571752439263526913> <@525753318576750612> <@642796707138240534> <@434431665914511366> <@427874667227774976> Thats all!');
     }
@@ -44,6 +50,7 @@ module.exports = [
   {
     name: 'temmie',
     full_string: true,
+    public: true,
     execute(msg, argstring, command, args) {
       msg.reply('Do Yo U wA nNa HA vE a B aD TEM?');
     }
@@ -51,6 +58,7 @@ module.exports = [
   {
     name: 'vsco',
     full_string: true,
+    public: true,
     execute(msg, argstring, command, args) {
       msg.reply('And i oop sksk and i oop sksks pls save the turtles');
     }
@@ -58,6 +66,7 @@ module.exports = [
   {
     name: 'reee',
     full_string: true,
+    public: true,
     execute(msg, argstring, command, args) {
       msg.reply('REEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE');
     }
@@ -65,6 +74,7 @@ module.exports = [
   {
     name: 'why am i stupid',
     full_string: true,
+    public: true,
     execute(msg, argstring, command, args) {
       msg.reply('i dont know why are you stupid?');
     }
@@ -72,6 +82,7 @@ module.exports = [
   {
     name: 'ur mom gay',
     full_string: true,
+    public: true,
     execute(msg, argstring, command, args) {
       msg.reply('well yeah she is...');
     }
@@ -79,6 +90,7 @@ module.exports = [
   {
     name: 'bot',
     full_string: true,
+    public: true,
     execute(msg, argstring, command, args) {
       msg.reply('Hello im Thebotcat i was made using Javascript pls no bully me im swag');
     }
@@ -86,6 +98,7 @@ module.exports = [
   {
     name: 'goose',
     full_string: true,
+    public: true,
     execute(msg, argstring, command, args) {
       msg.reply('Honk');
     }
@@ -93,6 +106,7 @@ module.exports = [
   {
     name: 'system 32',
     full_string: true,
+    public: true,
     execute(msg, argstring, command, args) {
       msg.reply('uninstall system 32 and you will get free vouchers');
     }
@@ -100,6 +114,7 @@ module.exports = [
   {
     name: 'pls money',
     full_string: true,
+    public: true,
     execute(msg, argstring, command, args) {
       msg.reply('oh sorry dude i dont have any change on me');
     }
@@ -107,6 +122,7 @@ module.exports = [
   {
     name: 'bitcoin',
     full_string: true,
+    public: true,
     execute(msg, argstring, command, args) {
       msg.reply('I have hacked all your devices if you do not give 1000000 bitcoin then you will never get them back');
     }
@@ -114,6 +130,7 @@ module.exports = [
   {
     name: 'unretard',
     full_string: true,
+    public: true,
     execute(msg, argstring, command, args) {
       msg.reply('Sorry But i am unable to do that.');
     }
@@ -121,6 +138,7 @@ module.exports = [
   {
     name: 'techku',
     full_string: true,
+    public: true,
     execute(msg, argstring, command, args) {
       msg.reply('what are you doing here bitch lil bitch ass little bitch smh head bitch go away bitch what you say bitch smh my head smh smh bitch bitch bitch bitch boi stupid little bitch ass bitch bitch bitch boi little bitch');
     }
@@ -128,6 +146,7 @@ module.exports = [
   {
     name: 'shut',
     full_string: true,
+    public: true,
     execute(msg, argstring, command, args) {
       var shut = new Discord.RichEmbed() .setImage('https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse2.mm.bing.net%2Fth%3Fid%3DOIP.xJlsa-JHMknJieoqdOqJXgHaHD%26pid%3DApi&f=1')
         .setTitle('shut')
@@ -138,6 +157,7 @@ module.exports = [
   {
     name: 'joke',
     full_string: false,
+    public: true,
     execute(msg, argstring, command, args) {
       if (!args[0] || args[0] == '1') {
         msg.reply('what do you call the security at a samsung store? GUARDIANS OF THE GALAXY he he he he');
@@ -151,6 +171,7 @@ module.exports = [
   {
     name: 'fun fact',
     full_string: false,
+    public: true,
     execute(msg, argstring, command, args) {
       if (!args[0] || args[0] == '1') {
         msg.reply('Did you know that Mars used to have an ocean?');
@@ -166,6 +187,7 @@ module.exports = [
   {
     name: 'pun',
     full_string: false,
+    public: true,
     execute(msg, argstring, command, args) {
       if (args[0] == '1') {
         msg.reply('The first computer dates back to Adam and Eve. It was an Apple with limited memory, just one byte. And then everything crashed.');
@@ -185,6 +207,7 @@ module.exports = [
   {
     name: 'meme',
     full_string: false,
+    public: true,
     execute(msg, argstring, command, args) {
       if (!args[0] || args[0] == '1') {
         var meme = new Discord.RichEmbed() .setImage('https://i.redd.it/eigm3xcqb4021.jpg'); 
@@ -222,6 +245,7 @@ module.exports = [
   {
     name: 'trump',
     full_string: false,
+    public: true,
     execute(msg, argstring, command, args) {
       if (!args[0] || args[0] == '1') {
         var trump = new Discord.RichEmbed() .setImage('http://worldwideinterweb.com/wp-content/uploads/2016/03/best-meme-of-the-day.jpg')
@@ -279,6 +303,7 @@ module.exports = [
   {
     name: 'corona meme',
     full_string: false,
+    public: true,
     execute(msg, argstring, command, args) {
       if (!args[0] || args[0] == '1') {
         var coronameme = new Discord.RichEmbed() .setImage('https://cdn.discordapp.com/attachments/534487318992650269/688491541299200081/Image26.jpg')
@@ -311,6 +336,7 @@ module.exports = [
   {
     name: 'wholesome',
     full_string: false,
+    public: true,
     execute(msg, argstring, command, args) {
       if (!args[0] || args[0] == '1') {
         var wholesome = new Discord.RichEmbed() .setImage('https://i.redditmedia.com/CsTEXpv1gA2KMS4WeT8lKIhjzr4LCc-Kb5XxBh3wBq4.jpg?w=320&s=6aff41d1c189cf568d9af5fd27def234'); 
@@ -358,6 +384,7 @@ module.exports = [
   {
     name: 'cute animal',
     full_string: false,
+    public: true,
     execute(msg, argstring, command, args) {
       if (!args[0] || args[0] == '1') {
         var cuteanimal = new Discord.RichEmbed() .setImage('https://i.ytimg.com/vi/6l2ISD5mE9I/hqdefault.jpg'); 
@@ -395,6 +422,7 @@ module.exports = [
   {
     name: 'doggo',
     full_string: false,
+    public: true,
     execute(msg, argstring, command, args) {
       if (!args[0] || args[0] == '1') {
         var doggo = new Discord.RichEmbed() .setImage('https://media.tenor.co/images/2e92887462db1626e7c1007c857ba548/tenor.gif')
@@ -437,6 +465,7 @@ module.exports = [
   {
     name: 'uwu',
     full_string: false,
+    public: true,
     execute(msg, argstring, command, args) {
       if (!args[0] || args[0] == '1') {
         var uwu = new Discord.RichEmbed() .setImage('https://media.tenor.co/images/7a2703befdd934a9e54ac4d44ae146e1/tenor.gif')
@@ -454,6 +483,7 @@ module.exports = [
   {
     name: 'surreal',
     full_string: false,
+    public: true,
     execute(msg, argstring, command, args) {
       if (!args[0] || args[0] == '1') {
         var surreal = new Discord.RichEmbed() .setImage('https://vignette.wikia.nocookie.net/surrealmemes/images/6/67/Received_775602375964559.jpeg/revision/latest?cb=20180521211008');
@@ -467,6 +497,7 @@ module.exports = [
   {
     name: 'minecraft',
     full_string: false,
+    public: true,
     execute(msg, argstring, command, args) {
       if (!args[0] || args[0] == '1') {
         var minecraft = new Discord.RichEmbed() .setImage('http://1.bp.blogspot.com/-SqTOrZ9Hx4U/UHs0PK1yEUI/AAAAAAAAAFg/9Sz8LMNhkYQ/s1600/tumblr_m85obfgM221rcl24wo1_500.gif');
@@ -480,6 +511,7 @@ module.exports = [
   {
     name: 'fortnite',
     full_string: false,
+    public: true,
     execute(msg, argstring, command, args) {
       var fortnite = new Discord.RichEmbed() .setImage('https://media.tenor.com/images/98aa4ee2eb9834fbc140e792f9a55472/tenor.gif');
       msg.channel.send(fortnite);
@@ -488,6 +520,7 @@ module.exports = [
   {
     name: 'gamer',
     full_string: false,
+    public: true,
     execute(msg, argstring, command, args) {
       var gamer = new Discord.RichEmbed() .setImage('https://media.giphy.com/media/g0KiswZX0Hg0hUBvUr/giphy.gif');
       msg.channel.send(gamer);
@@ -496,6 +529,7 @@ module.exports = [
   {
     name: 'true gamer',
     full_string: true,
+    public: true,
     execute(msg, argstring, command, args) {
       var truegamer = new Discord.RichEmbed() .setImage('https://cdn.discordapp.com/attachments/534491966982062110/685510900609974322/ESbpeIcXsAERN9-.jpg')
         .setTitle('Now this is what a True gamer looks like')
@@ -506,6 +540,7 @@ module.exports = [
   {
     name: 'monkaS',
     full_string: true,
+    public: true,
     execute(msg, argstring, command, args) {
       var monkas = new Discord.RichEmbed() .setImage('https://media1.tenor.com/images/6c5e42878a150c038925bb3ff63077c5/tenor.gif?itemid=12246365')
         .setTitle('MonkaS')
@@ -516,6 +551,7 @@ module.exports = [
   {
     name: 'segue',
     full_string: true,
+    public: false,
     execute(msg, argstring, command, args) {
       if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025') return msg.channel.send('segue?');
       msg.channel.send('segue?');
@@ -529,6 +565,7 @@ module.exports = [
   {
     name: 'hack',
     full_string: false,
+    public: true,
     execute(msg, argstring, command, args) {
       if (!args[0] || args[0].toLowerCase() == 'thebotcat') {
         msg.reply('dont hack me plz');
@@ -542,6 +579,7 @@ module.exports = [
   {
     name: 'me lon',
     full_string: false,
+    public: true,
     execute(msg, argstring, command, args) {
       if (!args[0] || args[0] == '1') {
         // https://tenor.com/view/fish-pog-fish-poggers-fish-pog-champ-poggers-gif-16548474
@@ -557,6 +595,7 @@ module.exports = [
   {
     name: 'mulan',
     full_string: false,
+    public: true,
     execute(msg, argstring, command, args) {
       // https://tenor.com/view/mulan-face-palm-gif-8266780
       var mulan = new Discord.RichEmbed() .setImage('https://media1.tenor.com/images/bda352877609bc1d662a4684ce5d82f1/tenor.gif?itemid=8266780');
@@ -566,6 +605,7 @@ module.exports = [
   {
     name: 'poggers fish',
     full_string: false,
+    public: true,
     execute(msg, argstring, command, args) {
       if (!args[0] || args[0] == '1') {
         // https://tenor.com/view/fish-pog-fish-poggers-fish-pog-champ-poggers-gif-16548474
@@ -581,6 +621,7 @@ module.exports = [
   {
     name: 'big boi',
     full_string: true,
+    public: true,
     execute(msg, argstring, command, args) {
       var bigboi = new Discord.RichEmbed() .setImage('https://cdn.discordapp.com/attachments/681900183063494715/684825699588112394/eeeeee.png')
         .setTitle('he is chonky')
@@ -591,6 +632,7 @@ module.exports = [
   {
     name: 'hug',
     full_string: false,
+    public: true,
     execute(msg, argstring, command, args) {
       var hug = new Discord.RichEmbed() .setImage('https://media.giphy.com/media/f4HpCDvF84oh2/giphy.gif')
         .setTitle('Heres a hug')
@@ -601,6 +643,7 @@ module.exports = [
   {
     name: 'bruh',
     full_string: false,
+    public: true,
     execute(msg, argstring, command, args) {
       var bruh = new Discord.RichEmbed() .setImage('https://cdn.discordapp.com/attachments/681482685751099579/681482802822512689/image0.jpg')
         .setTitle('i still question why this exists....')
@@ -611,6 +654,7 @@ module.exports = [
   {
     name: 'patreon',
     full_string: false,
+    public: true,
     execute(msg, argstring, command, args) {
       var patreon = new Discord.RichEmbed() .setImage('https://pmcvariety.files.wordpress.com/2017/05/patreon-logo-e1495085041531.jpg?w=700&h=393&crop=1')
         .setTitle('if you would like too support me in bettering my bot or other things support me here! https://www.patreon.com/user?u=19323140&fan_landing=true ')
@@ -621,6 +665,7 @@ module.exports = [
   {
     name: 'discord',
     full_string: false,
+    public: true,
     execute(msg, argstring, command, args) {
       var discord = new Discord.RichEmbed() .setImage('http://www.fraghero.com/wp-content/uploads/2017/03/discord_logo__1489184841_48114.jpg')
         .setTitle('This is The thebotcats discord bot server if you wanna join click the link! https://discord.gg/NamrBZc')

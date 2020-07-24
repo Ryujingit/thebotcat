@@ -2,6 +2,8 @@ module.exports = [
   {
     name: 'avatar',
     full_string: false,
+    description: '`!avatar` displays your avatar\n`!avatar @someone` displays someone\'s avatar',
+    public: true,
     execute(msg, argstring, command, args) {
       let targetMember;
       if (!msg.mentions.members.first()) {
@@ -19,6 +21,8 @@ module.exports = [
   {
     name: 'coinflip',
     full_string: false,
+    description: '`!coinflip` returns tails or heads with 50% probability each',
+    public: true,
     execute(msg, argstring, command, args) {
       if (Math.random() < 0.5) {
         msg.channel.send('I\'m flipping a coin, and the result is...: tails!');
@@ -30,6 +34,8 @@ module.exports = [
   {
     name: 'rps',
     full_string: false,
+    description: '`!rps rock|paper|scissors` plays a game of rock paper scissors with me, where I pick one randomly',
+    public: true,
     execute(msg, argstring, command, args) {
       let replies = ['rock', 'paper', 'scissors'];
       
