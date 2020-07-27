@@ -8,30 +8,6 @@ module.exports = [
     }
   },
   {
-    name: 'Ameyyuu',
-    full_string: true,
-    public: true,
-    execute(msg, argstring, command, args) {
-      msg.reply('Ameyyuu is who made me thanks for asking!');
-    }
-  },
-  {
-    name: 'commit die',
-    full_string: true,
-    public: true,
-    execute(msg, argstring, command, args) {
-      msg.reply('well just commit die?');
-    }
-  },
-  {
-    name: 'do i suck',
-    full_string: true,
-    public: true,
-    execute(msg, argstring, command, args) {
-      msg.reply('I mean i suppose so but idk ask someone else im only a robot');
-    }
-  },
-  {
     name: 'who am i',
     full_string: true,
     public: true,
@@ -64,30 +40,6 @@ module.exports = [
     }
   },
   {
-    name: 'reee',
-    full_string: true,
-    public: true,
-    execute(msg, argstring, command, args) {
-      msg.reply('REEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE');
-    }
-  },
-  {
-    name: 'why am i stupid',
-    full_string: true,
-    public: true,
-    execute(msg, argstring, command, args) {
-      msg.reply('i dont know why are you stupid?');
-    }
-  },
-  {
-    name: 'ur mom gay',
-    full_string: true,
-    public: true,
-    execute(msg, argstring, command, args) {
-      msg.reply('well yeah she is...');
-    }
-  },
-  {
     name: 'bot',
     full_string: true,
     public: true,
@@ -96,35 +48,11 @@ module.exports = [
     }
   },
   {
-    name: 'goose',
-    full_string: true,
-    public: true,
-    execute(msg, argstring, command, args) {
-      msg.reply('Honk');
-    }
-  },
-  {
-    name: 'system 32',
-    full_string: true,
-    public: true,
-    execute(msg, argstring, command, args) {
-      msg.reply('uninstall system 32 and you will get free vouchers');
-    }
-  },
-  {
     name: 'pls money',
     full_string: true,
     public: true,
     execute(msg, argstring, command, args) {
       msg.reply('oh sorry dude i dont have any change on me');
-    }
-  },
-  {
-    name: 'bitcoin',
-    full_string: true,
-    public: true,
-    execute(msg, argstring, command, args) {
-      msg.reply('I have hacked all your devices if you do not give 1000000 bitcoin then you will never get them back');
     }
   },
   {
@@ -141,6 +69,36 @@ module.exports = [
     public: true,
     execute(msg, argstring, command, args) {
       msg.reply('what are you doing here bitch lil bitch ass little bitch smh head bitch go away bitch what you say bitch smh my head smh smh bitch bitch bitch bitch boi stupid little bitch ass bitch bitch bitch boi little bitch');
+    }
+  },
+  {
+    name: 'goe mama',
+    full_string: true,
+    public: true,
+    execute(msg, argstring, command, args) {
+      msg.channel.send('goe mama fat!');
+    }
+  },
+  {
+    name: 'lamo',
+    full_string: false,
+    public: true,
+    execute(msg, argstring, command, args) {
+      if (!args[0]) {
+        return msg.channel.send('lamomamoemao');
+      }
+      let len = Number(args[0]);
+      if (!len || len < 4 || len > 100) return;
+      else {
+        len -= 4;
+        let text = '', lastchar = 'o';
+        let options = ['a', 'e', 'm', 'o'];
+        for (; len > 0; len--) {
+          text += lastchar = options.filter(x => x != lastchar)[Math.floor(Math.random() * 3)];
+        }
+        if (text[text.length - 1] != 'o') text += 'o';
+        msg.channel.send(`lamo${text}`);
+      }
     }
   },
   {
@@ -538,17 +496,6 @@ module.exports = [
     }
   },
   {
-    name: 'monkaS',
-    full_string: true,
-    public: true,
-    execute(msg, argstring, command, args) {
-      var monkas = new Discord.RichEmbed() .setImage('https://media1.tenor.com/images/6c5e42878a150c038925bb3ff63077c5/tenor.gif?itemid=12246365')
-        .setTitle('MonkaS')
-        .setFooter('MonkaSS');
-      msg.channel.send(monkas);
-    }
-  },
-  {
     name: 'segue',
     full_string: true,
     public: false,
@@ -649,17 +596,6 @@ module.exports = [
         .setTitle('i still question why this exists....')
         .setFooter('why does this exist');
       msg.channel.send(bruh);
-    }
-  },
-  {
-    name: 'patreon',
-    full_string: false,
-    public: true,
-    execute(msg, argstring, command, args) {
-      var patreon = new Discord.RichEmbed() .setImage('https://pmcvariety.files.wordpress.com/2017/05/patreon-logo-e1495085041531.jpg?w=700&h=393&crop=1')
-        .setTitle('if you would like too support me in bettering my bot or other things support me here! https://www.patreon.com/user?u=19323140&fan_landing=true ')
-        .setFooter('Thebotcats patreon');
-      msg.channel.send(patreon);
     }
   },
   {
