@@ -16,14 +16,6 @@ module.exports = [
     }
   },
   {
-    name: 'staff',
-    full_string: true,
-    public: true,
-    execute(msg, argstring, command, args) {
-      msg.reply('The staff are <@571752439263526913> <@525753318576750612> <@642796707138240534> <@434431665914511366> <@427874667227774976> Thats all!');
-    }
-  },
-  {
     name: 'temmie',
     full_string: true,
     public: true,
