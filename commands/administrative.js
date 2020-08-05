@@ -234,7 +234,7 @@ module.exports = [
         } else return msg.channel.send('Cannot unlock channel outside of this guild.');
       }
     }
-  },
+  },/*
   {
     name: 'resetnicknames',
     full_string: false,
@@ -265,7 +265,7 @@ module.exports = [
         }
       );
     }
-  },
+  },*/
   {
     name: 'kick',
     full_string: false,
