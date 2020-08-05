@@ -458,8 +458,8 @@ module.exports = [
     execute(msg, cmdstring, command, argstring, args) {
       if (!((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id)))
         return msg.channel.send('You do not have permissions to run this command.');
-      console.debug(`evaluating ${util.inspect(cmd)}`);
       let cmd = argstring, res;
+      console.debug(`evaluating ${util.inspect(cmd)}`);
       if (args.length == 2 && (args[0] == 'deez' && args[1] == 'nuts' || args[0] == 'goe' && args[1] == 'mama')) return msg.channel.send('no');
       try {
         res = eval(cmd);
@@ -485,8 +485,8 @@ module.exports = [
     execute(msg, cmdstring, command, argstring, args) {
       if (!((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id)))
         return msg.channel.send('You do not have permissions to run this command.');
-      console.debug(`evaluating (output voided) ${util.inspect(cmd)}`);
       let cmd = argstring, res;
+      console.debug(`evaluating (output voided) ${util.inspect(cmd)}`);
       try {
         res = eval(cmd);
         console.debug(res);
@@ -503,8 +503,8 @@ module.exports = [
     execute(msg, cmdstring, command, argstring, args) {
       if (!((!props.erg || msg.channel.id == '724006510576926810') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id)))
         return msg.channel.send('You do not have permissions to run this command.');
-      console.debug(`shell exec ${util.inspect(cmd)}`);
       let cmd = argstring, res;
+      console.debug(`shell exec ${util.inspect(cmd)}`);
       let proc = cp.exec(cmd, { timeout: 20000, windowsHide: true }, (err, stdout, stderr) => {
         procs.splice(procs.indexOf(proc), 1);
         if (err) {
