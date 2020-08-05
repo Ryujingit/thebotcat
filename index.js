@@ -50,7 +50,7 @@ var badwords = [
 
 var prefix = '!';
 
-var version = '1.3.5';
+var version = '1.3.5b';
 
 var commands = [];
 
