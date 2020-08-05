@@ -50,7 +50,7 @@ var badwords = [
 
 var prefix = '!';
 
-var version = '1.3.4';
+var version = '1.3.5';
 
 var commands = [];
 
@@ -82,24 +82,28 @@ if (!props.saved) {
         infochannel: '724006510576926810',
         mutelist: [],
         savedperms: {},
+        prefix: prefix,
       },
       '671477379482517516': {
         modroles: [],
         infochannel: '710670425318883409',
         mutelist: [],
         savedperms: {},
+        prefix: prefix,
       },
       '688806155530534931': {
         modroles: [],
         infochannel: '688806772382761040',
         mutelist: [],
         savedperms: {},
+        prefix: prefix,
       },
       '717268211246301236': {
         modroles: [],
         infochannel: '739314876182167602',
         mutelist: [],
         savedperms: {},
+        prefix: prefix,
       },
       'default': {
         modroles: [],
@@ -115,6 +119,26 @@ if (!props.saved) {
   };
   propsSave();
 }
+
+Object.defineProperty(props.saved.guilds.default, 'prefix', {
+  configurable: true,
+  enumerable: false,
+  get: () => prefix,
+  set: val => prefix = val,
+});
+
+// props.saved.guilds integrity check
+(() => {
+  let ks = Object.keys(props.saved.guilds), obj;
+  for (var i = 0; i < ks.length; i++) {
+    obj = props.saved.guilds[ks[i]];
+    if (!obj.modroles) obj.modroles = [];
+    if (obj.infochannel === undefined) obj.infochannel = null;
+    if (!obj.mutelist) obj.mutelist = [];
+    if (!obj.savedperms) obj.savedperms = {};
+    if (!obj.prefix) obj.prefix = prefix;
+  }
+})();
 
 function propsSave() {
   let val;
@@ -339,24 +363,27 @@ var messageHandler = msg => {
     if (dodelete) msg.delete();
   }
   
-  if (/^<@!?682719630967439378>$/.test(msg.content)) return msg.channel.send(`I am thebotcat version ${version}, prefix \`${prefix}\``);
+  let guilddata = props.saved.guilds[msg.guild ? msg.guild.id : 'default'];
+  let workingprefix = guilddata ? guilddata.prefix : props.saved.guilds.default.prefix;
   
-  if (!msg.content.startsWith(prefix) || !msg.guild) return;
+  if (/^<@!?682719630967439378>$/.test(msg.content)) return msg.channel.send(`I am Thebotcat version ${version}, prefix \`${workingprefix}\``);
   
-  // argstring = the part after the prefix, command and args in one big string
+  if (!msg.content.startsWith(workingprefix) || !msg.guild) return;
+  
+  // argstring = the part after the workingprefix, command and args in one big string
   // command = the actual command
   // args = array of arguments
-  var argstring = msg.content.slice(prefix.length).trim(), args, command;
+  var cmdstring = msg.content.slice(workingprefix.length).trim(), args, command;
   
   // this code loops through the commands array to see if the stated text matches any known command
   var didexecute = false;
   for (var i = 0; i < commands.length; i++) {
-    if (commands[i].full_string && commands[i].name == argstring || !commands[i].full_string && argstring.startsWith(commands[i].name)) {
+    if (commands[i].full_string && commands[i].name == cmdstring || !commands[i].full_string && cmdstring.startsWith(commands[i].name)) {
       command = commands[i].name;
-      if (argstring[command.length] != ' ' && argstring.length > command.length) continue;
-      let argsunsplit = argstring.slice(command.length + 1)
-      args = argsunsplit == '' ? [] : argsunsplit.split(' ');
-      commands[i].execute(msg, argstring, command, args);
+      if (cmdstring[command.length] != ' ' && cmdstring.length > command.length) continue;
+      let argstring = cmdstring.slice(command.length + 1);
+      args = argstring == '' ? [] : argstring.split(' ');
+      commands[i].execute(msg, cmdstring, command, argstring, args);
       didexecute = true;
       break;
     }

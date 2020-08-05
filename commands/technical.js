@@ -4,7 +4,7 @@ module.exports = [
     full_string: false,
     description: '`!version` prints the version of my code',
     public: true,
-    execute(msg, argstring, command, args) {
+    execute(msg, cmdstring, command, argstring, args) {
       msg.channel.send(`Thebotcat is version ${version}`);
     }
   },
@@ -13,7 +13,7 @@ module.exports = [
     full_string: false,
     description: '`!ping` checks my ping to the web and discord',
     public: true,
-    execute(msg, argstring, command, args) {
+    execute(msg, cmdstring, command, argstring, args) {
       msg.channel.send('Checking Ping').then(m => {
         let beforerequest = Date.now(), afterrequest;
         https.get('https://example.com', res => {
@@ -33,7 +33,7 @@ module.exports = [
     full_string: false,
     description: '`!help` to display number of commands\n`!help list` to list commands\n`!help <command>` to print help for command',
     public: true,
-    execute(msg, argstring, command, args) {
+    execute(msg, cmdstring, command, argstring, args) {
       if (args.length == 0) {
         msg.channel.send(`I have ${commands.filter(x => x.public).length} commands, run \`!help list\` to list them or \`!help <command>\` for help on a specific command.`);
       } else if (args[0] == 'list') {

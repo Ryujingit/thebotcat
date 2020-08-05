@@ -4,7 +4,7 @@ module.exports = [
     full_string: false,
     description: '`!avatar` displays your avatar\n`!avatar @someone` displays someone\'s avatar',
     public: true,
-    execute(msg, argstring, command, args) {
+    execute(msg, cmdstring, command, argstring, args) {
       let targetMember;
       if (!msg.mentions.members.first()) {
         targetMember = msg.guild.members.get(msg.author.id);
@@ -23,7 +23,7 @@ module.exports = [
     full_string: false,
     description: '`!coinflip` returns tails or heads with 50% probability each',
     public: true,
-    execute(msg, argstring, command, args) {
+    execute(msg, cmdstring, command, argstring, args) {
       if (Math.random() < 0.5) {
         msg.channel.send('I\'m flipping a coin, and the result is...: tails!');
       } else {
@@ -36,7 +36,7 @@ module.exports = [
     full_string: false,
     description: '`!rps rock|paper|scissors` plays a game of rock paper scissors with me, where I pick one randomly',
     public: true,
-    execute(msg, argstring, command, args) {
+    execute(msg, cmdstring, command, argstring, args) {
       let replies = ['rock', 'paper', 'scissors'];
       
       let uReply = args[0];
@@ -65,9 +65,9 @@ module.exports = [
     full_string: false,
     description: '`!calc <expression>` calculates the result of a mathematical expression using math.js evaluate',
     public: true,
-    execute(msg, argstring, command, args) {
+    execute(msg, cmdstring, command, argstring, args) {
       if (!props.saved.feat.calc) return msg.channel.send('Calculation features are disabled');
-      let expr = argstring.slice(5), res, text;
+      let expr = argstring, res, text;
       console.debug(`calculating from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(expr)}`);
       let scope;
       if (!(scope = props.saved.calc_scopes[msg.author.id])) {
@@ -92,7 +92,7 @@ module.exports = [
     full_string: false,
     description: '`!calc_scopeview` returns JSON of your variable scope',
     public: true,
-    execute(msg, argstring, command, args) {
+    execute(msg, cmdstring, command, argstring, args) {
       if (!props.saved.feat.calc) return msg.channel.send('Calculation features are disabled');
       console.debug(`calc_scopeview from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}`);
       let scope = props.saved.calc_scopes[msg.author.id], text;
@@ -122,7 +122,7 @@ module.exports = [
     full_string: false,
     description: '`!calc_scopeclear` wipes your scope for the `!calc` command clean',
     public: true,
-    execute(msg, argstring, command, args) {
+    execute(msg, cmdstring, command, argstring, args) {
       if (!props.saved.feat.calc) return msg.channel.send('Calculation features are disabled');
       console.debug(`calc_scopeclear from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}`);
       let scope = props.saved.calc_scopes[msg.author.id], text;
