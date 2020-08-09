@@ -23,6 +23,7 @@ global.savecontext = true;
 
 //                 Ryujin                coolguy284            amrpowershot
 var developers = ['405091324572991498', '312737536546177025'];
+var confirmdevelopers = [];
 
 var mutelist = [];
 
@@ -50,7 +51,7 @@ var badwords = [
 
 var prefix = '!';
 
-var version = '1.3.5b';
+var version = '1.3.6-beta-1';
 
 var commands = [];
 
@@ -112,7 +113,9 @@ if (!props.saved) {
         savedperms: {},
       }
     },
-    calc_scopes: {},
+    calc_scopes: {
+      shared: {},
+    },
     sendmsgid: '739603137601601647',
     lastnum: 5000,
     lastnumid: '739532317537599509',
@@ -127,7 +130,8 @@ Object.defineProperty(props.saved.guilds.default, 'prefix', {
   set: val => prefix = val,
 });
 
-// props.saved.guilds integrity check
+// props.saved integrity checks
+if (!props.saved.calc_scopes.shared) props.saved.calc_scopes.shared = {};
 (() => {
   let ks = Object.keys(props.saved.guilds), obj;
   for (var i = 0; i < ks.length; i++) {
@@ -137,8 +141,29 @@ Object.defineProperty(props.saved.guilds.default, 'prefix', {
     if (!obj.mutelist) obj.mutelist = [];
     if (!obj.savedperms) obj.savedperms = {};
     if (!obj.prefix) obj.prefix = prefix;
+    Object.defineProperty(obj, 'voice', {
+      configurable: true,
+      enumerable: false,
+      writeable: true,
+      value: {
+        channel: null,
+        connection: null,
+        dispatcher: null,
+        songlist: [],
+      },
+    });
+  }
+  ks = Object.keys(props.saved.calc_scopes);
+  for (var i = 0; i < ks.length; i++) {
+    obj = props.saved.calc_scopes[ks[i]];
+    Object.defineProperty(obj, 'shared', {
+      configurable: true,
+      enumerable: false,
+      get: () => props.saved.calc_scopes.shared,
+    });
   }
 })();
+propsSave();
 
 function propsSave() {
   let val;
@@ -166,9 +191,9 @@ var infomsg = function (msg, val) {
 };
 var logmsg = function (val) {
   return client.channels.get('736426551050109010').send(val);
-}
+};
 
-Object.assign(global, { starttime, https, fs, util, cp, Discord, common, client, math, developers, mutelist, badwords, commands, procs, props, propsSave, schedulePropsSave, indexeval, infomsg, logmsg, addBadWord, removeBadWord, addCommand, addCommands, removeCommand, removeCommands });
+Object.assign(global, { starttime, https, fs, util, cp, Discord, common, client, math, developers, confirmdevelopers, mutelist, badwords, commands, procs, props, propsSave, schedulePropsSave, indexeval, infomsg, logmsg, addBadWord, removeBadWord, addCommand, addCommands, removeCommand, removeCommands });
 Object.defineProperties(global, {
   prefix: {
     configurable: true,
@@ -187,7 +212,13 @@ Object.defineProperties(global, {
     enumerable: true,
     get() { return messageHandler; },
     set(val) { messageHandler = val; },
-  }
+  },
+  voiceStateUpdateHandler: {
+    configurable: true,
+    enumerable: true,
+    get() { return voiceStateUpdateHandler; },
+    set(val) { return voiceStateUpdateHandler = val; },
+  },
 });
 
 function addBadWord(word, msgreply) { badwords.push([word.toLowerCase(), msgreply]); }
@@ -360,7 +391,14 @@ var messageHandler = msg => {
         }
       }
     }
-    if (dodelete) msg.delete();
+    if (dodelete) {
+      msg.delete();
+      if (msg.content.toLowerCase() != 'heck') {
+        infomsg(msg, `user ${msg.author.tag} (id ${msg.author.id}) said ${util.inspect(msg.content)} in channel <#${msg.channel.id}> (id ${msg.channel.id})`);
+      } else {
+        logmsg(`user ${msg.author.tag} (id ${msg.author.id}) said ${util.inspect(msg.content)} in channel <#${msg.channel.id}> (id ${msg.channel.id})`);
+      }
+    }
   }
   
   let guilddata = props.saved.guilds[msg.guild ? msg.guild.id : 'default'];
@@ -376,36 +414,44 @@ var messageHandler = msg => {
   var cmdstring = msg.content.slice(workingprefix.length).trim(), args, command;
   
   // this code loops through the commands array to see if the stated text matches any known command
-  var didexecute = false;
   for (var i = 0; i < commands.length; i++) {
     if (commands[i].full_string && commands[i].name == cmdstring || !commands[i].full_string && cmdstring.startsWith(commands[i].name)) {
       command = commands[i].name;
-      if (cmdstring[command.length] != ' ' && cmdstring.length > command.length) continue;
+      if (cmdstring[command.length] != ' ' && cmdstring[command.length] != '\n' && cmdstring.length > command.length) continue;
       let argstring = cmdstring.slice(command.length + 1);
       args = argstring == '' ? [] : argstring.split(' ');
-      commands[i].execute(msg, cmdstring, command, argstring, args);
-      didexecute = true;
-      break;
+      return commands[i].execute(msg, cmdstring, command, argstring, args);
     }
+  }
+};
+
+var voiceStateUpdateHandler = (oldState, newState) => {
+  let guilddata = props.saved.guilds[newState.guild.id];
+  if (!guilddata) return;
+  if (newState.id == client.user.id && !newState.voiceChannelID) {
+    guilddata.voice.channel = null;
+    guilddata.voice.connection = null;
+    guilddata.voice.dispatcher = null;
+    guilddata.voice.songlist.splice(0, Infinity);
   }
 };
 
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
   
-  client.user.setActivity(`! | ${client.guilds.size} servers | wash your hands kids`);
+  client.user.setActivity(`${prefix} | ${client.guilds.size} servers | wash your hands kids`);
 });
 
 client.on('guildCreate', guild => {
   console.log(`Joined a new guild: ${guild.name}`);
   
-  client.user.setActivity(`! | ${client.guilds.size} servers | wash your hands kids`);
+  client.user.setActivity(`${prefix} | ${client.guilds.size} servers | wash your hands kids`);
 });
 
 client.on('guildDelete', guild => {
   console.log(`Left a guild: ${guild.name}`);
   
-  client.user.setActivity(`! | ${client.guilds.size} servers | wash your hands kids`);
+  client.user.setActivity(`${prefix} | ${client.guilds.size} servers | wash your hands kids`);
 });
 
 client.on('reconnecting', () => {
@@ -425,6 +471,15 @@ client.on('message', msg => {
   }
 });
 
+client.on('voiceStateUpdate', (oldState, newState) => {
+  try {
+    voiceStateUpdateHandler(oldState, newState);
+  } catch (e) {
+    console.error('ERROR, something bad happened');
+    console.error(e.stack);
+  }
+});
+
 process.on('uncaughtException', function (err) {
   console.error('ERROR: an exception was uncaught by an exception handler.  This is very bad and could leave the bot in an unstable state.  If this is seen contact coolguy284 or another developer immediately.');
   console.error(err);
@@ -436,5 +491,11 @@ process.on('unhandledRejection', function (reason, p) {
 });
 
 process.on('exit', propsSave);
+
+process.on('SIGINT', () => {
+  console.log('\nShutting down');
+  propsSave();
+  process.exit();
+});
 
 require('./normal.js');

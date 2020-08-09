@@ -1,6 +1,6 @@
 {
   "name": "discordbot",
-  "version": "1.3.5b",
+  "version": "1.3.6-beta-1",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "discord.js": "^11.6.4"
+    "discord.js": "^11.6.4",
+    "node-opus": "^0.3.3"
   }
 }

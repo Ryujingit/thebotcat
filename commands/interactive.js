@@ -15,7 +15,7 @@ module.exports = [
       let avatarEmbed = new Discord.RichEmbed()
         .setImage(targetMember.user.displayAvatarURL)
         .setColor(targetMember.displayHexColor);
-      msg.channel.send(avatarEmbed);
+      return msg.channel.send(avatarEmbed);
     }
   },
   {
@@ -25,9 +25,9 @@ module.exports = [
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
       if (Math.random() < 0.5) {
-        msg.channel.send('I\'m flipping a coin, and the result is...: tails!');
+        return msg.channel.send('I\'m flipping a coin, and the result is...: tails!');
       } else {
-        msg.channel.send('I\'m flipping a coin, and the result is...: heads!');
+        return msg.channel.send('I\'m flipping a coin, and the result is...: heads!');
       }
     }
   },
@@ -50,14 +50,61 @@ module.exports = [
       let logbegin = `rock/paper/scissors requested by ${msg.author.tag}, they chose ${uReply}, i chose ${result}, `;
       if (status == 0) {
         logmsg(logbegin + 'tie');
-        msg.channel.send('It\'s a tie! We had the same choice.');
+        return msg.channel.send('It\'s a tie! We had the same choice.');
       } else if (status == 1) {
         logmsg(logbegin + 'i won');
-        msg.channel.send('I won!');
+        return msg.channel.send('I won!');
       } else if (status == -1) {
         logmsg(logbegin + 'they won');
-        msg.channel.send('You won!');
+        return msg.channel.send('You won!');
       }
+    }
+  },
+  {
+    name: 'join',
+    full_string: false,
+    description: '`!join` for me to join the voice channel you are in',
+    public: true,
+    async execute(msg, cmdstring, command, argstring, args) {
+      let guilddata;
+      if (!(guilddata = props.saved.guilds[msg.guild.id])) return msg.channel.send('Error: cannot join voice channel, guild not in database');
+      if (!msg.member.voiceChannelID) return msg.channel.send('You are not in a voice channel.');
+      let channel = client.channels.get(msg.member.voiceChannelID);
+      let channelPerms = channel.permissionsFor(msg.member), channelFull = channel.full;
+      if (channelFull && !(
+          common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || channelPerms.hasPermission('MOVE_MEMBERS')
+        ) || !channelFull && !(
+          common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || channelPerms.hasPermission('MOVE_MEMBERS') || channelPerms.hasPermission('CONNECT')
+        )) return msg.channel.send('You do not have permission to get me to join the voice channel you are in.');
+      try {
+        guilddata.voice.channel = channel
+        guilddata.voice.connection = await channel.join();
+        return msg.channel.send(`Joined channel <#${channel.id}>`);
+      } catch (e) {
+        console.error(e);
+        return msg.channel.send(`Error in joining channel <#${channel.id}>`);
+      }
+    }
+  },
+  {
+    name: 'leave',
+    full_string: false,
+    description: '`!leave` for me to leave the voice channel you are in',
+    public: true,
+    execute(msg, cmdstring, command, argstring, args) {
+      let guilddata;
+      if (!(guilddata = props.saved.guilds[msg.guild.id])) return msg.channel.send('Error: cannot join voice channel, guild not in database');
+      let channel;
+      if (!(channel = guilddata.voice.channel)) return msg.channel.send('Not in a voice channel');
+      let vcmembers = channel.members.keyArray();
+      if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || channelPerms.hasPermission('MOVE_MEMBERS') || channelPerms.hasPermission('DISCONNECT') || vcmembers.length == 2 && vcmembers.includes(msg.author.id) || vcmembers.length == 1 && guilddata.voice.songlist.length == 0))
+        return msg.channel.send('You do not have permission to get me to leave the voice channel.');
+      guilddata.voice.connection.disconnect();
+      guilddata.voice.channel = null;
+      guilddata.voice.connection = null;
+      guilddata.voice.dispatcher = null;
+      guilddata.voice.songlist.splice(0, Infinity);
+      return msg.channel.send(`Left channel <#${channel.id}>`);
     }
   },
   {
@@ -74,17 +121,19 @@ module.exports = [
         scope = props.saved.calc_scopes[msg.author.id] = {};
       }
       global.safecontext = false;
+      let promise;
       try {
         res = math.evaluate(expr, scope);
-        msg.channel.send(text = `Result: ${res}`);
+        promise = msg.channel.send(text = `Result: ${res}`);
         console.log(text);
       } catch (e) {
-        msg.channel.send(text = e.toString());
+        promise =  msg.channel.send(text = e.toString());
         console.error(text);
       } finally {
         global.safecontext = true;
       }
       schedulePropsSave();
+      return promise;
     }
   },
   {
@@ -96,25 +145,27 @@ module.exports = [
       if (!props.saved.feat.calc) return msg.channel.send('Calculation features are disabled');
       console.debug(`calc_scopeview from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}`);
       let scope = props.saved.calc_scopes[msg.author.id], text;
+      let promise;
       if (scope) {
         try {
-          msg.channel.send(text = JSON.stringify(scope, math.replacer));
+          promise = msg.channel.send(text = JSON.stringify(scope, math.replacer));
           console.log(text);
         } catch (e) {
           console.error(e);
           try {
-            msg.channel.send(text = `Scope too big to fit in a discord message, variables:\n${Reflect.ownKeys(scope).join(', ')}`);
+            promise = msg.channel.send(text = `Scope too big to fit in a discord message, variables:\n${Reflect.ownKeys(scope).join(', ')}`);
             console.log(text);
           } catch (e) {
             console.error(e);
-            msg.channel.send(text = `Scope variables too big to fit in a discord message, use \`!calc_scopeclear\` to wipe`);
+            promise = msg.channel.send(text = `Scope variables too big to fit in a discord message, use \`!calc_scopeclear\` to wipe`);
             console.log(text);
           }
         }
       } else {
-        msg.channel.send(text = `You do not have a scope created yet, one is created when \`!calc\` is run`);
+        promise = msg.channel.send(text = `You do not have a scope created yet, one is created when \`!calc\` is run`);
         console.log(text);
       }
+      return promise;
     }
   },
   {
@@ -126,15 +177,17 @@ module.exports = [
       if (!props.saved.feat.calc) return msg.channel.send('Calculation features are disabled');
       console.debug(`calc_scopeclear from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}`);
       let scope = props.saved.calc_scopes[msg.author.id], text;
+      let promise;
       if (scope) {
         delete props.saved.calc_scopes[msg.author.id];
-        msg.channel.send(text = `Cleared scope successfully`);
+        promise = msg.channel.send(text = `Cleared scope successfully`);
         console.log(text);
         schedulePropsSave();
       } else {
-        msg.channel.send(text = `You do not have a scope created yet`);
+        promise = msg.channel.send(text = `You do not have a scope created yet`);
         console.log(text);
       }
+      return promise;
     }
   },
 ];

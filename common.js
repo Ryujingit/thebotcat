@@ -1,3 +1,46 @@
+function isDeveloper(msg) {
+  return (!props.erg || msg.channel.id == '724006510576926810' || msg.channel.id == '733760003055288350') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id);
+}
+
+function isConfirmDeveloper(msg) {
+  return confirmdevelopers.includes(msg.author.id);
+}
+
+function isOwner(msg) {
+  if (!msg.guild) return false;
+  return msg.guild.ownerID == msg.author.id;
+}
+
+function isAdmin(msg) {
+  if (!msg.guild) return false;
+  return msg.member.hasPermission('ADMINSTRATOR');
+}
+
+function isMod(msg) {
+  if (!msg.guild) return false;
+  if (!props.saved.guilds[msg.guild.id]) return false;
+  return Boolean(msg.member.roles.find(x => props.saved.guilds[msg.guild.id].modroles.includes(x.id)));
+}
+
+function getPermissions(msg) {
+  if (!msg.guild)
+    return {
+      developer: isDeveloper(msg),
+      confirmdeveloper: isConfirmDeveloper(msg),
+      owner: false,
+      admin: false,
+      mod: false,
+    };
+  else
+    return {
+      developer: isDeveloper(msg),
+      confirmdeveloper: isConfirmDeveloper(msg),
+      owner: isOwner(msg),
+      admin: isAdmin(msg),
+      mod: isMod(msg),
+    };
+}
+
 function serializePermissionOverwrites(channel) {
   return channel.permissionOverwrites.keyArray().map(x => channel.permissionOverwrites.get(x))
   .map(x =>
@@ -56,4 +99,11 @@ function rps(p1, p2) {
   }
 }
 
-module.exports = { serializePermissionOverwrites, partialDeserializePermissionOverwrites, completeDeserializePermissionOverwrites, serializedPermissionsEqual, rps };
+module.exports = {
+  isDeveloper, isConfirmDeveloper, isOwner, isAdmin, isMod,
+  getPermissions,
+  serializePermissionOverwrites,
+  partialDeserializePermissionOverwrites, completeDeserializePermissionOverwrites,
+  serializedPermissionsEqual,
+  rps,
+};
