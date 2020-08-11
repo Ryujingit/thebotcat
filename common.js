@@ -13,7 +13,7 @@ function isOwner(msg) {
 
 function isAdmin(msg) {
   if (!msg.guild) return false;
-  return msg.member.hasPermission('ADMINSTRATOR');
+  return msg.member.hasPermission('ADMINISTRATOR');
 }
 
 function isMod(msg) {
