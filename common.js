@@ -1,3 +1,5 @@
+var stream = require('stream');
+
 function isDeveloper(msg) {
   return (!props.erg || msg.channel.id == '724006510576926810' || msg.channel.id == '733760003055288350') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id);
 }
@@ -99,6 +101,41 @@ function rps(p1, p2) {
   }
 }
 
+class BufferStream extends stream.Duplex {
+  constructor(options) {
+    if (!options) options = {};
+    super(options);
+    this.bufferSize = options.bufferSize || 2 ** 20;
+    this.chunks = [];
+    this.chunkslength = 0;
+    this.chunkcb = null;
+    this.dopush = true;
+  }
+  _write(chunk, enc, cb) {
+    this.chunks.push(chunk);
+    this.chunkslength += chunk.length;
+    if (this.chunkslength < this.bufferSize) {
+      cb();
+      if (this.dopush) this._read();
+    } else {
+      this.chunkcb = cb;
+      if (this.dopush) this._read();
+    }
+  }
+  _read(size) {
+    this.dopush = true;
+    while (this.dopush && this.chunks.length > 0) {
+      let buf = this.chunks.splice(0, 1)[0];
+      this.dopush = this.push(buf);
+      this.chunkslength -= buf.length;
+      if (this.chunkcb && this.chunkslength < this.bufferSize) {
+        this.chunkcb();
+        this.chunkcb = null;
+      }
+    }
+  }
+}
+
 module.exports = {
   isDeveloper, isConfirmDeveloper, isOwner, isAdmin, isMod,
   getPermissions,
@@ -106,4 +143,5 @@ module.exports = {
   partialDeserializePermissionOverwrites, completeDeserializePermissionOverwrites,
   serializedPermissionsEqual,
   rps,
+  BufferStream,
 };

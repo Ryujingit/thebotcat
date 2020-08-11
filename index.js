@@ -4,10 +4,13 @@ var https = require('https');
 var fs = require('fs');
 var util = require('util');
 var cp = require('child_process');
+var stream = require('stream');
 var Discord = require('discord.js');
+var ytdl;
+try { ytdl = require('ytdl-core'); } catch (e) { ytdl = null; }
 var common = require('./common.js');
-var client = new Discord.Client();
 var math = require('./math.min.js');
+var client = new Discord.Client();
 math.config({ number: 'BigNumber' });
 math.oldimport = math.import.bind(math);
 math.oldcreateUnit = math.createUnit.bind(math);
@@ -41,8 +44,8 @@ var badwords = [
     adminbypass&4: server mod roles
   */
   { enabled: true, type: 9, adminbypass: 0, word: 'heck', retailiation: 'Refrain from using that heck word you frick' },
-  { enabled: true, type: 11, adminbypass: 0, word: 'nigger', retailiation: 'You said the n word.  Mods can see this message and you will get perm banned.' },
-  { enabled: true, type: 11, adminbypass: 0, word: 'faggot', retailiation: 'You said fa***t.  Mods can see this message and you will get perm banned.' },
+  { enabled: true, type: 11, adminbypass: 0, word: 'nigger', retailiation: 'You said the n word.  Mods can see this message and you will get perm banned. (message content $(rcontent))' },
+  { enabled: true, type: 11, adminbypass: 0, word: 'faggot', retailiation: 'You said fa***t.  Mods can see this message and you will get perm banned. (message content $(rcontent))' },
   { enabled: false, type: 12, adminbypass: 0, word: /(?:\bu[  /-]*w[  /-]*u\b)|(?:\bo[  /-]*w[  /-]*o\b)/, retailiation: 'uwu or owo are blacklisted and you will get banned' },
   { enabled: false, type: 4, adminbypass: 0, word: '███████╗███████╗\n██╔════╝╚════██║\n█████╗░░░░███╔═╝\n██╔══╝░░██╔══╝░░\n███████╗███████╗\n╚══════╝╚══════╝', retailiation: 'at this point im just gonna say f you' },
   { enabled: false, type: 12, adminbypass: 0, word: /(?:\bp[  /-]*p\b)/, retailiation: 'pp is blacklisted and you will get banned' },
@@ -51,7 +54,7 @@ var badwords = [
 
 var prefix = '!';
 
-var version = '1.3.6-beta-1';
+var version = '1.3.6-beta-2';
 
 var commands = [];
 
@@ -78,6 +81,12 @@ if (!props.saved) {
       calc: false,
     },
     guilds: {
+      'default': {
+        modroles: [],
+        infochannel: '736426551050109010',
+        mutelist: [],
+        savedperms: {},
+      },
       '711668012528304178': {
         modroles: ['730919511284252754'],
         infochannel: '724006510576926810',
@@ -94,7 +103,7 @@ if (!props.saved) {
       },
       '688806155530534931': {
         modroles: [],
-        infochannel: '688806772382761040',
+        infochannel: '736426551050109010',
         mutelist: [],
         savedperms: {},
         prefix: prefix,
@@ -106,20 +115,20 @@ if (!props.saved) {
         savedperms: {},
         prefix: prefix,
       },
-      'default': {
+      '475143894074392580': {
         modroles: [],
-        infochannel: '724006510576926810',
+        infochannel: '509071244340232193',
         mutelist: [],
         savedperms: {},
-      }
+        prefix: prefix,
+      },
     },
-    calc_scopes: {
-      shared: {},
-    },
-    sendmsgid: '739603137601601647',
+    calc_scopes: {},
+    sendmsgid: '741850132672151604',
     lastnum: 5000,
     lastnumid: '739532317537599509',
   };
+  Object.assign(props.saved.calc_scopes, JSON.parse('{"shared":{"vars":{"te":"when thebotcat te <@!312737536546177025>","woosh":{"mathjs":"DenseMatrix","data":["Gor manam","Gie mama","Goem a ma"],"size":[3]}}},"312737536546177025":{"v":{"mathjs":"BigNumber","value":"45"},"vars":{"te":"when thebotcat te <@!312737536546177025>","woosh":{"mathjs":"DenseMatrix","data":["Gor manam","Gie mama","Goem a ma"],"size":[3]}}},"386966483978158080":{"y":{"mathjs":"BigNumber","value":"334"}}}', math.reviver));
   propsSave();
 }
 
@@ -149,7 +158,13 @@ if (!props.saved.calc_scopes.shared) props.saved.calc_scopes.shared = {};
         channel: null,
         connection: null,
         dispatcher: null,
-        songlist: [],
+        proc: null,
+        procpipe: null,
+        proc2: null,
+        proc2pipe: null,
+        songslist: [],
+        volume: null,
+        loop: null,
       },
     });
   }
@@ -186,14 +201,16 @@ var indexeval = function (val) { return eval(val); };
 var infomsg = function (msg, val) {
   let guildinfo, channelid;
   if ((guildinfo = msg.guild ? props.saved.guilds[msg.guild.id] : undefined) && (channelid = guildinfo.infochannel) || (guildinfo = props.saved.guilds['default']) && (channelid = guildinfo.infochannel)) {
+    console.log(`infomsg for ${msg.guild.name}: ${val}`);
     return client.channels.get(channelid).send(val);
   }
 };
 var logmsg = function (val) {
+  console.log(`logmsg ${val}`);
   return client.channels.get('736426551050109010').send(val);
 };
 
-Object.assign(global, { starttime, https, fs, util, cp, Discord, common, client, math, developers, confirmdevelopers, mutelist, badwords, commands, procs, props, propsSave, schedulePropsSave, indexeval, infomsg, logmsg, addBadWord, removeBadWord, addCommand, addCommands, removeCommand, removeCommands });
+Object.assign(global, { starttime, https, fs, util, cp, stream, Discord, ytdl, common, math, client, developers, confirmdevelopers, mutelist, badwords, commands, procs, props, propsSave, schedulePropsSave, indexeval, infomsg, logmsg, addBadWord, removeBadWord, addCommand, addCommands, removeCommand, removeCommands });
 Object.defineProperties(global, {
   prefix: {
     configurable: true,
@@ -376,16 +393,16 @@ var messageHandler = msg => {
             case 0: break;
             case 1:
               if (content != word.word) break;
-              dodelete = true; msg.reply(word.retailiation); break;
+              dodelete = true; msg.reply(word.retailiation.replace(/\$\(rcontent\)/g, msg.content.length < 1800 ? util.inspect(msg.content) : `Error: message length over 1800 characters`)); break;
             case 2:
               if (!content.split(/ +/g).some(x => x == word.word)) break;
-              dodelete = true; msg.reply(word.retailiation); break;
+              dodelete = true; msg.reply(word.retailiation.replace(/\$\(rcontent\)/g, msg.content.length < 1800 ? util.inspect(msg.content) : `Error: message length over 1800 characters`)); break;
             case 3:
               if (!content.includes(word.word)) break;
-              dodelete = true; msg.reply(word.retailiation); break;
+              dodelete = true; msg.reply(word.retailiation.replace(/\$\(rcontent\)/g, msg.content.length < 1800 ? util.inspect(msg.content) : `Error: message length over 1800 characters`)); break;
             case 4:
               if (!word.word.test(content)) break;
-              dodelete = true; msg.reply(word.retailiation); break;
+              dodelete = true; msg.reply(word.retailiation.replace(/\$\(rcontent\)/g, msg.content.length < 1800 ? util.inspect(msg.content) : `Error: message length over 1800 characters`)); break;
             default: break;
           }
         }
@@ -429,10 +446,18 @@ var voiceStateUpdateHandler = (oldState, newState) => {
   let guilddata = props.saved.guilds[newState.guild.id];
   if (!guilddata) return;
   if (newState.id == client.user.id && !newState.voiceChannelID) {
+    try { guilddata.voice.proc.kill(); } catch (e) {}
+    try { guilddata.voice.proc2.kill(); } catch (e) {}
     guilddata.voice.channel = null;
     guilddata.voice.connection = null;
     guilddata.voice.dispatcher = null;
-    guilddata.voice.songlist.splice(0, Infinity);
+    guilddata.voice.proc = null;
+    guilddata.voice.procpipe = null;
+    guilddata.voice.proc2 = null;
+    guilddata.voice.proc2pipe = null;
+    guilddata.voice.songslist.splice(0, Infinity);
+    guilddata.voice.volume = null;
+    guilddata.voice.loop = null;
   }
 };
 
