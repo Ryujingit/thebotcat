@@ -87,10 +87,7 @@ module.exports = [
           common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || channelPerms.hasPermission('MOVE_MEMBERS') || channelPerms.hasPermission('CONNECT')
         )) return msg.channel.send('You do not have permission to get me to join the voice channel you are in.');
       try {
-        guilddata.voice.channel = channel
-        guilddata.voice.connection = await channel.join();
-        guilddata.voice.volume = 1;
-        guilddata.voice.loop = false;
+        await common.clientVCManager.join(guilddata.voice, channel);
         return msg.channel.send(`Joined channel <#${channel.id}>`);
       } catch (e) {
         console.error(e);
@@ -111,19 +108,7 @@ module.exports = [
       let vcmembers = channel.members.keyArray();
       if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || channelPerms.hasPermission('MOVE_MEMBERS') || channelPerms.hasPermission('DISCONNECT') || vcmembers.length == 2 && vcmembers.includes(msg.author.id) || vcmembers.length == 1 && guilddata.voice.songslist.length == 0))
         return msg.channel.send('You do not have permission to get me to leave the voice channel.');
-      try { guilddata.voice.proc.kill(); } catch (e) {}
-      try { guilddata.voice.proc2.kill(); } catch (e) {}
-      guilddata.voice.connection.disconnect();
-      guilddata.voice.channel = null;
-      guilddata.voice.connection = null;
-      guilddata.voice.dispatcher = null;
-      guilddata.voice.proc = null;
-      guilddata.voice.procpipe = null;
-      guilddata.voice.proc2 = null;
-      guilddata.voice.proc2pipe = null;
-      guilddata.voice.songslist.splice(0, Infinity);
-      guilddata.voice.volume = null;
-      guilddata.voice.loop = null;
+      common.clientVCManager.leave(guilddata.voice);
       return msg.channel.send(`Left channel <#${channel.id}>`);
     }
   },
@@ -138,16 +123,18 @@ module.exports = [
       if (!(guilddata = props.saved.guilds[msg.guild.id])) return msg.channel.send('Error: cannot adjust volume in voice channel, guild not in database');
       let channel;
       if (!(channel = guilddata.voice.channel)) return msg.channel.send('I\'m not in a voice channel');
-      if (!guilddata.voice.dispatcher) return msg.channel.send('Error: no song is playing');
-      let vcmembers = channel.members.keyArray();
-      if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || vcmembers.length == 2 && vcmembers.includes(msg.author.id)))
-        return msg.channel.send('Only admins and mods can change my volume, or someone who is alone with me in a voice channel.');
-      let wantedvolume = Number(args[0]);
-      if (isNaN(wantedvolume) || wantedvolume == Infinity || wantedvolume == -Infinity || wantedvolume < 0 || wantedvolume > 2)
-        return msg.channel.send('Volume out of bounds or not specified.');
-      guilddata.voice.dispatcher.setVolume(wantedvolume);
-      guilddata.voice.volume = wantedvolume;
-      return msg.channel.send(`Set playback volume to ${wantedvolume}`);
+      if (args.length == 0) {
+        return msg.channel.send(`Playback volume is currently set to ${common.clientVCManager.getVolume(guilddata.voice)}`);
+      } else {
+        let vcmembers = channel.members.keyArray();
+        if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || vcmembers.length == 2 && vcmembers.includes(msg.author.id)))
+          return msg.channel.send('Only admins and mods can change my volume, or someone who is alone with me in a voice channel.');
+        let wantedvolume = Number(args[0]);
+        if (isNaN(wantedvolume) || wantedvolume == Infinity || wantedvolume == -Infinity || wantedvolume < 0 || wantedvolume > 2)
+          return msg.channel.send('Volume out of bounds or not specified.');
+        common.clientVCManager.setVolume(guilddata.voice, wantedvolume);
+        return msg.channel.send(`Set playback volume to ${wantedvolume}`);
+      }
     }
   },
   {
@@ -164,7 +151,7 @@ module.exports = [
       let vcmembers = channel.members.keyArray();
       if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || vcmembers.length == 2 && vcmembers.includes(msg.author.id)))
         return msg.channel.send('Only admins and mods can change toggle loop, or someone who is alone with me in a voice channel.');
-      guilddata.voice.loop = !guilddata.voice.loop;
+      common.clientVCManager.toggleLoop(guilddata.voice);
       return msg.channel.send(`Toggled loop to ${guilddata.voice.loop ? 'enabled' : 'disabled'}`);
     }
   },
@@ -183,7 +170,7 @@ module.exports = [
       let vcmembers = channel.members.keyArray();
       if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || vcmembers.length == 2 && vcmembers.includes(msg.author.id)))
         return msg.channel.send('Only admins and mods can pause / resume, or someone who is alone with me in a voice channel.');
-      guilddata.voice.dispatcher.pause();
+      common.clientVCManager.pause(guilddata.voice);
       return msg.channel.send(`Paused`);
     }
   },
@@ -202,8 +189,27 @@ module.exports = [
       let vcmembers = channel.members.keyArray();
       if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || vcmembers.length == 2 && vcmembers.includes(msg.author.id)))
         return msg.channel.send('Only admins and mods can pause / resume, or someone who is alone with me in a voice channel.');
-      guilddata.voice.dispatcher.resume();
+      common.clientVCManager.resume(guilddata.voice);
       return msg.channel.send(`Resumed`);
+    }
+  },
+  {
+    name: 'forceskip',
+    full_string: false,
+    description: '`!forceskip` skips the currently playing song',
+    public: true,
+    execute(msg, cmdstring, command, argstring, args) {
+      if (!common.isDeveloper(msg)) return;
+      let guilddata;
+      if (!(guilddata = props.saved.guilds[msg.guild.id])) return msg.channel.send('Error: cannot skip song in voice channel, guild not in database');
+      let channel;
+      if (!(channel = guilddata.voice.channel)) return msg.channel.send('I\'m not in a voice channel');
+      if (!guilddata.voice.dispatcher) return msg.channel.send('Error: no song is playing');
+      let vcmembers = channel.members.keyArray();
+      if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || vcmembers.length == 2 && vcmembers.includes(msg.author.id)))
+        return msg.channel.send('Only admins and mods can forceskip, or someone who is alone with me in a voice channel.');
+      common.clientVCManager.forceSkip(guilddata.voice);
+      return msg.channel.send(`Skipped`);
     }
   },
   {
@@ -218,47 +224,51 @@ module.exports = [
       if (!guilddata.voice.channel) return msg.channel.send('I\'m not in a voice channel');
       if (!(msg.member.voiceChannelID == guilddata.voice.channel.id || common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg)))
         return msg.channel.send('You must be in the same voice channel as I\'m in to play a song.  Admins and mods can bypass this though.');
-      let videoinfo;
+      let latestobj;
       try {
-        videoinfo = await ytdl.getBasicInfo(args[0]);
+        latestobj = await common.clientVCManager.addSong(guilddata.voice, args[0]);
       } catch (e) {
+        console.error(e);
         return msg.channel.send('Invalid url');
       }
-      let songslist = guilddata.voice.songslist, latestobj;
-      songslist.push(latestobj = {
-        url: videoinfo.formats[0].url,
-        desc: `${videoinfo.videoDetails.title} by ${videoinfo.videoDetails.author.name}`,
-      });
       msg.channel.send(`${latestobj.desc} added to queue`);
-      if (guilddata.voice.dispatcher) return;
-      while (songslist.length > 0) {
-        if (guilddata.voice.proc2) {
-          guilddata.voice.proc = guilddata.voice.proc2;
-          guilddata.voice.procpipe = guilddata.voice.proc2pipe;
-          guilddata.voice.proc2 = null;
-          guilddata.voice.proc2pipe = null;
-        } else {
-          guilddata.voice.proc = cp.spawn('ffmpeg', ['-f', 'mp4', '-i', songslist[0].url, '-f', 'mp3', 'pipe:1']);
-          guilddata.voice.procpipe = new common.BufferStream();
-          guilddata.voice.proc.stdout.pipe(guilddata.voice.procpipe);
-          //guilddata.voice.proc.stderr.pipe(process.stderr);
-        }
-        guilddata.voice.dispatcher = guilddata.voice.connection.playArbitraryInput(guilddata.voice.procpipe, { volume: guilddata.voice.volume });
-        while (Boolean(guilddata.voice.dispatcher) && !guilddata.voice.dispatcher.destroyed) {
-          await new Promise(r => setTimeout(r, 100));
-          if (songslist.length > 1 && !guilddata.voice.proc2) {
-            guilddata.voice.proc2 = cp.spawn('ffmpeg', ['-f', 'mp4', '-i', songslist[1].url, '-f', 'mp3', 'pipe:1']);
-            guilddata.voice.proc2pipe = new common.BufferStream();
-            guilddata.voice.proc2.stdout.pipe(guilddata.voice.proc2pipe);
-            //guilddata.voice.proc2.stderr.pipe(process.stderr);
-          }
-        }
-        if (!guilddata.voice.loop) guilddata.voice.songslist.splice(0, 1);
-        try { guilddata.voice.proc.kill(); } catch (e) {}
-        guilddata.voice.proc = null;
-        guilddata.voice.procpipe = null;
-        guilddata.voice.dispatcher = null;
-      }
+      return common.clientVCManager.startMainLoop(guilddata.voice, msg.channel);
+    }
+  },
+  {
+    name: 'songslist',
+    full_string: false,
+    description: '`!songslist` to list the currently playing song and the next songs',
+    public: true,
+    execute(msg, cmdstring, command, argstring, args) {
+      if (!common.isDeveloper(msg)) return;
+      let guilddata;
+      if (!(guilddata = props.saved.guilds[msg.guild.id])) return msg.channel.send('Error: cannot play music in voice channel, guild not in database');
+      if (!guilddata.voice.channel) return msg.channel.send('I\'m not in a voice channel');
+      let songslist = guilddata.voice.songslist;
+      if (songslist.length == 0)
+        return msg.channel.send('Currently playing no songs');
+      else if (songslist.length == 1)
+        return msg.channel.send(`Currently playing ${songslist[0].desc} (${guilddata.voice.dispatcher ? common.msecToHMS(guilddata.voice.dispatcher.time) : '-:--.---'} / ${common.msecToHMS(songslist[0].expectedLength)})`);
+      else
+        return msg.channel.send(`Currently playing ${songslist[0].desc} (${guilddata.voice.dispatcher ? common.msecToHMS(guilddata.voice.dispatcher.time) : '-:--.---'} / ${common.msecToHMS(songslist[0].expectedLength)})\nQueue:\n${songslist.slice(1).map(x => x.desc).join('\n')}`);
+    }
+  },
+  {
+    name: 'currentsong',
+    full_string: false,
+    description: '`!currentsong` to list the currently playing song',
+    public: true,
+    execute(msg, cmdstring, command, argstring, args) {
+      if (!common.isDeveloper(msg)) return;
+      let guilddata;
+      if (!(guilddata = props.saved.guilds[msg.guild.id])) return msg.channel.send('Error: cannot play music in voice channel, guild not in database');
+      if (!guilddata.voice.channel) return msg.channel.send('I\'m not in a voice channel');
+      let songslist = guilddata.voice.songslist;
+      if (songslist.length == 0)
+        return msg.channel.send('Currently playing no songs');
+      else if (songslist.length == 1)
+        return msg.channel.send(`Currently playing ${songslist[0].desc} (${guilddata.voice.dispatcher ? common.msecToHMS(guilddata.voice.dispatcher.time) : '-:--.---'} / ${common.msecToHMS(songslist[0].expectedLength)})`);
     }
   },
   {

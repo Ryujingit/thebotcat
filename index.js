@@ -52,9 +52,10 @@ var badwords = [
   { enabled: false, type: 3, adminbypass: 0, word: `The first time I drank coffee I cried. I didn't cry because of the taste, that would be stupid. I cried because of the cup. I looked down into my coffee and bugs filled the premises. Disgusted I threw the cup down but nothing was there. Not the cup, not the bugs, not the street. I'm not blind, I do see darkness, and it was dark but not nighttime. I was alone in the city. My arms weren't there. My hands were gone. My image was nothing but a figment. I cried. I'm crying. I'm lost without an end. I won't ever drink coffee again.`, retailiation: 'dez\'s life story is private information' },
 ];
 
-var prefix = '!';
+var defaultprefix = '!';
+var universalprefix = '!(thebotcat)';
 
-var version = '1.3.6-beta-2';
+var version = '1.3.6-beta-3';
 
 var commands = [];
 
@@ -92,35 +93,35 @@ if (!props.saved) {
         infochannel: '724006510576926810',
         mutelist: [],
         savedperms: {},
-        prefix: prefix,
+        prefix: defaultprefix,
       },
       '671477379482517516': {
         modroles: [],
         infochannel: '710670425318883409',
         mutelist: [],
         savedperms: {},
-        prefix: prefix,
+        prefix: defaultprefix,
       },
       '688806155530534931': {
         modroles: [],
         infochannel: '736426551050109010',
         mutelist: [],
         savedperms: {},
-        prefix: prefix,
+        prefix: defaultprefix,
       },
       '717268211246301236': {
         modroles: [],
         infochannel: '739314876182167602',
         mutelist: [],
         savedperms: {},
-        prefix: prefix,
+        prefix: defaultprefix,
       },
       '475143894074392580': {
         modroles: [],
         infochannel: '509071244340232193',
         mutelist: [],
         savedperms: {},
-        prefix: prefix,
+        prefix: defaultprefix,
       },
     },
     calc_scopes: {},
@@ -132,11 +133,19 @@ if (!props.saved) {
   propsSave();
 }
 
+Object.defineProperties(props.saved.guilds, {
+  'wendys': { configurable: true, enumerable: false, get: () => props.saved.guilds['711668012528304178'] },
+  'ryuhub': { configurable: true, enumerable: false, get: () => props.saved.guilds['671477379482517516'] },
+  'botcat': { configurable: true, enumerable: false, get: () => props.saved.guilds['688806155530534931'] },
+  'pensive': { configurable: true, enumerable: false, get: () => props.saved.guilds['717268211246301236'] },
+  'bluetop': { configurable: true, enumerable: false, get: () => props.saved.guilds['475143894074392580'] },
+});
+
 Object.defineProperty(props.saved.guilds.default, 'prefix', {
   configurable: true,
   enumerable: false,
-  get: () => prefix,
-  set: val => prefix = val,
+  get: () => defaultprefix,
+  set: val => defaultprefix = val,
 });
 
 // props.saved integrity checks
@@ -149,23 +158,12 @@ if (!props.saved.calc_scopes.shared) props.saved.calc_scopes.shared = {};
     if (obj.infochannel === undefined) obj.infochannel = null;
     if (!obj.mutelist) obj.mutelist = [];
     if (!obj.savedperms) obj.savedperms = {};
-    if (!obj.prefix) obj.prefix = prefix;
+    if (!obj.prefix) obj.prefix = defaultprefix;
     Object.defineProperty(obj, 'voice', {
       configurable: true,
       enumerable: false,
       writeable: true,
-      value: {
-        channel: null,
-        connection: null,
-        dispatcher: null,
-        proc: null,
-        procpipe: null,
-        proc2: null,
-        proc2pipe: null,
-        songslist: [],
-        volume: null,
-        loop: null,
-      },
+      value: common.clientVCManager.getEmptyVoiceObject(),
     });
   }
   ks = Object.keys(props.saved.calc_scopes);
@@ -212,11 +210,17 @@ var logmsg = function (val) {
 
 Object.assign(global, { starttime, https, fs, util, cp, stream, Discord, ytdl, common, math, client, developers, confirmdevelopers, mutelist, badwords, commands, procs, props, propsSave, schedulePropsSave, indexeval, infomsg, logmsg, addBadWord, removeBadWord, addCommand, addCommands, removeCommand, removeCommands });
 Object.defineProperties(global, {
-  prefix: {
+  defaultprefix: {
     configurable: true,
     enumerable: true,
-    get() { return prefix; },
-    set(val) { prefix = val; },
+    get() { return defaultprefix; },
+    set(val) { defaultprefix = val; },
+  },
+  universalprefix: {
+    configurable: true,
+    enumerable: true,
+    get() { return universalprefix; },
+    set(val) { universalprefix = val; },
   },
   version: {
     configurable: true,
@@ -423,12 +427,17 @@ var messageHandler = msg => {
   
   if (/^<@!?682719630967439378>$/.test(msg.content)) return msg.channel.send(`I am Thebotcat version ${version}, prefix \`${workingprefix}\``);
   
-  if (!msg.content.startsWith(workingprefix) || !msg.guild) return;
+  if (!msg.guild) return;
   
   // argstring = the part after the workingprefix, command and args in one big string
   // command = the actual command
   // args = array of arguments
-  var cmdstring = msg.content.slice(workingprefix.length).trim(), args, command;
+  var cmdstring, args, command;
+  if (msg.content.startsWith(universalprefix))
+    cmdstring = msg.content.slice(universalprefix.length).trim();
+  else if (msg.content.startsWith(workingprefix))
+    cmdstring = msg.content.slice(workingprefix.length).trim();
+  else return;
   
   // this code loops through the commands array to see if the stated text matches any known command
   for (var i = 0; i < commands.length; i++) {
@@ -442,41 +451,31 @@ var messageHandler = msg => {
   }
 };
 
+// used to clean up voice handler object if thebotcat is disconnected manually
 var voiceStateUpdateHandler = (oldState, newState) => {
   let guilddata = props.saved.guilds[newState.guild.id];
   if (!guilddata) return;
   if (newState.id == client.user.id && !newState.voiceChannelID) {
-    try { guilddata.voice.proc.kill(); } catch (e) {}
-    try { guilddata.voice.proc2.kill(); } catch (e) {}
-    guilddata.voice.channel = null;
-    guilddata.voice.connection = null;
-    guilddata.voice.dispatcher = null;
-    guilddata.voice.proc = null;
-    guilddata.voice.procpipe = null;
-    guilddata.voice.proc2 = null;
-    guilddata.voice.proc2pipe = null;
-    guilddata.voice.songslist.splice(0, Infinity);
-    guilddata.voice.volume = null;
-    guilddata.voice.loop = null;
+    common.clientVCManager.leave(guilddata.voice);
   }
 };
 
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
   
-  client.user.setActivity(`${prefix} | ${client.guilds.size} servers | wash your hands kids`);
+  client.user.setActivity(`${defaultprefix} | ${client.guilds.size} servers | wash your hands kids`);
 });
 
 client.on('guildCreate', guild => {
   console.log(`Joined a new guild: ${guild.name}`);
   
-  client.user.setActivity(`${prefix} | ${client.guilds.size} servers | wash your hands kids`);
+  client.user.setActivity(`${defaultprefix} | ${client.guilds.size} servers | wash your hands kids`);
 });
 
 client.on('guildDelete', guild => {
   console.log(`Left a guild: ${guild.name}`);
   
-  client.user.setActivity(`${prefix} | ${client.guilds.size} servers | wash your hands kids`);
+  client.user.setActivity(`${defaultprefix} | ${client.guilds.size} servers | wash your hands kids`);
 });
 
 client.on('reconnecting', () => {
