@@ -55,7 +55,7 @@ var badwords = [
 var defaultprefix = '!';
 var universalprefix = '!(thebotcat)';
 
-var version = '1.3.6-beta-3';
+var version = '1.3.6';
 
 var commands = [];
 
@@ -208,7 +208,7 @@ var logmsg = function (val) {
   return client.channels.get('736426551050109010').send(val);
 };
 
-Object.assign(global, { starttime, https, fs, util, cp, stream, Discord, ytdl, common, math, client, developers, confirmdevelopers, mutelist, badwords, commands, procs, props, propsSave, schedulePropsSave, indexeval, infomsg, logmsg, addBadWord, removeBadWord, addCommand, addCommands, removeCommand, removeCommands });
+Object.assign(global, { starttime, https, fs, util, cp, stream, Discord, ytdl, common, math, client, developers, confirmdevelopers, mutelist, badwords, commands, procs, props, propsSave, schedulePropsSave, indexeval, infomsg, logmsg, addBadWord, removeBadWord, addCommand, addCommands, removeCommand, removeCommands, getCommandsCategorized });
 Object.defineProperties(global, {
   defaultprefix: {
     configurable: true,
@@ -245,8 +245,18 @@ Object.defineProperties(global, {
 function addBadWord(word, msgreply) { badwords.push([word.toLowerCase(), msgreply]); }
 function removeBadWord(word) { badwords.splice(badwords.map(x => x[0]).indexOf(word), 1); }
 
-function addCommand(cmd) { commands.push(cmd); }
-function addCommands(cmds) { commands.push(...cmds); }
+function addCommand(cmd, category) {
+  if (category)
+    commands.push({ category, ...cmd });
+  else
+    commands.push(cmd);
+}
+function addCommands(cmds, category) {
+  if (category)
+    commands.push(...cmds.map(x => ({ category, ...x })));
+  else
+    commands.push(...cmds);
+}
 function removeCommand(cmd) {
   var index;
   while ((index = commands.indexOf(cmd)) != -1)
@@ -260,11 +270,25 @@ function removeCommands(cmds) {
       commands.splice(index, 1);
   }
 }
+function getCommandsCategorized() {
+  let commandsCategorized = { Uncategorized: [] };
+  commands.filter(x => x.public).forEach(x =>
+    x.category ?
+      (commandsCategorized[x.category] ?
+        commandsCategorized[x.category].push(x) :
+        commandsCategorized[x.category] = [x]
+      ) :
+      commandsCategorized.uncategorized.push(x)
+  );
+  if (commandsCategorized.Uncategorized.length == 0) delete commandsCategorized.Uncategorized;
+  return commandsCategorized;
+}
 
-addCommands(require('./commands/administrative.js'));
-addCommands(require('./commands/technical.js'));
-addCommands(require('./commands/interactive.js'));
-addCommands(require('./commands/content.js'));
+addCommands(require('./commands/administrative.js'), 'Administrative');
+addCommands(require('./commands/technical.js'), 'Technical');
+addCommands(require('./commands/interactive.js'), 'Interactive');
+addCommands(require('./commands/music.js'), 'Music');
+addCommands(require('./commands/content.js'), 'Content');
 
 var messageHandlers = [
   msg => {

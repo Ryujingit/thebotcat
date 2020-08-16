@@ -39,7 +39,16 @@ module.exports = [
       if (args.length == 0) {
         return msg.channel.send(`I have ${commands.filter(x => x.public).length} commands, run \`!help list\` to list them or \`!help <command>\` for help on a specific command.`);
       } else if (args[0] == 'list') {
-        return msg.channel.send(`Commands: ${commands.filter(x => x.public).map(x => `\`${x.name}\``).join(', ')}\nRun \`!help <command>\` for help on a specific command.`);
+        let commandsCategorized = getCommandsCategorized();
+        return msg.channel.send({
+          embed: {
+            title: 'Commands',
+            description: 'Run `!help <command>` for help on a specific command.',
+            fields: Object.keys(commandsCategorized).map(
+              x => ({ name: x, value: commandsCategorized[x].map(y => `\`${y.name}\``).join(', ') || 'None', inline: false })
+            ),
+          }
+        });
       } else {
         let cmdobj = commands.filter(x => x.name == args[0])[0];
         if (cmdobj && cmdobj.public) {
