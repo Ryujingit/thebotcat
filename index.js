@@ -55,7 +55,7 @@ var badwords = [
 var defaultprefix = '!';
 var universalprefix = '!(thebotcat)';
 
-var version = '1.3.6';
+var version = '1.4.0-beta1';
 
 var commands = [];
 
@@ -80,6 +80,7 @@ if (!props.saved) {
   props.saved = {
     feat: {
       calc: false,
+      lamt: 0,
     },
     guilds: {
       'default': {
@@ -200,12 +201,12 @@ var infomsg = function (msg, val) {
   let guildinfo, channelid;
   if ((guildinfo = msg.guild ? props.saved.guilds[msg.guild.id] : undefined) && (channelid = guildinfo.infochannel) || (guildinfo = props.saved.guilds['default']) && (channelid = guildinfo.infochannel)) {
     console.log(`infomsg for ${msg.guild.name}: ${val}`);
-    return client.channels.get(channelid).send(val);
+    return client.channels.cache.get(channelid).send(val);
   }
 };
 var logmsg = function (val) {
   console.log(`logmsg ${val}`);
-  return client.channels.get('736426551050109010').send(val);
+  return client.channels.cache.get('736426551050109010').send(val);
 };
 
 Object.assign(global, { starttime, https, fs, util, cp, stream, Discord, ytdl, common, math, client, developers, confirmdevelopers, mutelist, badwords, commands, procs, props, propsSave, schedulePropsSave, indexeval, infomsg, logmsg, addBadWord, removeBadWord, addCommand, addCommands, removeCommand, removeCommands, getCommandsCategorized });
@@ -294,7 +295,7 @@ var messageHandlers = [
   msg => {
     if (msg.channel.id == '738599826765250632') {
       msg.delete();
-      client.channels.get('738593863958003756').send(`${msg.author.tag}: ${msg.content}`);
+      client.channels.cache.get('738593863958003756').send(`${msg.author.tag}: ${msg.content}`);
       props.saved.sendmsgid = msg.id;
       schedulePropsSave();
     }
@@ -315,7 +316,7 @@ global.messageHandlers = messageHandlers;
   while (!client.token)
     await new Promise(r => setTimeout(r, 1000));
   console.log('Checking for new messages in send only channel');
-  let channel = client.channels.get('738599826765250632'), messages;
+  let channel = client.channels.cache.get('738599826765250632'), messages;
   try {
     while (channel.lastMessageID != props.saved.sendmsgid) {
       console.log('New messages detected');
@@ -336,7 +337,7 @@ global.messageHandlers = messageHandlers;
     console.error(e.toString());
   }
   console.log('Checking for new messages in count to 5000 channel');
-  channel = client.channels.get('738602247549616170');
+  channel = client.channels.cache.get('738602247549616170');
   try {
     while (props.saved.lastnum < 5000 && channel.lastMessageID != props.saved.lastnumid) {
       console.log('New messages detected');
@@ -369,7 +370,7 @@ var messageHandler = msg => {
       res = eval(cmd);
       console.debug(`-> ${util.inspect(res)}`);
       if (props.erg) return;
-      var richres = new Discord.RichEmbed()
+      var richres = new Discord.MessageEmbed()
         .setTitle('Lavealt Rs')
         .setDescription(util.inspect(res));
       msg.channel.send(richres);
@@ -377,7 +378,7 @@ var messageHandler = msg => {
       console.log('err in lavealt');
       console.debug(e.stack);
       if (props.erg) return;
-      var richres = new Discord.RichEmbed()
+      var richres = new Discord.MessageEmbed()
         .setTitle('Lavealt Er')
         .setDescription(e.stack);
       msg.channel.send(richres);
@@ -407,7 +408,7 @@ var messageHandler = msg => {
   if (msg.guild) {
     let isdeveloper = !props.erg && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id),
         isadmin = msg.member.hasPermission('ADMINISTRATOR'),
-        ismod = props.saved.guilds[msg.guild.id] ? msg.member.roles.filter(x => props.saved.guilds[msg.guild.id].modroles.includes(x)) != null : false;
+        ismod = props.saved.guilds[msg.guild.id] ? msg.member.roles.cache.filter(x => props.saved.guilds[msg.guild.id].modroles.includes(x)) != null : false;
     let dodelete = false;
     let word, content, bypass;
     for (var i = 0; i < badwords.length; i++) {
@@ -479,7 +480,7 @@ var messageHandler = msg => {
 var voiceStateUpdateHandler = (oldState, newState) => {
   let guilddata = props.saved.guilds[newState.guild.id];
   if (!guilddata) return;
-  if (newState.id == client.user.id && !newState.voiceChannelID) {
+  if (newState.id == client.user.id && !newState.channelID) {
     common.clientVCManager.leave(guilddata.voice);
   }
 };
@@ -487,19 +488,19 @@ var voiceStateUpdateHandler = (oldState, newState) => {
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
   
-  client.user.setActivity(`${defaultprefix} | ${client.guilds.size} servers | wash your hands kids`);
+  client.user.setActivity(`${defaultprefix} | ${client.guilds.cache.size} servers | wash your hands kids`);
 });
 
 client.on('guildCreate', guild => {
   console.log(`Joined a new guild: ${guild.name}`);
   
-  client.user.setActivity(`${defaultprefix} | ${client.guilds.size} servers | wash your hands kids`);
+  client.user.setActivity(`${defaultprefix} | ${client.guilds.cache.size} servers | wash your hands kids`);
 });
 
 client.on('guildDelete', guild => {
   console.log(`Left a guild: ${guild.name}`);
   
-  client.user.setActivity(`${defaultprefix} | ${client.guilds.size} servers | wash your hands kids`);
+  client.user.setActivity(`${defaultprefix} | ${client.guilds.cache.size} servers | wash your hands kids`);
 });
 
 client.on('reconnecting', () => {

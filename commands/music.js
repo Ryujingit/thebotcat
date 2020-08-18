@@ -9,20 +9,22 @@ module.exports = [
       if (!(guilddata = props.saved.guilds[msg.guild.id])) return msg.channel.send('Error: cannot join voice channel, guild not in database');
       let channel;
       if (args.length == 0) {
-        if (!msg.member.voiceChannelID) return msg.channel.send('You are not in a voice channel.');
-        channel = client.channels.get(msg.member.voiceChannelID);
+        if (!msg.member.voice.channelID) return msg.channel.send('You are not in a voice channel.');
+        channel = client.channels.cache.get(msg.member.voice.channelID);
       } else if (args.length == 1) {
         if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg)))
           return msg.channel.send('Only admins and mods can get me to remotely join a voice channel.');
         let channelid;
         if (/^<#[0-9]+>$/.test(args[0])) channelid = args[0].slice(2, args[0].length - 1);
-        channel = msg.guild.channels.get(channelid);
+        channel = msg.guild.channels.cache.get(channelid);
         if (!channel) return msg.channel.send('Invalid channel mention.');
       }
-      let channelPerms = channel.permissionsFor(msg.member), channelFull = channel.full;
-      if (channelFull && !(
+      if (guilddata.voice.channel && guilddata.voice.channel.id == channel.id) return msg.channel.send(`Already joined channel <#${channel.id}>`);
+      let channelPerms = channel.permissionsFor(msg.member);
+      let requiresMod = channel.full || guilddata.voice.channel && guilddata.voice.channel.members.keyArray().length == 1 && guilddata.voice.songslist.length == 0;
+      if (requiresMod && !(
           common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || channelPerms.hasPermission('MOVE_MEMBERS')
-        ) || !channelFull && !(
+        ) || !requiresMod && !(
           common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || channelPerms.hasPermission('MOVE_MEMBERS') || channelPerms.hasPermission('CONNECT')
         )) return msg.channel.send('You do not have permission to get me to join the voice channel you are in.');
       try {
@@ -161,7 +163,7 @@ module.exports = [
       let guilddata;
       if (!(guilddata = props.saved.guilds[msg.guild.id])) return msg.channel.send('Error: cannot play music in voice channel, guild not in database');
       if (!guilddata.voice.channel) return msg.channel.send('I\'m not in a voice channel');
-      if (!(msg.member.voiceChannelID == guilddata.voice.channel.id || common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg)))
+      if (!(msg.member.voice.channelID == guilddata.voice.channel.id || common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg)))
         return msg.channel.send('You must be in the same voice channel as I\'m in to play a song.  Admins and mods can bypass this though.');
       let latestobj;
       try {
@@ -188,9 +190,9 @@ module.exports = [
       if (songslist.length == 0)
         return msg.channel.send('Currently playing no songs');
       else if (songslist.length == 1)
-        return msg.channel.send(`Currently playing ${songslist[0].desc} (${guilddata.voice.dispatcher ? common.msecToHMS(guilddata.voice.dispatcher.time) : '-:--.---'} / ${common.msecToHMS(songslist[0].expectedLength)})`);
+        return msg.channel.send(`Currently playing ${songslist[0].desc} (${guilddata.voice.dispatcher ? common.msecToHMS(guilddata.voice.dispatcher.streamTime) : '-:--.---'} / ${common.msecToHMS(songslist[0].expectedLength)})`);
       else
-        return msg.channel.send(`Currently playing ${songslist[0].desc} (${guilddata.voice.dispatcher ? common.msecToHMS(guilddata.voice.dispatcher.time) : '-:--.---'} / ${common.msecToHMS(songslist[0].expectedLength)})\nQueue:\n${songslist.slice(1).map(x => x.desc).join('\n')}`);
+        return msg.channel.send(`Currently playing ${songslist[0].desc} (${guilddata.voice.dispatcher ? common.msecToHMS(guilddata.voice.dispatcher.streamTime) : '-:--.---'} / ${common.msecToHMS(songslist[0].expectedLength)})\nQueue:\n${songslist.slice(1).map(x => x.desc).join('\n')}`);
     }
   },
   {
@@ -207,7 +209,7 @@ module.exports = [
       if (songslist.length == 0)
         return msg.channel.send('Currently playing no songs');
       else if (songslist.length == 1)
-        return msg.channel.send(`Currently playing ${songslist[0].desc} (${guilddata.voice.dispatcher ? common.msecToHMS(guilddata.voice.dispatcher.time) : '-:--.---'} / ${common.msecToHMS(songslist[0].expectedLength)})`);
+        return msg.channel.send(`Currently playing ${songslist[0].desc} (${guilddata.voice.dispatcher ? common.msecToHMS(guilddata.voice.dispatcher.streamTime) : '-:--.---'} / ${common.msecToHMS(songslist[0].expectedLength)})`);
     }
   },
 ];

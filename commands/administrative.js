@@ -20,7 +20,7 @@ module.exports = [
       let channelid = argr[0].slice(2, argr[0].length - 1);
       let text = argr.slice(1).join(' ');
       let channel;
-      if (channel = client.channels.get(channelid))
+      if (channel = client.channels.cache.get(channelid))
         return channel.send(text);
     }
   },
@@ -33,7 +33,7 @@ module.exports = [
       if (!args[0]) return;
       var user;
       if (!(user = msg.mentions.users.first())) {
-        let users = msg.guild.members.keyArray().map(x => msg.guild.members.get(x).user);
+        let users = msg.guild.members.cache.keyArray().map(x => msg.guild.members.cache.get(x).user);
         if (/^[0-9]+$/.test(args[0])) {
           let arr = users.filter(x => x.id == args[0]);
           if (arr.length == 1) user = arr[0];
@@ -60,7 +60,7 @@ module.exports = [
     public: false,
     execute(msg, cmdstring, command, argstring, args) {
       if (!common.isDeveloper(msg)) return;
-      let channels = client.channels.keyArray().map(x => client.channels.get(x)).filter(x => x.type == 'dm').map(x => `${x.id}: ${x.recipient.tag}`).join('\n');
+      let channels = client.channels.cache.keyArray().map(x => client.channels.cache.get(x)).filter(x => x.type == 'dm').map(x => `${x.id}: ${x.recipient.tag}`).join('\n');
       return msg.channel.send(`DM channels:\n${channels}`);
     }
   },
@@ -104,7 +104,7 @@ module.exports = [
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
       if (!(common.isDeveloper(msg) || common.isAdmin(msg) || msg.guild.id == '717268211246301236')) return;
-      var members = msg.guild.members.keyArray().map(x => msg.guild.members.get(x)).filter(x => !x.user.bot);
+      var members = msg.guild.members.cache.keyArray().map(x => msg.guild.members.cache.get(x)).filter(x => !x.user.bot);
       var random_member = members[Math.floor(Math.random() * members.length)];
       return msg.channel.send(`Random ping: <@!${random_member.user.id}>`);
     }
@@ -328,7 +328,7 @@ module.exports = [
     execute(msg, cmdstring, command, argstring, args) {
       if (!(common.isDeveloper(msg) || common.isAdmin(msg))) return;
       console.log(`resetnickname called by ${msg.author.tag} in ${msg.guild.name}`);
-      var member_array = msg.guild.members.keyArray().map(x => msg.guild.members.get(x));
+      var member_array = msg.guild.members.cache.keyArray().map(x => msg.guild.members.cache.get(x));
       var already_reset = 0, reset_successful = 0, reset_fail = 0;
       member_array.forEach(
         async x => {
@@ -357,26 +357,31 @@ module.exports = [
     full_string: false,
     description: '`!kick @person` to kick someone from this guild',
     public: true,
-    execute(msg, cmdstring, command, argstring, args) {
+    async execute(msg, cmdstring, command, argstring, args) {
       var user;
       if (!(user = msg.mentions.users.first())) return;
-      if (!msg.member.hasPermission('KICK_MEMBERS') && msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025')
+      if (!(common.isDeveloper(msg) || common.isOwner(msg) || common.isAdmin(msg) || common.isMod(msg) || msg.member.hasPermission('KICK_MEMBERS')))
         return msg.channel.send('You do not have permission to run this command.');
       var member = msg.mentions.members.first();
       if (member == null) return;
-      if (member.hasPermission('KICK_MEMBERS') && msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025') {
-        var perm_failed = new Discord.RichEmbed()
-          .setTitle('Access denied!')
-          .setDescription('This user is a mod!');
-        return msg.channel.send(perm_failed);
+      if (!client.hasPermission('KICK_MEMBERS')) {
+        var kickerror = new Discord.MessageEmbed()
+          .setTitle("Error")
+          .setDescription(`I do not have permission to kick members.`);
+        return msg.channel.send(kickerror);
       }
-      if (!client.hasPermission('KICK_MEMBERS'))
-        return msg.channel.send('I cannot kick members');
-      member.kick();
-      var kick = new Discord.RichEmbed()
-        .setTitle("Goodbye!")
-        .setDescription(`${member.displayName} has been successfully kicked`);
-      return msg.channel.send(kick);
+      try {
+        await member.kick();
+        var kick = new Discord.MessageEmbed()
+          .setTitle("Goodbye!")
+          .setDescription(`${member.displayName} has been successfully kicked`);
+        return msg.channel.send(kick);
+      } catch (e) {
+        var kickerror = new Discord.MessageEmbed()
+          .setTitle("Error")
+          .setDescription(`Cannot kick ${member.displayName}, not high enough in the role hierarchy`);
+        return msg.channel.send(kickerror);
+      }
     }
   },
   {
@@ -384,55 +389,65 @@ module.exports = [
     full_string: false,
     description: '`!ban @person` to ban someone from this guild',
     public: true,
-    execute(msg, cmdstring, command, argstring, args) {
+    async execute(msg, cmdstring, command, argstring, args) {
       var user;
       if (!(user = msg.mentions.users.first())) return;
-      if (!msg.member.hasPermission('BAN_MEMBERS') && msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025')
+      if (!(common.isDeveloper(msg) || common.isOwner(msg) || common.isAdmin(msg) || common.isMod(msg) || msg.member.hasPermission('BAN_MEMBERS')))
         return msg.channel.send('You do not have permission to run this command.');
       var member = msg.mentions.members.first();
       if (member == null) return;
-      if (member.hasPermission("BAN_MEMBERS") && msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025') {
-        var perm_failed = new Discord.RichEmbed()
-          .setTitle('Access denied!')
-          .setDescription('This user is a mod!')
-        return msg.channel.send(perm_failed);
+      if (!client.hasPermission('BAN_MEMBERS')) {
+        var banerror = new Discord.MessageEmbed()
+          .setTitle("Error")
+          .setDescription(`I do not have permission to ban members.`);
+        return msg.channel.send(banerror);
       }
-      if (!client.hasPermission('BAN_MEMBERS'))
-        return msg.channel.send('I cannot ban members');
-      member.ban();
-      var ban = new Discord.RichEmbed()
-        .setTitle("Goodbye!")
-        .setDescription(`${member.displayName} has been successfully banned`);
-      return msg.channel.send(ban);
+      try {
+        await member.ban();
+        var ban = new Discord.MessageEmbed()
+          .setTitle("Goodbye!")
+          .setDescription(`${member.displayName} has been successfully banned`);
+        return msg.channel.send(ban);
+      } catch (e) {
+        var banerror = new Discord.MessageEmbed()
+          .setTitle("Error")
+          .setDescription(`Cannot ban ${member.displayName}, not high enough in the role hierarchy`);
+        return msg.channel.send(banerror);
+      }
     }
-  },/*
+  },
   {
     name: 'unban',
     full_string: false,
     description: '`!unban @person` to unban someone from this guild',
     public: true,
-    execute(msg, cmdstring, command, argstring, args) {
+    async execute(msg, cmdstring, command, argstring, args) {
       var user;
       if (!(user = msg.mentions.users.first())) return;
-      if (!msg.member.hasPermission('MANAGE_SERVER') && msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025')
+      if (!(common.isDeveloper(msg) || common.isOwner(msg) || common.isAdmin(msg) || common.isMod(msg) || msg.member.hasPermission('MANAGE_SERVER')))
         return msg.channel.send('You do not have permission to run this command.');
       var member = msg.mentions.members.first();
       if (member == null) return;
-      if (member.hasPermission("BAN_MEMBERS") && msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025') {
-        var perm_failed = new Discord.RichEmbed()
-          .setTitle('Access denied!')
-          .setDescription('This user is a mod!')
-        return msg.channel.send(perm_failed);
+      if (!client.hasPermission('MANAGE_SERVER')) {
+        var unbanerror = new Discord.MessageEmbed()
+          .setTitle("Error")
+          .setDescription(`I do not have permission to unban members.`);
+        return msg.channel.send(unbanerror);
       }
-      if (!client.hasPermission('BAN_MEMBERS'))
-        return msg.channel.send('I cannot ban members');
-      member.ban();
-      var ban = new Discord.RichEmbed()
-        .setTitle("Goodbye!")
-        .setDescription(`${member.displayName} has been stook with a ban hammer`);
-      return msg.channel.send(ban);
+      try {
+        await msg.guild.unban(member);
+        var unban = new Discord.MessageEmbed()
+          .setTitle("Welcome back")
+          .setDescription(`${member.displayName} has been successfully unbanned`);
+        return msg.channel.send(unban);
+      } catch (e) {
+        var unbanerror = new Discord.MessageEmbed()
+          .setTitle("Error")
+          .setDescription(`Cannot unban ${member.displayName}`);
+        return msg.channel.send(unbanerror);
+      }
     }
-  },*/
+  },
   {
     name: 'giveadmin',
     full_string: false,
@@ -479,17 +494,17 @@ module.exports = [
       try {
         res = eval(cmd);
         console.debug(`-> ${util.inspect(res)}`);
-        var richres = new Discord.RichEmbed()
+        var richres = new Discord.MessageEmbed()
           .setTitle('Eval Result')
           .setDescription(util.inspect(res));
-        return msg.channel.send(richres);
+        return await msg.channel.send(richres);
       } catch (e) {
         console.log('error in eval');
         console.debug(e.stack);
-        var richres = new Discord.RichEmbed()
+        var richres = new Discord.MessageEmbed()
           .setTitle('Eval Error')
           .setDescription(e.stack);
-        return msg.channel.send(richres);
+        return await msg.channel.send(richres);
       }
     }
   },
@@ -503,9 +518,8 @@ module.exports = [
       let cmd = argstring, res;
       console.debug(`evaluating (output voided) from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(cmd)}`);
       if (global.confirmeval && common.isConfirmDeveloper(msg)) {
-        if (!(await confirmeval(`evaluating (output voided) from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(cmd)}`))) {
-          return msg.channel.send('Eval command failed');
-        }
+        if (!(await confirmeval(`evaluating (output voided) from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(cmd)}`)))
+          return;
       } else if (common.isConfirmDeveloper(msg) && !common.isDeveloper(msg)) return msg.channel.send('You do not have permissions to run this command.');
       try {
         res = eval(cmd);
@@ -536,18 +550,18 @@ module.exports = [
           if (err) {
             console.log('error in shell exec');
             console.debug(err.stack);
-            var richres = new Discord.RichEmbed()
+            var richres = new Discord.MessageEmbed()
               .setTitle('Shell Command Error')
               .setDescription(err.stack);
-            resolve(msg.channel.send(richres));
+            msg.channel.send(richres).then(x => resolve(x)).catch(e => reject(e));
             return;
           }
           stdout = stdout.toString(); stderr = stderr.toString();
           console.debug(`shell command result\nstdout:\n${util.inspect(stdout)}\nstderr:\n${util.inspect(stderr)}`);
-          var richres = new Discord.RichEmbed()
+          var richres = new Discord.MessageEmbed()
             .setTitle('Shell Command Result')
             .setDescription(`*stdout*:\n${util.inspect(stdout)}\n*stderr*:\n${util.inspect(stderr)}`);
-          resolve(msg.channel.send(richres));
+            msg.channel.send(richres).then(x => resolve(x)).catch(e => reject(e));
         });
         procs.push(proc);
       });

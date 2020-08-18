@@ -157,6 +157,22 @@ class BufferStream extends stream.Duplex {
       if (this.dopush) this._read();
     }
   }
+  _final(cb) {
+    if (this.chunkcb) this.chunkcb();
+    if (this.chunks.length != 0) {
+      this.push(Buffer.concat(this.chunks));
+    }
+    this.push(null);
+    cb();
+  }
+  _destroy(err, cb) {
+    if (this.chunkcb) this.chunkcb();
+    if (this.chunks.length != 0) {
+      this.push(Buffer.concat(this.chunks));
+    }
+    this.push(null);
+    cb();
+  }
   _read(size) {
     this.dopush = true;
     while (this.dopush && this.chunks.length > 0) {
@@ -192,6 +208,7 @@ var clientVCManager = {
   },
   // all of these functions have self explanatory names, and the first parameter of each function is the guild's voice state object
   join: async function join(voice, channel) {
+    if (voice.channel) clientVCManager.leave(voice);
     voice.channel = channel;
     voice.connection = await channel.join();
     voice.volume = 1;
@@ -232,6 +249,7 @@ var clientVCManager = {
     voice.dispatcher.resume();
   },
   addSong: async function addSong(voice, query) {
+    if (!/^https?:\/\/(?:www.)?youtube.com\/[A-Za-z0-9?&=\-_%.]+$/.test(query)) throw new Error('invalid url');
     let videoinfo;
     try {
       videoinfo = await ytdl.getBasicInfo(query);
@@ -250,7 +268,7 @@ var clientVCManager = {
     });
     latestobj.url = filteredFormats[0].url;
     latestobj.expectedLength = Number(filteredFormats[0].approxDurationMs) || 0;
-    if (!/^https?:\/\/[a-z0-9.\-]+\/[A-Za-z0-9?&=\-_%.]+$/.test(latestobj.url)) return msg.channel.send('Invalid url');
+    if (!/^https?:\/\/[a-z0-9.\-]+\/[A-Za-z0-9?&=\-_%.]+$/.test(latestobj.url)) throw new Error('invalid url');
     songslist.push(latestobj);
     return latestobj;
   },
@@ -273,7 +291,7 @@ var clientVCManager = {
           voice.proc.stdout.pipe(voice.procpipe);
           //voice.proc.stderr.pipe(process.stderr);
         }
-        voice.dispatcher = voice.connection.playArbitraryInput(voice.procpipe, { volume: voice.volume });
+        voice.dispatcher = voice.connection.play(voice.procpipe, { volume: voice.volume });
         while (voice.dispatcher && !voice.dispatcher.destroyed) {
           await new Promise(r => setTimeout(r, 15));
           if (voice.songslist.length > 1 && !voice.proc2) {
@@ -287,7 +305,7 @@ var clientVCManager = {
             voice.mainloop = 1;
           }
         }
-        if (voice.dispatcher && voice.dispatcher.time < voice.songslist[0].expectedLength - 5000) msgchannel.send(`Error: something broke when playing ${voice.songslist[0].desc}`);
+        if (voice.dispatcher && voice.dispatcher.streamTime < voice.songslist[0].expectedLength - 5000) msgchannel.send(`Error: something broke when playing ${voice.songslist[0].desc}`);
         if (!voice.loop) voice.songslist.splice(0, 1);
         try { voice.proc.kill(); } catch (e) {}
         voice.proc = null;
@@ -296,9 +314,8 @@ var clientVCManager = {
       }
     } catch (e) {
       console.error(e);
-    } finally {
-      voice.mainloop = 0;
     }
+    voice.mainloop = 0;
   },
 };
 

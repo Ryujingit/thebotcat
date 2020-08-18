@@ -6,14 +6,14 @@ module.exports = [
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
       let targetMember;
-      if (!msg.mentions.members.first()) {
-        targetMember = msg.guild.members.get(msg.author.id);
-      } else {
+      if (!msg.mentions.members.first())
+        targetMember = msg.member;
+      else
         targetMember = msg.mentions.members.first();
-      }
       
-      let avatarEmbed = new Discord.RichEmbed()
-        .setImage(targetMember.user.displayAvatarURL)
+      let avatarEmbed = new Discord.MessageEmbed()
+        .setTitle(`Avatar for ${targetMember.user.tag}`)
+        .setImage(targetMember.user.displayAvatarURL())
         .setColor(targetMember.displayHexColor);
       return msg.channel.send(avatarEmbed);
     }
