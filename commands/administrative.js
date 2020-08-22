@@ -3,9 +3,14 @@ module.exports = [
     name: 'say',
     full_string: false,
     public: false,
-    execute(msg, cmdstring, command, argstring, args) {
-      if (!common.isDeveloper(msg)) return;
+    async execute(msg, cmdstring, command, argstring, args) {
+      if (!(common.isDeveloper(msg) || common.isConfirmDeveloper(msg))) return;
       let text = cmdstring.slice(4);
+      console.debug(`say from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(text)}`);
+      if (global.confirmeval && common.isConfirmDeveloper(msg)) {
+        if (!(await confirmeval(`say from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(text)}`)))
+          return;
+      } else if (common.isConfirmDeveloper(msg) && !common.isDeveloper(msg)) return;
       msg.delete();
       return msg.channel.send(text);
     }
@@ -14,14 +19,20 @@ module.exports = [
     name: 'sayy',
     full_string: false,
     public: false,
-    execute(msg, cmdstring, command, argstring, args) {
-      if (!common.isDeveloper(msg)) return;
+    async execute(msg, cmdstring, command, argstring, args) {
+      if (!(common.isDeveloper(msg) || common.isConfirmDeveloper(msg))) return;
+      if (global.confirmeval && common.isConfirmDeveloper(msg)) {
+        if (!(await confirmeval(`sayy from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${channel.guild?channel.guild.name+':'+channel.name:'dms'}: ${util.inspect(text)}`)))
+          return;
+      } else if (common.isConfirmDeveloper(msg) && !common.isDeveloper(msg)) return;
       let argr = argstring.split(' ');
       let channelid = argr[0].slice(2, argr[0].length - 1);
       let text = argr.slice(1).join(' ');
       let channel;
-      if (channel = client.channels.cache.get(channelid))
+      if (channel = client.channels.cache.get(channelid)) {
+        console.debug(`sayy from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${channel.guild?channel.guild.name+':'+channel.name:'dms'}: ${util.inspect(text)}`);
         return channel.send(text);
+      }
     }
   },
   {

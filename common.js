@@ -300,6 +300,7 @@ var clientVCManager = {
             voice.proc2.stdout.pipe(voice.proc2pipe);
             //voice.proc2.stderr.pipe(process.stderr);
           }
+          if (voice.dispatcher.streamTime > voice.songslist[0].expectedLength - 2) voice.mainloop = 2;
           if (voice.mainloop == 2) {
             voice.dispatcher.destroy();
             voice.mainloop = 1;

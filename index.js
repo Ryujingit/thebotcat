@@ -55,7 +55,7 @@ var badwords = [
 var defaultprefix = '!';
 var universalprefix = '!(thebotcat)';
 
-var version = '1.4.0-beta1';
+var version = '1.4.0';
 
 var commands = [];
 
@@ -320,7 +320,7 @@ global.messageHandlers = messageHandlers;
   try {
     while (channel.lastMessageID != props.saved.sendmsgid) {
       console.log('New messages detected');
-      messages = await channel.fetchMessages({ after: props.saved.sendmsgid });
+      messages = await channel.messages.fetch({ after: props.saved.sendmsgid });
       console.log('Loaded up to 50 new messages');
       messages = messages.keyArray().map(x => messages.get(x)).sort((a, b) => { a = a.createdTimestamp; b = b.createdTimestamp; if (a > b) { return 1; } else if (a < b) { return -1; } else { return 0; } });
       if (messages.length == 0) {
@@ -341,7 +341,7 @@ global.messageHandlers = messageHandlers;
   try {
     while (props.saved.lastnum < 5000 && channel.lastMessageID != props.saved.lastnumid) {
       console.log('New messages detected');
-      messages = await channel.fetchMessages({ after: props.saved.lastnumid });
+      messages = await channel.messages.fetch({ after: props.saved.lastnumid });
       console.log('Loaded up to 50 new messages');
       messages = messages.keyArray().map(x => messages.get(x)).sort((a, b) => { a = a.createdTimestamp; b = b.createdTimestamp; if (a > b) { return 1; } else if (a < b) { return -1; } else { return 0; } });
       if (messages.length == 0) {
@@ -365,11 +365,11 @@ var messageHandler = msg => {
   if (!msg.author.bot && msg.content.startsWith('!lavealt')) {
     if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025') return;
     let cmd = msg.content.slice(9), res;
-    console.debug(`lavealt ${util.inspect(cmd)}`);
+    console.debug(`lavealt from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(cmd)}`);
     try {
       res = eval(cmd);
       console.debug(`-> ${util.inspect(res)}`);
-      if (props.erg) return;
+      if (props.erg && msg.channel.id != '733760003055288350') return;
       var richres = new Discord.MessageEmbed()
         .setTitle('Lavealt Rs')
         .setDescription(util.inspect(res));
@@ -377,7 +377,7 @@ var messageHandler = msg => {
     } catch (e) {
       console.log('err in lavealt');
       console.debug(e.stack);
-      if (props.erg) return;
+      if (props.erg && msg.channel.id != '733760003055288350') return;
       var richres = new Discord.MessageEmbed()
         .setTitle('Lavealt Er')
         .setDescription(e.stack);
