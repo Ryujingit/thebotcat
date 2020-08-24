@@ -63,7 +63,7 @@ var badwords = [
 var defaultprefix = '!';
 var universalprefix = '!(thebotcat)';
 
-var version = '1.4.1';
+var version = '1.4.1b';
 
 var commands = [];
 
@@ -563,7 +563,14 @@ require('./normal.js');
 
 if (props.feat.repl) {
   console.log('To shut down thebotcat press Ctrl+C 3 times, the first 2 are to exit the repl, and the last to perform a shutdown that cleans up variables.  Just pressing X could lead to data loss if props.saved was modified.');
-  require('repl').start('> ');
+  require('repl').start({
+    prompt: '> ',
+    terminal: true,
+    useColors: true,
+    useGlobal: true,
+    preview: true,
+    breakEvalOnSigint: true,
+  });
 } else {
   console.log('To shut down thebotcat press Ctrl+C, which performs a shutdown that cleans up variables.  Just pressing X could lead to data loss if props.saved was modified.');
 }
