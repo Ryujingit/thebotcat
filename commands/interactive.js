@@ -63,27 +63,39 @@ module.exports = [
   {
     name: 'calc',
     full_string: false,
-    description: '`!calc <expression>` calculates the result of a mathematical expression using math.js evaluate',
+    description: '`!calc <expression>` calculates the result of a mathematical expression using math.js evaluate (<https://mathjs.org/docs/expressions/index.html> for info)\n' +
+      'Note: a delete command has been added to delete a property from an object:\n' +
+      '  `delete(obj, prop)` to delete `prop` from `obj` or\n' +
+      '  `delete(prop)` to delete `prop` from global scope',
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
       if (!props.saved.feat.calc) return msg.channel.send('Calculation features are disabled');
-      let expr = argstring, res, text;
+      let expr = argstring, res;
       console.debug(`calculating from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(expr)}`);
       let scope;
       if (!(scope = props.saved.calc_scopes[msg.author.id])) {
         scope = props.saved.calc_scopes[msg.author.id] = {};
       }
-      global.safecontext = false;
+      global.calccontext = scope;
       let promise;
       try {
         res = math.evaluate(expr, scope);
-        promise = msg.channel.send(text = `Result: ${res}`);
-        console.log(text);
+        if (res === undefined) res = 'undefined';
+        else if (res === null) res = 'null';
+        else if (typeof res == 'string') res = util.inspect(res);
+        else if (res.__proto__ == Object.prototype) {
+          res = math.matrix([res]).toString();
+          res = res.slice(1, res.length - 1);
+        } else res = res.toString();
+        if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(res.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) res = { embed: { title: 'Result', description: res } };
+        else res = `Result: ${res}`;
+        promise = msg.channel.send(res);
+        console.log(res);
       } catch (e) {
-        promise =  msg.channel.send(text = e.toString());
-        console.error(text);
+        promise = msg.channel.send(res = e.toString());
+        console.error(res);
       } finally {
-        global.safecontext = true;
+        global.calccontext = null;
       }
       schedulePropsSave();
       return promise;
@@ -101,12 +113,16 @@ module.exports = [
       let promise;
       if (scope) {
         try {
-          promise = msg.channel.send(text = JSON.stringify(scope, math.replacer));
+          text = JSON.stringify(scope, math.replacer);
+          if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Scope', description: text } };
+          promise = msg.channel.send(text);
           console.log(text);
         } catch (e) {
           console.error(e);
           try {
-            promise = msg.channel.send(text = `Scope too big to fit in a discord message, variables:\n${Reflect.ownKeys(scope).join(', ')}`);
+            text = `Scope too big to fit in a discord message, variables:\n${Reflect.ownKeys(scope).join(', ')}`
+            if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Scope', description: text } };
+            promise = msg.channel.send(text);
             console.log(text);
           } catch (e) {
             console.error(e);

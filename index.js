@@ -15,14 +15,22 @@ math.config({ number: 'BigNumber' });
 math.oldimport = math.import.bind(math);
 math.oldcreateUnit = math.createUnit.bind(math);
 math.import({
-  'import':     function (...args) { if (!safecontext) throw new Error('Function import is disabled'); return math.oldimport(...args); },
-  'createUnit': function (...args) { if (!safecontext) throw new Error('Function createUnit is disabled'); return math.oldcreateUnit(...args); },
+  'import':     function (...args) { if (calccontext) throw new Error('Function import is disabled'); return math.oldimport(...args); },
+  'createUnit': function (...args) { if (calccontext) throw new Error('Function createUnit is disabled'); return math.oldcreateUnit(...args); },
   /*'evaluate':   function () { throw new Error('Function evaluate is disabled') },
   'parse':      function () { throw new Error('Function parse is disabled') },
   'simplify':   function () { throw new Error('Function simplify is disabled') },
-  'derivative': function () { throw new Error('Function derivative is disabled') }*/
+  'derivative': function () { throw new Error('Function derivative is disabled') },*/
+  'delete':     function (...args) {
+    if (args.length == 2) {
+      return delete args[0][args[1]];
+    } else if (args.length == 1) {
+      if (calccontext) return delete calccontext[args[0]];
+      else return delete args[0];
+    } else throw new Error('Invalid arguments');
+  },
 }, { override: true });
-global.savecontext = true;
+global.calccontext = null;
 
 //                 Ryujin                coolguy284            amrpowershot
 var developers = ['405091324572991498', '312737536546177025'];
@@ -55,13 +63,16 @@ var badwords = [
 var defaultprefix = '!';
 var universalprefix = '!(thebotcat)';
 
-var version = '1.4.0';
+var version = '1.4.1';
 
 var commands = [];
 
 var procs = [];
 
 var props = {
+  feat: {
+    repl: false,
+  },
   saved: null,
   savedstringify: null,
   savescheduled: false,
@@ -272,8 +283,9 @@ function removeCommands(cmds) {
   }
 }
 function getCommandsCategorized() {
+  let commandsList = commands.filter(x => x.public);
   let commandsCategorized = { Uncategorized: [] };
-  commands.filter(x => x.public).forEach(x =>
+  commandsList.forEach(x =>
     x.category ?
       (commandsCategorized[x.category] ?
         commandsCategorized[x.category].push(x) :
@@ -282,7 +294,7 @@ function getCommandsCategorized() {
       commandsCategorized.uncategorized.push(x)
   );
   if (commandsCategorized.Uncategorized.length == 0) delete commandsCategorized.Uncategorized;
-  return commandsCategorized;
+  return [commandsList, commandsCategorized];
 }
 
 addCommands(require('./commands/administrative.js'), 'Administrative');
@@ -548,3 +560,10 @@ process.on('SIGINT', () => {
 });
 
 require('./normal.js');
+
+if (props.feat.repl) {
+  console.log('To shut down thebotcat press Ctrl+C 3 times, the first 2 are to exit the repl, and the last to perform a shutdown that cleans up variables.  Just pressing X could lead to data loss if props.saved was modified.');
+  require('repl').start('> ');
+} else {
+  console.log('To shut down thebotcat press Ctrl+C, which performs a shutdown that cleans up variables.  Just pressing X could lead to data loss if props.saved was modified.');
+}

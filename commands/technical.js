@@ -33,19 +33,17 @@ module.exports = [
   {
     name: 'help',
     full_string: false,
-    description: '`!help` to display number of commands\n`!help list` to list commands\n`!help <command>` to print help for command',
+    description: '`!help` to list commands\n`!help <command>` to print help for command',
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
       if (args.length == 0) {
-        return msg.channel.send(`I have ${commands.filter(x => x.public).length} commands, run \`!help list\` to list them or \`!help <command>\` for help on a specific command.`);
-      } else if (args[0] == 'list') {
-        let commandsCategorized = getCommandsCategorized();
+        let [ commandsList, commandsCategorized ] = getCommandsCategorized();
         return msg.channel.send({
           embed: {
-            title: 'Commands',
+            title: `Commands (${commandsList.length})`,
             description: 'Run `!help <command>` for help on a specific command.',
             fields: Object.keys(commandsCategorized).map(
-              x => ({ name: x, value: commandsCategorized[x].map(y => `\`${y.name}\``).join(', ') || 'None', inline: false })
+              x => ({ name: `${x} (${commandsCategorized[x].length})`, value: commandsCategorized[x].map(y => `\`${y.name}\``).join(', ') || 'None', inline: false })
             ),
           }
         });
