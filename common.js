@@ -45,7 +45,7 @@ function isAdmin(msg) {
 function isMod(msg) {
   if (!msg.guild) return false;
   if (!props.saved.guilds[msg.guild.id]) return false;
-  return Boolean(msg.member.roles.find(x => props.saved.guilds[msg.guild.id].modroles.includes(x.id)));
+  return Boolean(msg.member.roles.cache.find(x => props.saved.guilds[msg.guild.id].modroles.includes(x.id)));
 }
 
 
@@ -151,14 +151,14 @@ class BufferStream extends stream.Duplex {
     this.chunkslength += chunk.length;
     if (this.chunkslength < this.bufferSize) {
       cb();
-      if (this.dopush) this._read();
+      this.performPush();
     } else {
       this.chunkcb = cb;
-      if (this.dopush) this._read();
+      this.performPush();
     }
   }
   _final(cb) {
-    if (this.chunkcb) this.chunkcb();
+    if (this.chunkcb) setImmediate(this.chunkcb);
     if (this.chunks.length != 0) {
       this.push(Buffer.concat(this.chunks));
     }
@@ -166,7 +166,7 @@ class BufferStream extends stream.Duplex {
     cb();
   }
   _destroy(err, cb) {
-    if (this.chunkcb) this.chunkcb();
+    if (this.chunkcb) setImmediate(this.chunkcb);
     if (this.chunks.length != 0) {
       this.push(Buffer.concat(this.chunks));
     }
@@ -175,14 +175,26 @@ class BufferStream extends stream.Duplex {
   }
   _read(size) {
     this.dopush = true;
+    this.performPush();
+  }
+  performPush() {
+    if (!this.dopush) return;
+    if (this.chunks.length == 0) {
+      this.dopush = this.push(Buffer.alloc(0));
+      if (this.chunkcb) {
+        setImmediate(this.chunkcb);
+        this.chunkcb = null;
+      }
+      return;
+    }
     while (this.dopush && this.chunks.length > 0) {
       let buf = this.chunks.splice(0, 1)[0];
       this.dopush = this.push(buf);
       this.chunkslength -= buf.length;
-      if (this.chunkcb && this.chunkslength < this.bufferSize) {
-        this.chunkcb();
-        this.chunkcb = null;
-      }
+    }
+    if (this.chunkcb && this.chunkslength < this.bufferSize) {
+      setImmediate(this.chunkcb);
+      this.chunkcb = null;
     }
   }
 }
@@ -225,6 +237,7 @@ var clientVCManager = {
     voice.procpipe = null;
     voice.proc2 = null;
     voice.proc2pipe = null;
+    voice.mainloop = 0;
     voice.songslist.splice(0, Infinity);
     voice.volume = null;
     voice.loop = null;
@@ -258,6 +271,7 @@ var clientVCManager = {
     }
     let songslist = voice.songslist;
     let latestobj = {
+      query: query,
       url: null,
       desc: `${videoinfo.videoDetails.title} by ${videoinfo.videoDetails.author.name}`,
       expectedLength: null,
@@ -291,6 +305,7 @@ var clientVCManager = {
           voice.proc.stdout.pipe(voice.procpipe);
           //voice.proc.stderr.pipe(process.stderr);
         }
+        //voice.dispatcher = voice.connection.play(voice.songslist[0].query, { volume: voice.volume });
         voice.dispatcher = voice.connection.play(voice.procpipe, { volume: voice.volume });
         while (voice.dispatcher && !voice.dispatcher.destroyed) {
           await new Promise(r => setTimeout(r, 15));
@@ -300,13 +315,13 @@ var clientVCManager = {
             voice.proc2.stdout.pipe(voice.proc2pipe);
             //voice.proc2.stderr.pipe(process.stderr);
           }
-          if (voice.dispatcher.streamTime > voice.songslist[0].expectedLength - 2) voice.mainloop = 2;
+          if (voice.dispatcher && voice.dispatcher.streamTime > voice.songslist[0].expectedLength - 2) voice.mainloop = 2;
           if (voice.mainloop == 2) {
             voice.dispatcher.destroy();
-            voice.mainloop = 1;
           }
         }
-        if (voice.dispatcher && voice.dispatcher.streamTime < voice.songslist[0].expectedLength - 5000) msgchannel.send(`Error: something broke when playing ${voice.songslist[0].desc}`);
+        if (voice.mainloop != 2 && voice.dispatcher && voice.dispatcher.streamTime < voice.songslist[0].expectedLength - 5000) msgchannel.send(`Error: something broke when playing ${voice.songslist[0].desc}`);
+        if (voice.mainloop == 2) voice.mainloop = 1;
         if (!voice.loop) voice.songslist.splice(0, 1);
         try { voice.proc.kill(); } catch (e) {}
         voice.proc = null;

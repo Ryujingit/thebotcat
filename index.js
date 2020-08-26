@@ -63,7 +63,7 @@ var badwords = [
 var defaultprefix = '!';
 var universalprefix = '!(thebotcat)';
 
-var version = '1.4.1b';
+var version = '1.4.1c';
 
 var commands = [];
 
@@ -91,6 +91,7 @@ if (!props.saved) {
   props.saved = {
     feat: {
       calc: false,
+      audio: 0, // audio&1 = join/leave, audio&2 = music
       lamt: 0,
     },
     guilds: {
@@ -161,8 +162,11 @@ Object.defineProperty(props.saved.guilds.default, 'prefix', {
 });
 
 // props.saved integrity checks
-if (!props.saved.calc_scopes.shared) props.saved.calc_scopes.shared = {};
 (() => {
+  if (!props.saved.calc_scopes.shared) props.saved.calc_scopes.shared = {};
+  if (!('calc' in props.saved.feat)) props.saved.feat.calc = false;
+  if (!('audio' in props.saved.feat)) props.saved.feat.audio = 0;
+  if (!('lamt' in props.saved.feat)) props.saved.feat.lamt = 0;
   let ks = Object.keys(props.saved.guilds), obj;
   for (var i = 0; i < ks.length; i++) {
     obj = props.saved.guilds[ks[i]];

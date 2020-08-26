@@ -249,13 +249,13 @@ module.exports = [
       if (!props.saved.guilds[msg.guild.id]) return msg.channel.send('Error: cannot lock channel, guild not in database');
       let promise;
       if (args.length == 0) {
-        if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || msg.channel.permissionsFor(msg.member).hasPermission('MANAGE_CHANNEL'))) return msg.channel.send('You do not have permission to run this command.');
+        if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || msg.channel.permissionsFor(msg.member).has('MANAGE_CHANNEL'))) return msg.channel.send('You do not have permission to run this command.');
         let perms = common.serializePermissionOverwrites(msg.channel);
         let newperms = perms.map(x => Object.assign({}, x));
         let type = { dm: 0, text: 1, voice: 2, category: 3, news: 1, store: 1, unknown: 0 }[msg.channel.type];
         let bits = Discord.Permissions.FLAGS['SEND_MESSAGES'] * (type & 1) | Discord.Permissions.FLAGS['CONNECT'] * (type & 2);
         newperms.forEach(x => {
-          if (!(props.saved.guilds[msg.guild.id].modroles.includes(x.id) || x.type == 'role' && msg.guild.roles.get(x.id).hasPermission('MANAGE_CHANNELS'))) {
+          if (!(props.saved.guilds[msg.guild.id].modroles.includes(x.id) || x.type == 'role' && msg.guild.roles.get(x.id).has('MANAGE_CHANNELS'))) {
             x.allow &= ~bits;
             x.deny |= bits;
           }
@@ -271,7 +271,7 @@ module.exports = [
       } else if (/<#[0-9]+>/.test(args[0])) {
         let channelid = args[0].slice(2, args[0].length - 1), channel;
         if (channel = msg.guild.channels.find(x => x.id == channelid)) {
-          if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || channel.permissionsFor(msg.member).hasPermission('MANAGE_CHANNEL'))) return msg.channel.send('You do not have permission to run this command.');
+          if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || channel.permissionsFor(msg.member).has('MANAGE_CHANNEL'))) return msg.channel.send('You do not have permission to run this command.');
           let perms = common.serializePermissionOverwrites(channel);
           let newperms = perms.map(x => Object.assign({}, x));
           let type = { dm: 0, text: 1, voice: 2, category: 3, news: 1, store: 1, unknown: 0 }[channel.type];
@@ -304,7 +304,7 @@ module.exports = [
       if (!props.saved.guilds[msg.guild.id]) return msg.channel.send('Error: cannot unlock channel, guild not in database');
       let promise;
       if (args.length == 0) {
-        if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || msg.channel.permissionsFor(msg.member).hasPermission('MANAGE_CHANNEL'))) return msg.channel.send('You do not have permission to run this command.');
+        if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || msg.channel.permissionsFor(msg.member).has('MANAGE_CHANNEL'))) return msg.channel.send('You do not have permission to run this command.');
         let perms;
         if (perms = props.saved.guilds[msg.guild.id].savedperms[msg.channel.id]) {
           common.partialDeserializePermissionOverwrites(msg.channel, perms);
@@ -317,7 +317,7 @@ module.exports = [
       } else if (/<#[0-9]+>/.test(args[0])) {
         let channelid = args[0].slice(2, args[0].length - 1), channel;
         if (channel = msg.guild.channels.find(x => x.id == channelid)) {
-          if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || msg.channel.permissionsFor(msg.member).hasPermission('MANAGE_CHANNEL'))) return msg.channel.send('You do not have permission to run this command.');
+          if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || msg.channel.permissionsFor(msg.member).has('MANAGE_CHANNEL'))) return msg.channel.send('You do not have permission to run this command.');
           let perms;
           if (perms = props.saved.guilds[msg.guild.id].savedperms[channelid]) {
             common.partialDeserializePermissionOverwrites(channel, perms);
@@ -375,7 +375,7 @@ module.exports = [
         return msg.channel.send('You do not have permission to run this command.');
       var member = msg.mentions.members.first();
       if (member == null) return;
-      if (!client.hasPermission('KICK_MEMBERS')) {
+      if (!msg.guild.me.hasPermission('KICK_MEMBERS')) {
         var kickerror = new Discord.MessageEmbed()
           .setTitle("Error")
           .setDescription(`I do not have permission to kick members.`);
@@ -407,7 +407,7 @@ module.exports = [
         return msg.channel.send('You do not have permission to run this command.');
       var member = msg.mentions.members.first();
       if (member == null) return;
-      if (!client.hasPermission('BAN_MEMBERS')) {
+      if (!msg.guild.me.hasPermission('BAN_MEMBERS')) {
         var banerror = new Discord.MessageEmbed()
           .setTitle("Error")
           .setDescription(`I do not have permission to ban members.`);
@@ -439,7 +439,7 @@ module.exports = [
         return msg.channel.send('You do not have permission to run this command.');
       var member = msg.mentions.members.first();
       if (member == null) return;
-      if (!client.hasPermission('MANAGE_SERVER')) {
+      if (!msg.guild.me.hasPermission('MANAGE_SERVER')) {
         var unbanerror = new Discord.MessageEmbed()
           .setTitle("Error")
           .setDescription(`I do not have permission to unban members.`);

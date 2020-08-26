@@ -3,8 +3,9 @@ module.exports = [
     name: 'join',
     full_string: false,
     description: '`!join` for me to join the voice channel you are in\n`!join <channel>` for me to join a voice channel',
-    public: false,
+    public: true,
     async execute(msg, cmdstring, command, argstring, args) {
+      if (!(props.saved.feat.audio & 1)) return msg.channel.send('Join/leave features are disabled');
       let guilddata;
       if (!(guilddata = props.saved.guilds[msg.guild.id])) return msg.channel.send('Error: cannot join voice channel, guild not in database');
       let channel;
@@ -23,9 +24,9 @@ module.exports = [
       let channelPerms = channel.permissionsFor(msg.member);
       let requiresMod = channel.full || guilddata.voice.channel && guilddata.voice.channel.members.keyArray().length == 1 && guilddata.voice.songslist.length == 0;
       if (requiresMod && !(
-          common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || channelPerms.hasPermission('MOVE_MEMBERS')
+          common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || channelPerms.has('MOVE_MEMBERS')
         ) || !requiresMod && !(
-          common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || channelPerms.hasPermission('MOVE_MEMBERS') || channelPerms.hasPermission('CONNECT')
+          common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || channelPerms.has('MOVE_MEMBERS') || channelPerms.has('CONNECT')
         )) return msg.channel.send('You do not have permission to get me to join the voice channel you are in.');
       try {
         await common.clientVCManager.join(guilddata.voice, channel);
@@ -40,14 +41,15 @@ module.exports = [
     name: 'leave',
     full_string: false,
     description: '`!leave` for me to leave the voice channel I am in',
-    public: false,
+    public: true,
     execute(msg, cmdstring, command, argstring, args) {
+      if (!(props.saved.feat.audio & 1)) return msg.channel.send('Join/leave features are disabled');
       let guilddata;
       if (!(guilddata = props.saved.guilds[msg.guild.id])) return msg.channel.send('Error: cannot join voice channel, guild not in database');
       let channel;
       if (!(channel = guilddata.voice.channel)) return msg.channel.send('I\'m not in a voice channel');
       let vcmembers = channel.members.keyArray();
-      if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || channelPerms.hasPermission('MOVE_MEMBERS') || channelPerms.hasPermission('DISCONNECT') || vcmembers.length == 2 && vcmembers.includes(msg.author.id) || vcmembers.length == 1 && guilddata.voice.songslist.length == 0))
+      if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || channelPerms.has('MOVE_MEMBERS') || channelPerms.has('DISCONNECT') || vcmembers.length == 2 && vcmembers.includes(msg.author.id) || vcmembers.length == 1 && guilddata.voice.songslist.length == 0))
         return msg.channel.send('You do not have permission to get me to leave the voice channel.');
       common.clientVCManager.leave(guilddata.voice);
       return msg.channel.send(`Left channel <#${channel.id}>`);
@@ -57,9 +59,9 @@ module.exports = [
     name: 'volume',
     full_string: false,
     description: '`!volume <float>` sets the volume of thebotcat in a vc, with 1 being the normal volume',
-    public: false,
+    public: true,
     execute(msg, cmdstring, command, argstring, args) {
-      if (!common.isDeveloper(msg)) return;
+      if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata;
       if (!(guilddata = props.saved.guilds[msg.guild.id])) return msg.channel.send('Error: cannot adjust volume in voice channel, guild not in database');
       let channel;
@@ -82,9 +84,9 @@ module.exports = [
     name: 'loop',
     full_string: false,
     description: '`!loop` toggles whether the currently playing song will loop',
-    public: false,
+    public: true,
     execute(msg, cmdstring, command, argstring, args) {
-      if (!common.isDeveloper(msg)) return;
+      if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata;
       if (!(guilddata = props.saved.guilds[msg.guild.id])) return msg.channel.send('Error: cannot toggle loop in voice channel, guild not in database');
       let channel;
@@ -100,9 +102,9 @@ module.exports = [
     name: 'pause',
     full_string: false,
     description: '`!pause` pauses the currently playing song',
-    public: false,
+    public: true,
     execute(msg, cmdstring, command, argstring, args) {
-      if (!common.isDeveloper(msg)) return;
+      if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata;
       if (!(guilddata = props.saved.guilds[msg.guild.id])) return msg.channel.send('Error: cannot pause song in voice channel, guild not in database');
       let channel;
@@ -119,9 +121,9 @@ module.exports = [
     name: 'resume',
     full_string: false,
     description: '`!resume` resumes the currently paused song',
-    public: false,
+    public: true,
     execute(msg, cmdstring, command, argstring, args) {
-      if (!common.isDeveloper(msg)) return;
+      if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata;
       if (!(guilddata = props.saved.guilds[msg.guild.id])) return msg.channel.send('Error: cannot resume song in voice channel, guild not in database');
       let channel;
@@ -138,9 +140,9 @@ module.exports = [
     name: 'forceskip',
     full_string: false,
     description: '`!forceskip` skips the currently playing song',
-    public: false,
+    public: true,
     execute(msg, cmdstring, command, argstring, args) {
-      if (!common.isDeveloper(msg)) return;
+      if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata;
       if (!(guilddata = props.saved.guilds[msg.guild.id])) return msg.channel.send('Error: cannot skip song in voice channel, guild not in database');
       let channel;
@@ -157,9 +159,9 @@ module.exports = [
     name: 'play',
     full_string: false,
     description: '`!play <url>` to play the audio of a youtube url, like every other music bot in existence',
-    public: false,
+    public: true,
     async execute(msg, cmdstring, command, argstring, args) {
-      if (!common.isDeveloper(msg)) return;
+      if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata;
       if (!(guilddata = props.saved.guilds[msg.guild.id])) return msg.channel.send('Error: cannot play music in voice channel, guild not in database');
       if (!guilddata.voice.channel) return msg.channel.send('I\'m not in a voice channel');
@@ -180,9 +182,9 @@ module.exports = [
     name: 'songslist',
     full_string: false,
     description: '`!songslist` to list the currently playing song and the next songs',
-    public: false,
+    public: true,
     execute(msg, cmdstring, command, argstring, args) {
-      if (!common.isDeveloper(msg)) return;
+      if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata;
       if (!(guilddata = props.saved.guilds[msg.guild.id])) return msg.channel.send('Error: cannot play music in voice channel, guild not in database');
       if (!guilddata.voice.channel) return msg.channel.send('I\'m not in a voice channel');
@@ -199,16 +201,16 @@ module.exports = [
     name: 'currentsong',
     full_string: false,
     description: '`!currentsong` to list the currently playing song',
-    public: false,
+    public: true,
     execute(msg, cmdstring, command, argstring, args) {
-      if (!common.isDeveloper(msg)) return;
+      if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata;
       if (!(guilddata = props.saved.guilds[msg.guild.id])) return msg.channel.send('Error: cannot play music in voice channel, guild not in database');
       if (!guilddata.voice.channel) return msg.channel.send('I\'m not in a voice channel');
       let songslist = guilddata.voice.songslist;
       if (songslist.length == 0)
         return msg.channel.send('Currently playing no songs');
-      else if (songslist.length == 1)
+      else
         return msg.channel.send(`Currently playing ${songslist[0].desc} (${guilddata.voice.dispatcher ? common.msecToHMS(guilddata.voice.dispatcher.streamTime) : '-:--.---'} / ${common.msecToHMS(songslist[0].expectedLength)})`);
     }
   },
