@@ -23,6 +23,94 @@ function msecToHMS(ms) {
 }
 
 
+class BreakError extends Error {}
+
+// starts with an object and accesses a properties of it based on the given array
+function arrayGet(obj, props) {
+  for (var i = 0; i < props.length; i++) {
+    obj = obj[props[i]];
+  }
+  return obj;
+}
+
+/* i32arr[0] values:
+  0 = nothing
+  1 = receiving buffer
+  2 = receiving buffer ack
+  3 = sending buffer
+  4 = sending buffer ack
+*/
+async function sendObjThruBuffer(buffer, i32arr, obj, checkcancelflag) {
+  //console.log(process.hrtime()[1].toString().padStart(9, '0'), 'send', obj);
+  if (typeof obj == 'undefined') throw new Error('senddefined');
+  obj = v8.serialize(obj);
+  //console.log('serr', obj);
+  if (obj.length > 65536) throw new Error('local tcp meltdown');
+  let buffobj = Buffer.from(buffer);
+  Atomics.store(i32arr, 1, obj.length);
+  obj.copy(buffobj, 8, 0, 65536);
+  Atomics.store(i32arr, 0, 3);
+  //console.log(process.hrtime()[1].toString().padStart(9, '0'), 'send2');
+  while (Atomics.load(i32arr, 0) == 3 && (checkcancelflag ? (checkcancelflag() ? true : (() => { throw new BreakError(); })()) : true))
+    await new Promise(r => setTimeout(r, 5));
+  //console.log(process.hrtime()[1].toString().padStart(9, '0'), 'send3', Atomics.load(i32arr));
+  Atomics.store(i32arr, 0, 0);
+  //console.log(process.hrtime()[1].toString().padStart(9, '0'), 'send4');
+  /*console.log('send', Atomics.load(i32arr, 0));
+  obj = v8.serialize(obj);
+  console.log('send2', [obj, Atomics.load(i32arr, 0)]);
+  while (Atomics.load(i32arr, 0) == 2 && (checkcancelflag ? (checkcancelflag() ? true : (() => { throw new BreakError(); })()) : true))
+    await new Promise(r => setTimeout(r, 5));
+  console.log('send2government', Atomics.load(i32arr, 0));
+  let buffobj = Buffer.from(buffer);
+  for (var loc = 0; loc < obj.length; loc += 65536) {
+    Atomics.store(i32arr, 1, obj.length - loc);
+    console.log('send3', Atomics.load(i32arr, 0));
+    Atomics.store(i32arr, 0, 3);
+    console.log('send3government', Atomics.load(i32arr, 0));
+    obj.copy(buffobj, 8, loc, loc + 65536);
+    while (Atomics.load(i32arr, 0) == 3 && (checkcancelflag ? (checkcancelflag() ? true : (() => { throw new BreakError(); })()) : true))
+      await new Promise(r => setTimeout(r, 5));
+    console.log('send4gubber', Atomics.load(i32arr, 0));
+  }
+  Atomics.store(i32arr, 0, 0);*/
+}
+
+async function receiveObjThruBuffer(buffer, i32arr, checkcancelflag) {
+  //console.log(process.hrtime()[1].toString().padStart(9, '0'), 'recv');
+  while (Atomics.load(i32arr, 0) == 0 && (checkcancelflag ? (checkcancelflag() ? true : (() => { throw new BreakError(); })()) : true))
+    await new Promise(r => setTimeout(r, 5));
+  //console.log(process.hrtime()[1].toString().padStart(9, '0'), 'recv2');
+  if (Atomics.load(i32arr, 0) == 0) throw new Error('recv stopped');
+  let amt = Atomics.load(i32arr, 1);
+  let obj = Buffer.alloc(amt);
+  Buffer.from(buffer).copy(obj, 0, 8, 8 + 65536);
+  Atomics.store(i32arr, 0, 2);
+  while (Atomics.load(i32arr, 0) == 2 && (checkcancelflag ? (checkcancelflag() ? true : (() => { throw new BreakError(); })()) : true))
+    await new Promise(r => setTimeout(r, 5));
+  //console.log(process.hrtime()[1].toString().padStart(9, '0'), 'recv3', [obj, Atomics.load(i32arr, 0)]);
+  return v8.deserialize(obj);
+  /*console.log('recv', Atomics.load(i32arr, 0));
+  let obj = [];
+  while (Atomics.load(i32arr, 0) == 0 && (checkcancelflag ? (checkcancelflag() ? true : (() => { throw new BreakError(); })()) : true))
+    await new Promise(r => setTimeout(r, 5));
+  console.log('recv2', Atomics.load(i32arr, 0));
+  let amt, objappend;
+  while ((amt = Atomics.load(i32arr, 1)) > 0) {
+    objappend = Buffer.alloc(Math.min(65536, amt));
+    Buffer.from(buffer).copy(objappend, 0, 8, 8 + objappend.length);
+    obj.push(objappend);
+    console.log('recv3', [objappend, amt]);
+    Atomics.store(i32arr, 0, 2);
+    while (Atomics.load(i32arr, 0) == 2 && (checkcancelflag ? (checkcancelflag() ? true : (() => { throw new BreakError(); })()) : true))
+      await new Promise(r => setTimeout(r, 5));
+    if (amt <= 65536) break;
+  }
+  console.log('recv done', Atomics.load(i32arr, 0));
+  return v8.deserialize(Buffer.concat(obj));*/
+}
+
+
 // the next five functions are self explanatory, although isMod refers to bot moderator role
 function isDeveloper(msg) {
   return (!props.erg || msg.channel.id == '724006510576926810' || msg.channel.id == '733760003055288350') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id);
@@ -339,7 +427,7 @@ var clientVCManager = {
 // also an interesting way to make js cleaner is by shortening { e: e } to { e }, and the compiler still understands
 module.exports = {
   constants,
-  msecToHMS,
+  msecToHMS, arrayGet, BreakError, sendObjThruBuffer, receiveObjThruBuffer,
   isDeveloper, isConfirmDeveloper, isOwner, isAdmin, isMod,
   getPermissions,
   serializePermissionOverwrites,

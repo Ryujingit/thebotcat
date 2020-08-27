@@ -68,7 +68,7 @@ module.exports = [
       '  `delete(obj, prop)` to delete `prop` from `obj` or\n' +
       '  `delete(prop)` to delete `prop` from global scope',
     public: true,
-    execute(msg, cmdstring, command, argstring, args) {
+    async execute(msg, cmdstring, command, argstring, args) {
       if (!props.saved.feat.calc) return msg.channel.send('Calculation features are disabled');
       let expr = argstring, res;
       console.debug(`calculating from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(expr)}`);
@@ -79,21 +79,98 @@ module.exports = [
       global.calccontext = scope;
       let promise;
       try {
-        res = math.evaluate(expr, scope);
-        if (res === undefined) res = 'undefined';
-        else if (res === null) res = 'null';
-        else if (typeof res == 'string') res = util.inspect(res);
-        else if (res.__proto__ == Object.prototype) {
-          res = math.matrix([res]).toString();
-          res = res.slice(1, res.length - 1);
-        } else res = res.toString();
-        if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(res.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) res = { embed: { title: 'Result', description: res } };
-        else res = `Result: ${res}`;
-        promise = msg.channel.send(res);
-        console.log(res);
+        if (doWorkers) {
+          // shared array buffer is used to access properties of scope, due to the worker-side of the code having to be synchronous
+          let buffer = new SharedArrayBuffer(8 + 65536), obj;
+          let i32arr = new Int32Array(buffer);
+          let doLoop = true;
+          let doLoopChecker = () => doLoop;
+          let loopFunc = (async () => {
+            let obj, action;
+            while (doLoop) {
+              try { action = await common.receiveObjThruBuffer(buffer, i32arr, doLoopChecker); } catch (e) { if (e instanceof common.BreakError) return; throw e; }
+              try {
+                console.log('doloop', action);
+                switch (action.type) {
+                  case 'has':
+                    obj = common.arrayGet(scope, action.props);
+                    await common.sendObjThruBuffer(buffer, i32arr, action.prop in obj, doLoopChecker);
+                    break;
+                  case 'get':
+                    let parentobj = common.arrayGet(scope, action.props);
+                    obj = parentobj[action.prop];
+                    if (action.prop == 'toString' && typeof obj == 'function')
+                      await common.sendObjThruBuffer(buffer, i32arr, { val: parentobj.toString() }, doLoopChecker);
+                    else if (typeof obj != 'object' && typeof obj != 'function')
+                      await common.sendObjThruBuffer(buffer, i32arr, { val: obj }, doLoopChecker);
+                    else if (Object.getPrototypeOf(obj) == Object.prototype)
+                      await common.sendObjThruBuffer(buffer, i32arr, {}, doLoopChecker);
+                    else
+                      await common.sendObjThruBuffer(buffer, i32arr, JSON.stringify(obj, math.replacer), doLoopChecker);
+                    break;
+                  case 'set':
+                    obj = common.arrayGet(scope, action.props);
+                    obj[action.prop] = JSON.parse(action.val, math.reviver);
+                    await common.sendObjThruBuffer(buffer, i32arr, null, doLoopChecker);
+                    break;
+                  case 'delete':
+                    obj = common.arrayGet(scope, action.props);
+                    await common.sendObjThruBuffer(buffer, i32arr, delete obj[action.prop], doLoopChecker);
+                    break;
+                  case 'ownKeys':
+                    obj = common.arrayGet(scope, action.props);
+                    await common.sendObjThruBuffer(buffer, i32arr, Reflect.ownKeys(obj), doLoopChecker);
+                    break;
+                  case 'stop':
+                    doLoop = false;
+                    break;
+                }
+              } catch (e) {
+                if (e instanceof common.BreakError) {
+                  doLoop = false;
+                  Atomics.store(i32arr, 0, 0);
+                  return;
+                }
+                await common.sendObjThruBuffer(buffer, i32arr, e, doLoopChecker);
+              }
+            }
+          })();
+          res = await pool.exec('mathevaluate', [msg.author.id, expr, buffer]);
+          doLoop = false;
+          await loopFunc;
+          //console.log('monee');
+          //console.log(doLoop);
+          //console.log(doLoopChecker());
+        } else {
+          mathVMContext.expr = expr;
+          mathVMContext.scope = scope;
+          vm.runInContext('res = math.evaluate(expr, scope)', mathVMContext, {timeout: common.isDeveloper(msg) ? 1000 : 100});
+          res = mathVMContext.res;
+          if (res === undefined) res = 'undefined';
+          else if (res === null) res = 'null';
+          else if (typeof res == 'string') res = util.inspect(res);
+          else if (Object.getPrototypeOf(res) == Object.prototype) {
+            res = math.matrix([res]).toString();
+            res = res.slice(1, res.length - 1);
+          } else res = res.toString();
+          if (res.length > 1900) res = res.slice(0, 1900) + '...';
+          if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(res.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) res = { embed: { title: 'Result', description: res } };
+          else res = `Result: ${res}`;
+        }
+        try {
+          console.log(res);
+          promise = await msg.channel.send(res);
+        } catch (e) {
+          promise = await msg.channel.send('Error: result too big to fit in discord message');
+        }
       } catch (e) {
-        promise = msg.channel.send(res = e.toString());
+        res = e.toString();
         console.error(res);
+        if (/^Error: Script execution timed out after [0-9]+ms$/.test(res)) {
+          promise = msg.channel.send(`Error: expression timeout after ${res.slice(40, Infinity)}`);
+        } else {
+          promise = msg.channel.send(res);
+        }
       } finally {
         global.calccontext = null;
       }

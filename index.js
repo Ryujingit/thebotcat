@@ -1,8 +1,14 @@
-var starttime = new Date();
+var starttime = new Date(), loadtime;
+
+var exitHandled = false;
+
+var doWorkers = false;
 
 var https = require('https');
 var fs = require('fs');
 var util = require('util');
+var v8 = require('v8');
+var vm = require('vm');
 var cp = require('child_process');
 var stream = require('stream');
 var Discord = require('discord.js');
@@ -31,6 +37,23 @@ math.import({
   },
 }, { override: true });
 global.calccontext = null;
+
+if (doWorkers) {
+  try {
+    var workerpool = require('workerpool');
+  } catch (e) {
+    console.log('doWorkers set to true but workerpool not available so doWorkers set to false');
+    doWorkers = false;
+  }
+}
+if (doWorkers) {
+  var worker = require('worker_threads');
+  var pool = workerpool.pool(__dirname + '/worker.js', { workerType: 'thread', maxWorkers: 3 });
+  Object.assign(global, { worker, workerpool, pool });
+} else {
+  var mathVMContext = vm.createContext({ math });
+  Object.assign(global, { mathVMContext });
+}
 
 //                 Ryujin                coolguy284            amrpowershot
 var developers = ['405091324572991498', '312737536546177025'];
@@ -63,7 +86,7 @@ var badwords = [
 var defaultprefix = '!';
 var universalprefix = '!(thebotcat)';
 
-var version = '1.4.1c';
+var version = '1.4.2';
 
 var commands = [];
 
@@ -224,8 +247,32 @@ var logmsg = function (val) {
   return client.channels.cache.get('736426551050109010').send(val);
 };
 
-Object.assign(global, { starttime, https, fs, util, cp, stream, Discord, ytdl, common, math, client, developers, confirmdevelopers, mutelist, badwords, commands, procs, props, propsSave, schedulePropsSave, indexeval, infomsg, logmsg, addBadWord, removeBadWord, addCommand, addCommands, removeCommand, removeCommands, getCommandsCategorized });
+Object.assign(global, { https, fs, util, v8, vm, cp, stream, Discord, ytdl, common, math, client, developers, confirmdevelopers, mutelist, badwords, commands, procs, props, propsSave, schedulePropsSave, indexeval, infomsg, logmsg, addBadWord, removeBadWord, addCommand, addCommands, removeCommand, removeCommands, getCommandsCategorized });
 Object.defineProperties(global, {
+  exitHandled: {
+    configurable: true,
+    enumerable: true,
+    get() { return exitHandled; },
+    set(val) { return exitHandled = val; },
+  },
+  starttime: {
+    configurable: true,
+    enumerable: true,
+    get() { return starttime; },
+    set(val) { starttime = val; },
+  },
+  loadtime: {
+    configurable: true,
+    enumerable: true,
+    get() { return loadtime; },
+    set(val) { loadtime = val; },
+  },
+  doWorkers: {
+    configurable: true,
+    enumerable: true,
+    get() { return doWorkers; },
+    set(val) { doWorkers = val; },
+  },
   defaultprefix: {
     configurable: true,
     enumerable: true,
@@ -255,6 +302,12 @@ Object.defineProperties(global, {
     enumerable: true,
     get() { return voiceStateUpdateHandler; },
     set(val) { return voiceStateUpdateHandler = val; },
+  },
+  exitHandler: {
+    configurable: true,
+    enumerable: true,
+    get() { return exitHandler; },
+    set(val) { return exitHandler = val; },
   },
 });
 
@@ -375,6 +428,7 @@ global.messageHandlers = messageHandlers;
   }
   console.log('All caught up');
   propsSave();
+  loadtime = new Date();
 })();
 
 var messageHandler = msg => {
@@ -555,26 +609,35 @@ process.on('unhandledRejection', function (reason, p) {
   console.error(reason);
 });
 
-process.on('exit', propsSave);
-
-process.on('SIGINT', () => {
+function exitHandler() {
+  if (exitHandled) return;
   console.log('\nShutting down');
   propsSave();
+  exitHandled = true;
   process.exit();
-});
+}
+
+process.on('exit', exitHandler);
+
+process.on('SIGINT', exitHandler);
 
 require('./normal.js');
 
 if (props.feat.repl) {
-  console.log('To shut down thebotcat press Ctrl+C 3 times, the first 2 are to exit the repl, and the last to perform a shutdown that cleans up variables.  Just pressing X could lead to data loss if props.saved was modified.');
-  require('repl').start({
-    prompt: '> ',
-    terminal: true,
-    useColors: true,
-    useGlobal: true,
-    preview: true,
-    breakEvalOnSigint: true,
-  });
+  console.log('To shut down thebotcat press Ctrl+C twice or Ctrl+D to exit the repl, after which a shutdown is performed that cleans up variables.  Just pressing X could lead to data loss if props.saved was modified.');
+  (async () => {
+    while (!loadtime)
+      await new Promise(r => setTimeout(r, 5));
+    global.replServer = require('repl').start({
+      prompt: '> ',
+      terminal: true,
+      useColors: true,
+      useGlobal: true,
+      preview: true,
+      breakEvalOnSigint: true,
+    });
+    global.replServer.on('exit', exitHandler);
+  })();
 } else {
   console.log('To shut down thebotcat press Ctrl+C, which performs a shutdown that cleans up variables.  Just pressing X could lead to data loss if props.saved was modified.');
 }

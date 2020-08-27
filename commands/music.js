@@ -171,7 +171,7 @@ module.exports = [
       try {
         latestobj = await common.clientVCManager.addSong(guilddata.voice, args[0]);
       } catch (e) {
-        console.error(e);
+        if (e.toString() != 'Error: invalid url') console.error(e);
         return msg.channel.send('Invalid url');
       }
       msg.channel.send(`${latestobj.desc} added to queue`);
