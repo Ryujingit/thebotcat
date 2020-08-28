@@ -90,7 +90,6 @@ module.exports = [
             while (doLoop) {
               try { action = await common.receiveObjThruBuffer(buffer, i32arr, doLoopChecker); } catch (e) { if (e instanceof common.BreakError) return; throw e; }
               try {
-                console.log('doloop', action);
                 switch (action.type) {
                   case 'has':
                     obj = common.arrayGet(scope, action.props);
@@ -98,15 +97,19 @@ module.exports = [
                     break;
                   case 'get':
                     let parentobj = common.arrayGet(scope, action.props);
-                    obj = parentobj[action.prop];
-                    if (action.prop == 'toString' && typeof obj == 'function')
-                      await common.sendObjThruBuffer(buffer, i32arr, { val: parentobj.toString() }, doLoopChecker);
-                    else if (typeof obj != 'object' && typeof obj != 'function')
-                      await common.sendObjThruBuffer(buffer, i32arr, { val: obj }, doLoopChecker);
-                    else if (Object.getPrototypeOf(obj) == Object.prototype)
-                      await common.sendObjThruBuffer(buffer, i32arr, {}, doLoopChecker);
-                    else
-                      await common.sendObjThruBuffer(buffer, i32arr, JSON.stringify(obj, math.replacer), doLoopChecker);
+                    if (!(action.prop in parentobj)) {
+                        await common.sendObjThruBuffer(buffer, i32arr, { object: false }, doLoopChecker);
+                    } else {
+                      obj = parentobj[action.prop];
+                      if (action.prop == 'toString' && typeof obj == 'function')
+                        await common.sendObjThruBuffer(buffer, i32arr, { val: parentobj.toString() }, doLoopChecker);
+                      else if (typeof obj != 'object' && typeof obj != 'function')
+                        await common.sendObjThruBuffer(buffer, i32arr, { val: obj }, doLoopChecker);
+                      else if (Object.getPrototypeOf(obj) == Object.prototype)
+                        await common.sendObjThruBuffer(buffer, i32arr, { object: true }, doLoopChecker);
+                      else
+                        await common.sendObjThruBuffer(buffer, i32arr, JSON.stringify(obj, math.replacer), doLoopChecker);
+                    }
                     break;
                   case 'set':
                     obj = common.arrayGet(scope, action.props);
@@ -135,9 +138,14 @@ module.exports = [
               }
             }
           })();
-          res = await pool.exec('mathevaluate', [msg.author.id, expr, buffer]);
-          doLoop = false;
-          await loopFunc;
+          try {
+            res = await pool.exec('mathevaluate', [msg.author.id, expr, buffer]);
+            doLoop = false;
+            await loopFunc;
+          } catch (e) {
+            if (doLoop) doLoop = false;
+            throw e;
+          }
           //console.log('monee');
           //console.log(doLoop);
           //console.log(doLoopChecker());

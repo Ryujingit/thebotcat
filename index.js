@@ -1,4 +1,4 @@
-var starttime = new Date(), loadtime;
+var starttime = new Date(), loadtime, readytime;
 
 var exitHandled = false;
 
@@ -86,7 +86,7 @@ var badwords = [
 var defaultprefix = '!';
 var universalprefix = '!(thebotcat)';
 
-var version = '1.4.2';
+var version = '1.4.2b';
 
 var commands = [];
 
@@ -266,6 +266,12 @@ Object.defineProperties(global, {
     enumerable: true,
     get() { return loadtime; },
     set(val) { loadtime = val; },
+  },
+  readytime: {
+    configurable: true,
+    enumerable: true,
+    get() { return readytime; },
+    set(val) { readytime = val; },
   },
   doWorkers: {
     configurable: true,
@@ -476,9 +482,7 @@ var messageHandler = msg => {
   
   // this is the screening for bad words part
   if (msg.guild) {
-    let isdeveloper = !props.erg && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id),
-        isadmin = msg.member.hasPermission('ADMINISTRATOR'),
-        ismod = props.saved.guilds[msg.guild.id] ? msg.member.roles.cache.filter(x => props.saved.guilds[msg.guild.id].modroles.includes(x)) != null : false;
+    let isdeveloper = common.isDeveloper(msg), isadmin = common.isAdmin(msg), ismod = common.isMod(msg);
     let dodelete = false;
     let word, content, bypass;
     for (var i = 0; i < badwords.length; i++) {
@@ -559,6 +563,8 @@ client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
   
   client.user.setActivity(`${defaultprefix} | ${client.guilds.cache.size} servers | wash your hands kids`);
+  
+  readytime = new Date();
 });
 
 client.on('guildCreate', guild => {
@@ -611,7 +617,7 @@ process.on('unhandledRejection', function (reason, p) {
 
 function exitHandler() {
   if (exitHandled) return;
-  console.log('\nShutting down');
+  console.log('Shutting down');
   propsSave();
   exitHandled = true;
   process.exit();
@@ -626,7 +632,7 @@ require('./normal.js');
 if (props.feat.repl) {
   console.log('To shut down thebotcat press Ctrl+C twice or Ctrl+D to exit the repl, after which a shutdown is performed that cleans up variables.  Just pressing X could lead to data loss if props.saved was modified.');
   (async () => {
-    while (!loadtime)
+    while ((!loadtime || !readytime) && Date.now() < starttime.getTime() + 10000)
       await new Promise(r => setTimeout(r, 5));
     global.replServer = require('repl').start({
       prompt: '> ',
