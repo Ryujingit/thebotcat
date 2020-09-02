@@ -131,27 +131,15 @@ function serializePermissionOverwrites(channel) {
     ({
       id: x.id,
       type: x.type,
-      deny: x.deny,
-      allow: x.allow,
+      deny: x.deny.bitfield,
+      allow: x.allow.bitfield,
     })
   );
 }
 
 // takes the array returned by the above function, and applies the permission overwrites it represents
 function partialDeserializePermissionOverwrites(channel, perms) {
-  var k = Object.keys(Discord.Permissions.FLAGS), obj;
-  for (var i = 0; i < perms.length; i++) {
-    obj = {};
-    for (var j = 0; j < k.length; j++) {
-      if (perms[i].allow & Discord.Permissions.FLAGS[k[j]])
-        obj[k[j]] = true;
-      else if (perms[i].deny & Discord.Permissions.FLAGS[k[j]])
-        obj[k[j]] = false;
-      else
-        obj[k[j]] = null;
-    }
-    channel.overwritePermissions(perms[i].id, obj);
-  }
+  channel.overwritePermissions(perms);
 }
 
 // like the above function except that channel overwrites are wiped first so the channel ONLY has the permissions that were in the array
@@ -166,6 +154,36 @@ function serializedPermissionsEqual(perms1, perms2) {
   return perms1.every((x, i) => {
     return x.id == perms2[i].id && x.type == perms2[i].type && x.allow == perms2[i].allow && x.deny == perms2[i].deny;
   });
+}
+
+
+// used to artifically run a command
+function invokeMessageHandler(obj, options) {
+  if (typeof obj == 'string') {
+    obj = {
+      content: obj,
+      author: { id: '312737536546177025', tag: 'coolguy284#5720' },
+      channel: { id: '688806772382761040', name: 'private-testing', send: options && options.sendcb ? options.sendcb : () => {} },
+      guild: { id: '688806155530534931', name: 'Thebotcat Support' },
+      member: { hasPermission: () => true, roles: { cache: { find: () => true } } },
+    };
+  } else if (typeof obj == 'object') {
+    if (!('content' in obj)) obj.content = '';
+    if (!('author' in obj)) obj.author = { id: '312737536546177025', tag: 'coolguy284#5720' };
+    else if (typeof obj.author == 'string') obj.author = client.users.cache.get(obj.author);
+    if (!('channel' in obj)) obj.channel = { id: '688806772382761040', name: 'private-testing', send: options && options.sendcb ? options.sendcb : () => {} };
+    else if (typeof obj.channel == 'string') obj.channel = client.channels.cache.get(obj.author);
+    if (!('guild' in obj)) obj.guild = { id: '688806155530534931', name: 'Thebotcat Support' };
+    else if (typeof obj.guild == 'string') obj.guild = client.guilds.cache.get(obj.guild);
+    if (obj.guild) {
+      if (!('member' in obj)) {
+        if (obj.author && obj.author.id) {
+          obj.member = obj.guild.members ? obj.guild.members.cache.get(obj.author.id) : { hasPermission: () => true, roles: { cache: { find: () => true } } };
+        } else obj.member = { hasPermission: () => true, roles: { cache: { find: () => true } } };
+      } else if (typeof obj.member == 'string') obj.member = obj.guild.members.cache.get(obj.guild);
+    }
+  } else return;
+  return messageHandler(obj);
 }
 
 
@@ -276,7 +294,12 @@ var clientVCManager = {
   join: async function join(voice, channel) {
     if (voice.channel) clientVCManager.leave(voice);
     voice.channel = channel;
-    voice.connection = await channel.join();
+    try {
+      voice.connection = await channel.join();
+    } catch (e) {
+      voice.channel = null;
+      throw e;
+    }
     voice.volume = 1;
     voice.loop = false;
   },
@@ -399,6 +422,7 @@ module.exports = {
   serializePermissionOverwrites,
   partialDeserializePermissionOverwrites, completeDeserializePermissionOverwrites,
   serializedPermissionsEqual,
+  invokeMessageHandler,
   rps,
   BufferStream,
   clientVCManager,

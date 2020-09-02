@@ -155,7 +155,7 @@ module.exports = [
           if (/^<@&[0-9]+>$/.test(args[2])) roleid = args[2].slice(3, args[2].length - 1);
           else if (/^[0-9]+$/.test(args[2])) roleid = args[2];
           else {
-            let rolelist = msg.guild.roles.keyArray().map(x => msg.guild.roles.get(x)), roleres;
+            let rolelist = msg.guild.roles.cache.keyArray().map(x => msg.guild.roles.cache.get(x)), roleres;
             roleres = rolelist.filter(x => x.name == args[2]);
             if (roleres.length > 2) return msg.channel.send('Error: ambigous role name');
             else if (roleres.length == 1) roleid = roleres[0].id;
@@ -171,7 +171,7 @@ module.exports = [
               if (roleres.length > 2) return msg.channel.send('Error: ambigous role name');
               else if (roleres.length == 1) roleid = roleres[0].id;
             }
-            if (!roleid) return msg.channel.send('Error: could not fine role with name ${args[2]}');
+            if (!roleid) return msg.channel.send('Error: could not find role with name ${args[2]}');
           }
           if (args[1] == 'add') {
             if (!props.saved.guilds[msg.guild.id].modroles.includes(roleid)) {
@@ -255,7 +255,7 @@ module.exports = [
         let type = { dm: 0, text: 1, voice: 2, category: 3, news: 1, store: 1, unknown: 0 }[msg.channel.type];
         let bits = Discord.Permissions.FLAGS['SEND_MESSAGES'] * (type & 1) | Discord.Permissions.FLAGS['CONNECT'] * (type & 2);
         newperms.forEach(x => {
-          if (!(props.saved.guilds[msg.guild.id].modroles.includes(x.id) || x.type == 'role' && msg.guild.roles.get(x.id).has('MANAGE_CHANNELS'))) {
+          if (!(props.saved.guilds[msg.guild.id].modroles.includes(x.id) || x.type == 'role' && msg.guild.roles.cache.get(x.id).permissions.has('MANAGE_CHANNELS'))) {
             x.allow &= ~bits;
             x.deny |= bits;
           }

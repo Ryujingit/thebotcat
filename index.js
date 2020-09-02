@@ -74,19 +74,19 @@ var badwords = [
     adminbypass&2: server admins
     adminbypass&4: server mod roles
   */
-  { enabled: true, type: 9, adminbypass: 0, word: 'heck', retailiation: 'Refrain from using that heck word you frick' },
-  { enabled: true, type: 11, adminbypass: 0, word: 'nigger', retailiation: 'You said the n word.  Mods can see this message and you will get perm banned. (message content $(rcontent))' },
-  { enabled: true, type: 11, adminbypass: 0, word: 'faggot', retailiation: 'You said fa***t.  Mods can see this message and you will get perm banned. (message content $(rcontent))' },
-  { enabled: false, type: 12, adminbypass: 0, word: /(?:\bu[  /-]*w[  /-]*u\b)|(?:\bo[  /-]*w[  /-]*o\b)/, retailiation: 'uwu or owo are blacklisted and you will get banned' },
-  { enabled: false, type: 4, adminbypass: 0, word: '███████╗███████╗\n██╔════╝╚════██║\n█████╗░░░░███╔═╝\n██╔══╝░░██╔══╝░░\n███████╗███████╗\n╚══════╝╚══════╝', retailiation: 'at this point im just gonna say f you' },
-  { enabled: false, type: 12, adminbypass: 0, word: /(?:\bp[  /-]*p\b)/, retailiation: 'pp is blacklisted and you will get banned' },
-  { enabled: false, type: 3, adminbypass: 0, word: `The first time I drank coffee I cried. I didn't cry because of the taste, that would be stupid. I cried because of the cup. I looked down into my coffee and bugs filled the premises. Disgusted I threw the cup down but nothing was there. Not the cup, not the bugs, not the street. I'm not blind, I do see darkness, and it was dark but not nighttime. I was alone in the city. My arms weren't there. My hands were gone. My image was nothing but a figment. I cried. I'm crying. I'm lost without an end. I won't ever drink coffee again.`, retailiation: 'dez\'s life story is private information' },
+  { enabled: true, type: 9, adminbypass: 0, word: 'heck', retaliation: 'Refrain from using that heck word you frick' },
+  { enabled: true, type: 11, adminbypass: 0, word: 'nigger', retaliation: 'You said the n word.  Mods can see this message and you will get perm banned. (message content $(rcontent))' },
+  { enabled: true, type: 11, adminbypass: 0, word: 'faggot', retaliation: 'You said fa***t.  Mods can see this message and you will get perm banned. (message content $(rcontent))' },
+  { enabled: false, type: 12, adminbypass: 0, word: /(?:\bu[  /-]*w[  /-]*u\b)|(?:\bo[  /-]*w[  /-]*o\b)/, retaliation: 'uwu or owo are blacklisted and you will get banned' },
+  { enabled: false, type: 4, adminbypass: 0, word: '███████╗███████╗\n██╔════╝╚════██║\n█████╗░░░░███╔═╝\n██╔══╝░░██╔══╝░░\n███████╗███████╗\n╚══════╝╚══════╝', retaliation: 'at this point im just gonna say f you' },
+  { enabled: false, type: 12, adminbypass: 0, word: /(?:\bp[  /-]*p\b)/, retaliation: 'pp is blacklisted and you will get banned' },
+  { enabled: false, type: 3, adminbypass: 0, word: `The first time I drank coffee I cried. I didn't cry because of the taste, that would be stupid. I cried because of the cup. I looked down into my coffee and bugs filled the premises. Disgusted I threw the cup down but nothing was there. Not the cup, not the bugs, not the street. I'm not blind, I do see darkness, and it was dark but not nighttime. I was alone in the city. My arms weren't there. My hands were gone. My image was nothing but a figment. I cried. I'm crying. I'm lost without an end. I won't ever drink coffee again.`, retaliation: 'dez\'s life story is private information' },
 ];
 
 var defaultprefix = '!';
 var universalprefix = '!(thebotcat)';
 
-var version = '1.4.2b';
+var version = '1.4.3';
 
 var commands = [];
 
@@ -165,7 +165,7 @@ if (!props.saved) {
     lastnum: 5000,
     lastnumid: '739532317537599509',
   };
-  Object.assign(props.saved.calc_scopes, JSON.parse('{"shared":{"vars":{"te":"when thebotcat te <@!312737536546177025>","woosh":{"mathjs":"DenseMatrix","data":["Gor manam","Gie mama","Goem a ma"],"size":[3]}}},"312737536546177025":{"v":{"mathjs":"BigNumber","value":"45"},"vars":{"te":"when thebotcat te <@!312737536546177025>","woosh":{"mathjs":"DenseMatrix","data":["Gor manam","Gie mama","Goem a ma"],"size":[3]}}},"386966483978158080":{"y":{"mathjs":"BigNumber","value":"334"}}}', math.reviver));
+  Object.assign(props.saved.calc_scopes, JSON.parse('{"shared":{"vars":{"te":"when thebotcat te <@!312737536546177025>","woosh":{"c":{"0":{"mathjs":"DenseMatrix","data":["gor mamam"],"size":[1]}},"w":{"0":{"mathjs":"DenseMatrix","data":["Gor manam","Gie mama","Goem a ma"],"size":[3]},"1":{"mathjs":"DenseMatrix","data":["goe mamema","goe emmaen"],"size":[2]}}},"wooshold":{"mathjs":"DenseMatrix","data":["Gor manam","Gie mama","Goem a ma"],"size":[3]}}},"312737536546177025":{"v":{"mathjs":"BigNumber","value":"45"},"vars":{"te":"when thebotcat te <@!312737536546177025>","woosh":{"c":{"0":{"mathjs":"DenseMatrix","data":["gor mamam"],"size":[1]}},"w":{"0":{"mathjs":"DenseMatrix","data":["Gor manam","Gie mama","Goem a ma"],"size":[3]},"1":{"mathjs":"DenseMatrix","data":["goe mamema","goe emmaen"],"size":[2]}}}},"v8":"javascript engine lel","matr":{"mathjs":"DenseMatrix","data":["v","t","a"],"size":[3]}},"386966483978158080":{"y":{"mathjs":"BigNumber","value":"334"}}}', math.reviver));
   propsSave();
 }
 
@@ -388,7 +388,7 @@ var messageHandlers = [
 global.messageHandlers = messageHandlers;
 
 (async () => {
-  while (!client.token)
+  while (!readytime)
     await new Promise(r => setTimeout(r, 1000));
   console.log('Checking for new messages in send only channel');
   let channel = client.channels.cache.get('738599826765250632'), messages;
@@ -480,8 +480,39 @@ var messageHandler = msg => {
   
   if (!msg.guild) logmsg(`dm from ${msg.author.tag} with contents ${util.inspect(msg.content)}`);
   
-  // this is the screening for bad words part
+  // argstring = the part after the workingprefix, command and args in one big string
+  // command = the actual command
+  // args = array of arguments
+  var isCommand = 0, cmdstring, command, argstring, args;
   if (msg.guild) {
+    let guilddata = props.saved.guilds[msg.guild ? msg.guild.id : 'default'];
+    let workingprefix = guilddata ? guilddata.prefix : props.saved.guilds.default.prefix;
+    
+    if (msg.content.startsWith(universalprefix)) {
+      isCommand = 1;
+      cmdstring = msg.content.slice(universalprefix.length).trim();
+    } else if (msg.content.startsWith(workingprefix)) {
+      isCommand = 1;
+      cmdstring = msg.content.slice(workingprefix.length).trim();
+    }
+    
+    if (/^<@!?682719630967439378>$/.test(msg.content)) return msg.channel.send(`I am Thebotcat version ${version}, prefix \`${workingprefix}\``);
+    
+    // this code loops through the commands array to see if the stated text matches any known command
+    if (isCommand) {
+      for (var i = 0; i < commands.length; i++) {
+        if (commands[i].full_string && commands[i].name == cmdstring || !commands[i].full_string && cmdstring.startsWith(commands[i].name)) {
+          command = commands[i].name;
+          if (cmdstring[command.length] != ' ' && cmdstring[command.length] != '\n' && cmdstring.length > command.length) continue;
+          argstring = cmdstring.slice(command.length + 1);
+          args = argstring == '' ? [] : argstring.split(' ');
+          isCommand = 2 + i;
+          break;
+        }
+      }
+    }
+    
+    // this is the screening for bad words part
     let isdeveloper = common.isDeveloper(msg), isadmin = common.isAdmin(msg), ismod = common.isMod(msg);
     let dodelete = false;
     let word, content, bypass;
@@ -496,57 +527,31 @@ var messageHandler = msg => {
             case 0: break;
             case 1:
               if (content != word.word) break;
-              dodelete = true; msg.reply(word.retailiation.replace(/\$\(rcontent\)/g, msg.content.length < 1800 ? util.inspect(msg.content) : `Error: message length over 1800 characters`)); break;
+              dodelete = true; if (!isCommand || isCommand && command != 'settings') msg.reply(word.retaliation.replace(/\$\(rcontent\)/g, msg.content.length < 1800 ? util.inspect(msg.content) : `Error: message length over 1800 characters`)); break;
             case 2:
               if (!content.split(/ +/g).some(x => x == word.word)) break;
-              dodelete = true; msg.reply(word.retailiation.replace(/\$\(rcontent\)/g, msg.content.length < 1800 ? util.inspect(msg.content) : `Error: message length over 1800 characters`)); break;
+              dodelete = true; if (!isCommand || isCommand && command != 'settings') msg.reply(word.retaliation.replace(/\$\(rcontent\)/g, msg.content.length < 1800 ? util.inspect(msg.content) : `Error: message length over 1800 characters`)); break;
             case 3:
               if (!content.includes(word.word)) break;
-              dodelete = true; msg.reply(word.retailiation.replace(/\$\(rcontent\)/g, msg.content.length < 1800 ? util.inspect(msg.content) : `Error: message length over 1800 characters`)); break;
+              dodelete = true; if (!isCommand || isCommand && command != 'settings') msg.reply(word.retaliation.replace(/\$\(rcontent\)/g, msg.content.length < 1800 ? util.inspect(msg.content) : `Error: message length over 1800 characters`)); break;
             case 4:
               if (!word.word.test(content)) break;
-              dodelete = true; msg.reply(word.retailiation.replace(/\$\(rcontent\)/g, msg.content.length < 1800 ? util.inspect(msg.content) : `Error: message length over 1800 characters`)); break;
+              dodelete = true; if (!isCommand || isCommand && command != 'settings') msg.reply(word.retaliation.replace(/\$\(rcontent\)/g, msg.content.length < 1800 ? util.inspect(msg.content) : `Error: message length over 1800 characters`)); break;
             default: break;
           }
         }
       }
     }
     if (dodelete) {
-      msg.delete();
+      if (!isCommand) msg.delete();
       if (msg.content.toLowerCase() != 'heck') {
         infomsg(msg, `user ${msg.author.tag} (id ${msg.author.id}) said ${util.inspect(msg.content)} in channel <#${msg.channel.id}> (id ${msg.channel.id})`);
       } else {
         logmsg(`user ${msg.author.tag} (id ${msg.author.id}) said ${util.inspect(msg.content)} in channel <#${msg.channel.id}> (id ${msg.channel.id})`);
       }
     }
-  }
-  
-  let guilddata = props.saved.guilds[msg.guild ? msg.guild.id : 'default'];
-  let workingprefix = guilddata ? guilddata.prefix : props.saved.guilds.default.prefix;
-  
-  if (/^<@!?682719630967439378>$/.test(msg.content)) return msg.channel.send(`I am Thebotcat version ${version}, prefix \`${workingprefix}\``);
-  
-  if (!msg.guild) return;
-  
-  // argstring = the part after the workingprefix, command and args in one big string
-  // command = the actual command
-  // args = array of arguments
-  var cmdstring, args, command;
-  if (msg.content.startsWith(universalprefix))
-    cmdstring = msg.content.slice(universalprefix.length).trim();
-  else if (msg.content.startsWith(workingprefix))
-    cmdstring = msg.content.slice(workingprefix.length).trim();
-  else return;
-  
-  // this code loops through the commands array to see if the stated text matches any known command
-  for (var i = 0; i < commands.length; i++) {
-    if (commands[i].full_string && commands[i].name == cmdstring || !commands[i].full_string && cmdstring.startsWith(commands[i].name)) {
-      command = commands[i].name;
-      if (cmdstring[command.length] != ' ' && cmdstring[command.length] != '\n' && cmdstring.length > command.length) continue;
-      let argstring = cmdstring.slice(command.length + 1);
-      args = argstring == '' ? [] : argstring.split(' ');
-      return commands[i].execute(msg, cmdstring, command, argstring, args);
-    }
+    if (isCommand >= 2)
+      return commands[isCommand - 2].execute(msg, cmdstring, command, argstring, args);
   }
 };
 
@@ -554,8 +559,11 @@ var messageHandler = msg => {
 var voiceStateUpdateHandler = (oldState, newState) => {
   let guilddata = props.saved.guilds[newState.guild.id];
   if (!guilddata) return;
-  if (newState.id == client.user.id && !newState.channelID) {
-    common.clientVCManager.leave(guilddata.voice);
+  if (oldState.id == client.user.id) {
+    if (!newState.channelID)
+      common.clientVCManager.leave(guilddata.voice);
+    else
+      guilddata.voice.channel = newState.channel;
   }
 };
 
