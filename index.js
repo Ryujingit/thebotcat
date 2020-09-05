@@ -55,8 +55,8 @@ if (doWorkers) {
   Object.assign(global, { mathVMContext });
 }
 
-//                 Ryujin                coolguy284            amrpowershot
-var developers = ['405091324572991498', '312737536546177025'];
+//                 Ryujin                coolguy284            woosh
+var developers = ['405091324572991498', '312737536546177025', '342384766378573834'];
 var confirmdevelopers = [];
 
 var mutelist = [];
@@ -86,7 +86,7 @@ var badwords = [
 var defaultprefix = '!';
 var universalprefix = '!(thebotcat)';
 
-var version = '1.4.3';
+var version = '1.4.3b';
 
 var commands = [];
 
@@ -95,6 +95,8 @@ var procs = [];
 var props = {
   feat: {
     repl: false,
+    savedms: false,
+    loaddms: false,
   },
   saved: null,
   savedstringify: null,
@@ -161,6 +163,7 @@ if (!props.saved) {
       },
     },
     calc_scopes: {},
+    dmchannels: [],
     sendmsgid: '741850132672151604',
     lastnum: 5000,
     lastnumid: '739532317537599509',
@@ -478,7 +481,12 @@ var messageHandler = msg => {
     msg.delete();
   }
   
-  if (!msg.guild) logmsg(`dm from ${msg.author.tag} with contents ${util.inspect(msg.content)}`);
+  if (!msg.guild) {
+    logmsg(`dm from ${msg.author.tag} (channel ${msg.channel.id}) with contents ${util.inspect(msg.content)}`);
+    if (props.feat.savedms && !props.saved.dmchannels.includes(msg.channel.id)) {
+      props.saved.dmchannels.push(msg.channel.id);
+    }
+  }
   
   // argstring = the part after the workingprefix, command and args in one big string
   // command = the actual command
@@ -573,6 +581,8 @@ client.on('ready', () => {
   client.user.setActivity(`${defaultprefix} | ${client.guilds.cache.size} servers | wash your hands kids`);
   
   readytime = new Date();
+  
+  if (props.feat.loaddms) props.saved.dmchannels.forEach(x => client.channels.fetch(x));
 });
 
 client.on('guildCreate', guild => {
