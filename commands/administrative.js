@@ -403,7 +403,7 @@ module.exports = [
     async execute(msg, cmdstring, command, argstring, args) {
       var user;
       if (!(user = msg.mentions.users.first())) return;
-      if (!(common.isDeveloper(msg) || common.isOwner(msg) || common.isAdmin(msg) || common.isMod(msg) || msg.member.hasPermission('BAN_MEMBERS')))
+      if (!(common.isDeveloper(msg) || common.isOwner(msg) || common.isAdmin(msg) || msg.member.hasPermission('BAN_MEMBERS')))
         return msg.channel.send('You do not have permission to run this command.');
       var member = msg.mentions.members.first();
       if (member == null) return;

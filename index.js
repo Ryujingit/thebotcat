@@ -12,6 +12,10 @@ var vm = require('vm');
 var cp = require('child_process');
 var stream = require('stream');
 var Discord = require('discord.js');
+Discord.Message.prototype.publish = async function () {
+  if (this.flags.bitfield & 1 || this.channel.type != 'news') return;
+  return client.rest.api.channels[this.channel.id].messages[this.id].crosspost.post();
+};
 var ytdl;
 try { ytdl = require('ytdl-core'); } catch (e) { ytdl = null; }
 var common = require('./common.js');
@@ -86,7 +90,7 @@ var badwords = [
 var defaultprefix = '!';
 var universalprefix = '!(thebotcat)';
 
-var version = '1.4.3b';
+var version = '1.4.3c';
 
 var commands = [];
 
