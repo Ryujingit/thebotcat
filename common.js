@@ -22,6 +22,28 @@ function msecToHMS(ms) {
     return `${Math.floor(ms / 3600000)}:${('' + Math.floor(ms / 60000) % 60).padStart(2, '0')}:${('' + Math.floor(ms / 1000) % 60).padStart(2, '0')}.${('' + Math.floor(ms) % 1000).padStart(3, '0')}`;
 }
 
+// converts a time in milliseconds to h m s ms
+function msecToHMSs(ms) {
+  if (ms < 3600000)
+    return `${Math.floor(ms / 60000)}m ${('' + Math.floor(ms / 1000) % 60).padStart(2, '0')}s ${('' + Math.floor(ms) % 1000).padStart(3, '0')}ms`;
+  else if (ms < 86400000)
+    return `${Math.floor(ms / 3600000)}h ${('' + Math.floor(ms / 60000) % 60).padStart(2, '0')}m ${('' + Math.floor(ms / 1000) % 60).padStart(2, '0')}s ${('' + Math.floor(ms) % 1000).padStart(3, '0')}ms`;
+  else
+    return `${Math.floor(ms / 86400000)}d ${('' + Math.floor(ms / 3600000) % 24).padStart(2, '0')}h ${('' + Math.floor(ms / 60000) % 60).padStart(2, '0')}m ${('' + Math.floor(ms / 1000) % 60).padStart(2, '0')}s ${('' + Math.floor(ms) % 1000).padStart(3, '0')}ms`;
+}
+
+
+function getBotcatStatusMessage() {
+  return {
+    embed: {
+      title: 'Thebotcat Status',
+      fields: [
+        { name: 'Uptime', value: common.msecToHMSs(client.uptime), inline: false }
+      ],
+    }
+  };
+}
+
 
 class BreakError extends Error {}
 
@@ -416,7 +438,7 @@ var clientVCManager = {
 // also an interesting way to make js cleaner is by shortening { e: e } to { e }, and the compiler still understands
 module.exports = {
   constants,
-  msecToHMS, arrayGet, BreakError, sendObjThruBuffer, receiveObjThruBuffer,
+  msecToHMS, msecToHMSs, getBotcatStatusMessage, arrayGet, BreakError, sendObjThruBuffer, receiveObjThruBuffer,
   isDeveloper, isConfirmDeveloper, isOwner, isAdmin, isMod,
   getPermissions,
   serializePermissionOverwrites,

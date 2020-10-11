@@ -90,7 +90,7 @@ var badwords = [
 var defaultprefix = '!';
 var universalprefix = '!(thebotcat)';
 
-var version = '1.4.3c';
+var version = '1.4.3d';
 
 var commands = [];
 
@@ -165,6 +165,13 @@ if (!props.saved) {
         savedperms: {},
         prefix: defaultprefix,
       },
+      '756683767732764672': {
+        modroles: [],
+        infochannel: '756699972451172412',
+        mutelist: [],
+        savedperms: {},
+        prefix: defaultprefix,
+      }
     },
     calc_scopes: {},
     dmchannels: [],
@@ -388,6 +395,9 @@ var messageHandlers = [
         msg.channel.send('The goal of 5000 has been reached, this channel has now been freed.');
       props.saved.lastnumid = msg.id;
       schedulePropsSave();
+    }
+    if ((msg.channel.id == '732083047649771604' || msg.channel.id == '732082491611152443') && msg.author.id == '159985870458322944') {
+      msg.publish();
     }
   }
 ];
