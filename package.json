@@ -1,6 +1,6 @@
 {
   "name": "discordbot",
-  "version": "1.4.3d",
+  "version": "1.4.3d.1",
   "description": "A general purpose discord bot with a focus on administration and fun. (Bot Description: My discord bot just for your server used for administration and to keep your self nice n clean.)",
   "main": "index.js",
   "scripts": {

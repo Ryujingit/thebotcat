@@ -18,7 +18,7 @@ Discord.Message.prototype.publish = async function () {
 };
 var ytdl;
 try { ytdl = require('ytdl-core'); } catch (e) { ytdl = null; }
-var common = require('./common.js');
+var common = require('./common/index');
 var math = require('./math.min.js');
 var client = new Discord.Client();
 math.config({ number: 'BigNumber' });
@@ -90,7 +90,7 @@ var badwords = [
 var defaultprefix = '!';
 var universalprefix = '!(thebotcat)';
 
-var version = '1.4.3d';
+var version = '1.4.3d.1';
 
 var commands = [];
 
