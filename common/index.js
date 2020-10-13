@@ -4,7 +4,7 @@ var constants = require('./constants');
 
 var { msecToHMS, msecToHMSs } = require('./time'); 
 
-var getBotcatStatusMessage = require('./status');
+var { getBotcatUptimeMessage, getBotcatStatusMessage } = require('./status');
 
 var { BreakError, arrayGet, sendObjThruBuffer, receiveObjThruBuffer } = require('./workerbuffer');
 
@@ -24,7 +24,7 @@ var clientVCManager = require('./clientvcmanager');
 // also an interesting way to make js cleaner is by shortening { e: e } to { e }, and the compiler still understands
 module.exports = {
   constants,
-  msecToHMS, msecToHMSs, getBotcatStatusMessage, arrayGet, BreakError, sendObjThruBuffer, receiveObjThruBuffer,
+  msecToHMS, msecToHMSs, getBotcatUptimeMessage, getBotcatStatusMessage, arrayGet, BreakError, sendObjThruBuffer, receiveObjThruBuffer,
   isDeveloper, isConfirmDeveloper, isOwner, isAdmin, isMod,
   getPermissions,
   serializePermissionOverwrites,

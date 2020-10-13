@@ -31,6 +31,15 @@ module.exports = [
     }
   },
   {
+    name: 'uptime',
+    full_string: false,
+    description: '`!uptime` to see thebotcat\'s uptime',
+    public: true,
+    execute(msg, cmdstring, command, argstring, args) {
+      msg.channel.send(common.getBotcatUptimeMessage());
+    }
+  },
+  {
     name: 'status',
     full_string: false,
     description: '`!status` to see thebotcat\'s status',

@@ -90,7 +90,7 @@ var badwords = [
 var defaultprefix = '!';
 var universalprefix = '!(thebotcat)';
 
-var version = '1.4.3d.1';
+var version = '1.4.3e';
 
 var commands = [];
 
@@ -105,6 +105,12 @@ var props = {
   saved: null,
   savedstringify: null,
   savescheduled: false,
+  cCPUUsage: process.cpuUsage(),
+  cCPUUsageDate: new Date(),
+  pCPUUsage: null,
+  pCPUUsageDate: null,
+  CPUUsage: null,
+  memoryUsage: process.memoryUsage(),
 };
 
 if (fs.existsSync('props.json')) {
@@ -192,10 +198,7 @@ Object.defineProperties(props.saved.guilds, {
 });
 
 Object.defineProperty(props.saved.guilds.default, 'prefix', {
-  configurable: true,
-  enumerable: false,
-  get: () => defaultprefix,
-  set: val => defaultprefix = val,
+  configurable: true, enumerable: false, get: () => defaultprefix, set: val => defaultprefix = val,
 });
 
 // props.saved integrity checks
@@ -263,72 +266,17 @@ var logmsg = function (val) {
 
 Object.assign(global, { https, fs, util, v8, vm, cp, stream, Discord, ytdl, common, math, client, developers, confirmdevelopers, mutelist, badwords, commands, procs, props, propsSave, schedulePropsSave, indexeval, infomsg, logmsg, addBadWord, removeBadWord, addCommand, addCommands, removeCommand, removeCommands, getCommandsCategorized });
 Object.defineProperties(global, {
-  exitHandled: {
-    configurable: true,
-    enumerable: true,
-    get() { return exitHandled; },
-    set(val) { return exitHandled = val; },
-  },
-  starttime: {
-    configurable: true,
-    enumerable: true,
-    get() { return starttime; },
-    set(val) { starttime = val; },
-  },
-  loadtime: {
-    configurable: true,
-    enumerable: true,
-    get() { return loadtime; },
-    set(val) { loadtime = val; },
-  },
-  readytime: {
-    configurable: true,
-    enumerable: true,
-    get() { return readytime; },
-    set(val) { readytime = val; },
-  },
-  doWorkers: {
-    configurable: true,
-    enumerable: true,
-    get() { return doWorkers; },
-    set(val) { doWorkers = val; },
-  },
-  defaultprefix: {
-    configurable: true,
-    enumerable: true,
-    get() { return defaultprefix; },
-    set(val) { defaultprefix = val; },
-  },
-  universalprefix: {
-    configurable: true,
-    enumerable: true,
-    get() { return universalprefix; },
-    set(val) { universalprefix = val; },
-  },
-  version: {
-    configurable: true,
-    enumerable: true,
-    get() { return version; },
-    set(val) { version = val; },
-  },
-  messageHandler: {
-    configurable: true,
-    enumerable: true,
-    get() { return messageHandler; },
-    set(val) { messageHandler = val; },
-  },
-  voiceStateUpdateHandler: {
-    configurable: true,
-    enumerable: true,
-    get() { return voiceStateUpdateHandler; },
-    set(val) { return voiceStateUpdateHandler = val; },
-  },
-  exitHandler: {
-    configurable: true,
-    enumerable: true,
-    get() { return exitHandler; },
-    set(val) { return exitHandler = val; },
-  },
+  exitHandled: { configurable: true, enumerable: true, get: () => exitHandled, set: val => exitHandled = val },
+  starttime: { configurable: true, enumerable: true, get: () => starttime, set: val => starttime = val },
+  loadtime: { configurable: true, enumerable: true, get: () => loadtime, set: val => loadtime = val },
+  readytime: { configurable: true, enumerable: true, get: () => readytime, set: val => readytime = val },
+  doWorkers: { configurable: true, enumerable: true, get: () => doWorkers, set: val => doWorkers = val },
+  defaultprefix: { configurable: true, enumerable: true, get: () => defaultprefix, set: val => defaultprefix = val },
+  universalprefix: { configurable: true, enumerable: true, get: () => universalprefix, set: val => universalprefix = val },
+  version: { configurable: true, enumerable: true, get: () => version, set: val => version = val },
+  messageHandler: { configurable: true, enumerable: true, get: () => messageHandler, set: val => messageHandler = val },
+  voiceStateUpdateHandler: { configurable: true, enumerable: true, get: () => voiceStateUpdateHandler, set: val => voiceStateUpdateHandler = val },
+  exitHandler: { configurable: true, enumerable: true, get: () => exitHandler, set: val => exitHandler = val },
 });
 
 function addBadWord(word, msgreply) { badwords.push([word.toLowerCase(), msgreply]); }
@@ -399,7 +347,10 @@ var messageHandlers = [
     if ((msg.channel.id == '732083047649771604' || msg.channel.id == '732082491611152443') && msg.author.id == '159985870458322944') {
       msg.publish();
     }
-  }
+  },
+  msg => {
+    if (msg.content == 'pp' && msg.channel.id == '711745085984866344') msg.reply('fuck you');
+  },
 ];
 
 global.messageHandlers = messageHandlers;
@@ -635,6 +586,29 @@ client.on('voiceStateUpdate', (oldState, newState) => {
     console.error('ERROR, something bad happened');
     console.error(e.stack);
   }
+});
+
+// botcat tick function called every 60 seconds
+var ticks = 0;
+var tickFunc = () => {
+  props.pCPUUsage = props.cCPUUsage;
+  props.pCPUUsageDate = props.cCPUUsageDate;
+  props.cCPUUsage = process.cpuUsage();
+  props.cCPUUsageDate = new Date();
+  var frac = (props.cCPUUsageDate.getTime() - props.pCPUUsageDate.getTime()) / 1000;
+  props.CPUUsage = { user: (props.cCPUUsage.user - props.pCPUUsage.user) / (1000000 * frac), system: (props.cCPUUsage.system - props.pCPUUsage.system) / (1000000 * frac) };
+  props.memoryUsage = process.memoryUsage();
+  ticks++;
+};
+var tickInt = setInterval(() => tickFunc(), 60000);
+tickFunc();
+var tickTimTemp = setTimeout(() => tickFunc(), 5000);
+
+Object.defineProperties(global, {
+  ticks: { configurable: true, enumerable: true, get: () => ticks, set: val => ticks = val },
+  tickFunc: { configurable: true, enumerable: true, get: () => tickFunc, set: val => tickFunc = val },
+  tickInt: { configurable: true, enumerable: true, get: () => tickInt, set: val => tickInt = val },
+  tickTimTemp: { configurable: true, enumerable: true, get: () => tickTimTemp, set: val => tickTimTemp = val },
 });
 
 process.on('uncaughtException', function (err) {
