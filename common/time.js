@@ -17,4 +17,11 @@ function msecToHMSs(ms) {
     return `${Math.floor(ms / 86400000)}d ${('' + Math.floor(ms / 3600000) % 24).padStart(2, '0')}h ${('' + Math.floor(ms / 60000) % 60).padStart(2, '0')}m ${('' + Math.floor(ms / 1000) % 60).padStart(2, '0')}s ${('' + Math.floor(ms) % 1000).padStart(3, '0')}ms`;
 }
 
-module.exports = { msecToHMS, msecToHMSs };
+// converts a date object to Day Mon MM YYYY HH:MM:SS UTC format
+fancyDateStringWD = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+fancyDateStringMD = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function fancyDateString(date) {
+  return `${fancyDateStringWD[date.getDay()]} ${fancyDateStringMD[date.getMonth()]} ${(''+date.getDate()).padStart(2, '0')} ${date.getFullYear()} ${(''+date.getHours()).padStart(2, '0')}:${(''+date.getMinutes()).padStart(2, '0')}:${(''+date.getSeconds()).padStart(2, '0')}.${(''+date.getMilliseconds()).padStart(3, '0')} UTC`;
+}
+
+module.exports = { msecToHMS, msecToHMSs, fancyDateStringWD, fancyDateStringMD, fancyDateString };

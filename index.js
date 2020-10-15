@@ -90,7 +90,7 @@ var badwords = [
 var defaultprefix = '!';
 var universalprefix = '!(thebotcat)';
 
-var version = '1.4.4b';
+var version = '1.4.4c';
 
 var commands = [];
 
