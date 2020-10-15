@@ -90,7 +90,7 @@ var badwords = [
 var defaultprefix = '!';
 var universalprefix = '!(thebotcat)';
 
-var version = '1.4.3e';
+var version = '1.4.4';
 
 var commands = [];
 
@@ -111,6 +111,9 @@ var props = {
   pCPUUsageDate: null,
   CPUUsage: null,
   memoryUsage: process.memoryUsage(),
+  botStatusChannel: null,
+  botStatusMsg: null,
+  botStatusMsgResolve: null,
 };
 
 if (fs.existsSync('props.json')) {
@@ -403,6 +406,13 @@ global.messageHandlers = messageHandlers;
   console.log('All caught up');
   propsSave();
   loadtime = new Date();
+  try {
+    props.botStatusChannel = await client.channels.fetch('759507043685105757');
+    props.botStatusMsg = await props.botStatusChannel.messages.fetch('762432760680808479');
+  } catch (e) {
+    console.error(`couldn't fetch bot status message`);
+    console.error(e);
+  }
 })();
 
 var messageHandler = msg => {
@@ -598,10 +608,17 @@ var tickFunc = () => {
   var frac = (props.cCPUUsageDate.getTime() - props.pCPUUsageDate.getTime()) / 1000;
   props.CPUUsage = { user: (props.cCPUUsage.user - props.pCPUUsage.user) / (1000000 * frac), system: (props.cCPUUsage.system - props.pCPUUsage.system) / (1000000 * frac) };
   props.memoryUsage = process.memoryUsage();
+  
+  if (ticks % 10 == 0 && props.botStatusMsg && props.botStatusMsgResolve == null) {
+    props.botStatusMsgResolve = props.botStatusMsg
+      .edit(common.getBotcatStatusMessage())
+      .then(x => props.botStatusMsgResolve = null)
+      .catch(e => { console.error(e); props.botStatusMsgResolve = null; });
+  }
+  
   ticks++;
 };
 var tickInt = setInterval(() => tickFunc(), 60000);
-tickFunc();
 var tickTimTemp = setTimeout(() => tickFunc(), 5000);
 
 Object.defineProperties(global, {

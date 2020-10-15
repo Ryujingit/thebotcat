@@ -87,21 +87,23 @@ module.exports = [
       if (!(common.isDeveloper(msg) || common.isOwner(msg) || common.isAdmin(msg)))
         return;
       if (args.length == 1 && args[0] == 'all') {
+        console.debug(`ghostdot from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: all`);
         let channels = msg.guild.channels.cache.keyArray().map(x => msg.guild.channels.cache.get(x)), channel, message;
         for (var i = 0; i < channels.length; i++) {
-          if (channels[i].type == 'text' || channels[i].type == 'news') {
+          if (channels[i] && (channels[i].type == 'text' || channels[i].type == 'news')) {
             message = await channels[i].send('ghostdot');
-            await message.delete();
+            try { await message.delete(); } catch (e) {}
             await new Promise(r => setTimeout(r), 400);
           }
         }
       } else {
+        console.debug(`ghostdot from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${args.join(' ')}`);
         for (var i = 0; i < args.length; i++) {
           if (/<#[0-9]+>/g.test(args[i])) {
             channel = msg.guild.channels.cache.get(args[i].slice(2, args[0].length - 1));
-            if (channel.type == 'text' || channel.type == 'news') {
+            if (channel && (channel.type == 'text' || channel.type == 'news')) {
               message = await channel.send('ghostdot');
-              await message.delete();
+              try { await message.delete(); } catch (e) {}
               await new Promise(r => setTimeout(r), 400);
             }
           }
@@ -119,21 +121,23 @@ module.exports = [
         return msg.delete();
       msg.delete();
       if (args.length == 1 && args[0] == 'all') {
+        console.debug(`ghostdot_delmsg from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: all`);
         let channels = msg.guild.channels.cache.keyArray().map(x => msg.guild.channels.cache.get(x)), channel, message;
         for (var i = 0; i < channels.length; i++) {
-          if (channels[i].type == 'text' || channels[i].type == 'news') {
+          if (channels[i] && (channels[i].type == 'text' || channels[i].type == 'news')) {
             message = await channels[i].send('ghostdot');
-            await message.delete();
+            try { await message.delete(); } catch(e) {}
             await new Promise(r => setTimeout(r), 400);
           }
         }
       } else {
+        console.debug(`ghostdot_delmsg from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${args.join(' ')}`);
         for (var i = 0; i < args.length; i++) {
           if (/<#[0-9]+>/g.test(args[i])) {
             channel = msg.guild.channels.cache.get(args[i].slice(2, args[0].length - 1));
-            if (channel.type == 'text' || channel.type == 'news') {
+            if (channel && (channel.type == 'text' || channel.type == 'news')) {
               message = await channel.send('ghostdot');
-              await message.delete();
+              try { await message.delete(); } catch(e) {}
               await new Promise(r => setTimeout(r), 400);
             }
           }
