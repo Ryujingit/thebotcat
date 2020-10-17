@@ -22,6 +22,8 @@ var BufferStream = require('./bufferstream');
 
 var clientVCManager = require('./clientvcmanager');
 
+var handlers = require('./handlers/index');
+
 // module.exports is the default object that a node.js module uses to export functions and such, when you do require(), you get this object
 // also an interesting way to make js cleaner is by shortening { e: e } to { e }, and the compiler still understands
 module.exports = {
@@ -39,4 +41,5 @@ module.exports = {
   rps,
   BufferStream,
   clientVCManager,
+  handlers,
 };

@@ -90,7 +90,7 @@ var badwords = [
 var defaultprefix = '!';
 var universalprefix = '!(thebotcat)';
 
-var version = '1.4.4c';
+var version = '1.4.4d';
 
 var commands = [];
 
@@ -185,8 +185,6 @@ if (!props.saved) {
     calc_scopes: {},
     dmchannels: [],
     sendmsgid: '741850132672151604',
-    lastnum: 5000,
-    lastnumid: '739532317537599509',
   };
   Object.assign(props.saved.calc_scopes, JSON.parse('{"shared":{"vars":{"te":"when thebotcat te <@!312737536546177025>","woosh":{"c":{"0":{"mathjs":"DenseMatrix","data":["gor mamam"],"size":[1]}},"w":{"0":{"mathjs":"DenseMatrix","data":["Gor manam","Gie mama","Goem a ma"],"size":[3]},"1":{"mathjs":"DenseMatrix","data":["goe mamema","goe emmaen"],"size":[2]}}},"wooshold":{"mathjs":"DenseMatrix","data":["Gor manam","Gie mama","Goem a ma"],"size":[3]}}},"312737536546177025":{"v":{"mathjs":"BigNumber","value":"45"},"vars":{"te":"when thebotcat te <@!312737536546177025>","woosh":{"c":{"0":{"mathjs":"DenseMatrix","data":["gor mamam"],"size":[1]}},"w":{"0":{"mathjs":"DenseMatrix","data":["Gor manam","Gie mama","Goem a ma"],"size":[3]},"1":{"mathjs":"DenseMatrix","data":["goe mamema","goe emmaen"],"size":[2]}}}},"v8":"javascript engine lel","matr":{"mathjs":"DenseMatrix","data":["v","t","a"],"size":[3]}},"386966483978158080":{"y":{"mathjs":"BigNumber","value":"334"}}}', math.reviver));
   propsSave();
@@ -277,7 +275,8 @@ Object.defineProperties(global, {
   defaultprefix: { configurable: true, enumerable: true, get: () => defaultprefix, set: val => defaultprefix = val },
   universalprefix: { configurable: true, enumerable: true, get: () => universalprefix, set: val => universalprefix = val },
   version: { configurable: true, enumerable: true, get: () => version, set: val => version = val },
-  messageHandler: { configurable: true, enumerable: true, get: () => messageHandler, set: val => messageHandler = val },
+  messageHandler: { configurable: true, enumerable: true, get: () => handlers.event.message, set: val => handlers.event.message = val },
+  messageHandlers: { configurable: true, enumerable: true, get: () => handlers.extra.message, set: val => handlers.extra.message = val },
   voiceStateUpdateHandler: { configurable: true, enumerable: true, get: () => voiceStateUpdateHandler, set: val => voiceStateUpdateHandler = val },
   exitHandler: { configurable: true, enumerable: true, get: () => exitHandler, set: val => exitHandler = val },
 });
@@ -331,32 +330,7 @@ addCommands(require('./commands/interactive.js'), 'Interactive');
 addCommands(require('./commands/music.js'), 'Music');
 addCommands(require('./commands/content.js'), 'Content');
 
-var messageHandlers = [
-  msg => {
-    if (msg.channel.id == '738599826765250632') {
-      msg.delete();
-      client.channels.cache.get('738593863958003756').send(`${msg.author.tag}: ${msg.content}`);
-      props.saved.sendmsgid = msg.id;
-      schedulePropsSave();
-    }
-    if (msg.channel.id == '738602247549616170' && (props.saved.lastnum == null || props.saved.lastnum < 5000)) {
-      if (msg.embeds.length || props.saved.lastnum != null && Number(msg.content) != props.saved.lastnum + 1) { msg.delete(); console.log(`[${new Date().toISOString()}] count to 5000, deleted ${msg.author.tag}: ${msg.content}`); }
-      else props.saved.lastnum = Number(msg.content);
-      if (props.saved.lastnum >= 5000)
-        msg.channel.send('The goal of 5000 has been reached, this channel has now been freed.');
-      props.saved.lastnumid = msg.id;
-      schedulePropsSave();
-    }
-    if ((msg.channel.id == '732083047649771604' || msg.channel.id == '732082491611152443') && msg.author.id == '159985870458322944') {
-      msg.publish();
-    }
-  },
-  msg => {
-    if (msg.content == 'pp' && msg.channel.id == '711745085984866344') msg.reply('fuck you');
-  },
-];
-
-global.messageHandlers = messageHandlers;
+global.handlers = common.handlers;
 
 (async () => {
   while (!readytime)
@@ -375,28 +349,7 @@ global.messageHandlers = messageHandlers;
       }
       for (var i = 0; i < messages.length; i++) {
         console.log(`message handlering from ${props.saved.sendmsgid}`);
-        messageHandlers[0](messages[i]);
-        await new Promise(r => setTimeout(r, 500));
-      }
-    }
-  } catch (e) {
-    console.error(e.toString());
-  }
-  console.log('Checking for new messages in count to 5000 channel');
-  channel = client.channels.cache.get('738602247549616170');
-  try {
-    while (props.saved.lastnum < 5000 && channel.lastMessageID != props.saved.lastnumid) {
-      console.log('New messages detected');
-      messages = await channel.messages.fetch({ after: props.saved.lastnumid });
-      console.log('Loaded up to 50 new messages');
-      messages = messages.keyArray().map(x => messages.get(x)).sort((a, b) => { a = a.createdTimestamp; b = b.createdTimestamp; if (a > b) { return 1; } else if (a < b) { return -1; } else { return 0; } });
-      if (messages.length == 0) {
-        props.saved.lastnumid = channel.lastMessageID;
-        break;
-      }
-      for (var i = 0; i < messages.length; i++) {
-        console.log(`message handlering from ${props.saved.lastnumid}`);
-        messageHandlers[0](messages[i]);
+        handlers.extra.message[0](messages[i]);
         await new Promise(r => setTimeout(r, 500));
       }
     }
@@ -414,141 +367,6 @@ global.messageHandlers = messageHandlers;
     console.error(e);
   }
 })();
-
-var messageHandler = msg => {
-  if (!msg.author.bot && msg.content.startsWith('!lavealt')) {
-    if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025') return;
-    let cmd = msg.content.slice(9), res;
-    console.debug(`lavealt from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(cmd)}`);
-    try {
-      res = eval(cmd);
-      console.debug(`-> ${util.inspect(res)}`);
-      if (props.erg && msg.channel.id != '733760003055288350') return;
-      var richres = new Discord.MessageEmbed()
-        .setTitle('Lavealt Rs')
-        .setDescription(util.inspect(res));
-      msg.channel.send(richres);
-    } catch (e) {
-      console.log('err in lavealt');
-      console.debug(e.stack);
-      if (props.erg && msg.channel.id != '733760003055288350') return;
-      var richres = new Discord.MessageEmbed()
-        .setTitle('Lavealt Er')
-        .setDescription(e.stack);
-      msg.channel.send(richres);
-    }
-    return;
-  }
-  
-  for (var i = 0; i < messageHandlers.length; i++) {
-    if (messageHandlers[i](msg, i) === 0) return;
-  }
-  
-  if (msg.guild && msg.guild.id == '631990565550161951') return;
-  
-  if (msg.author.bot) return;
-  
-  if (mutelist.includes(msg.author.id) || 
-      msg.guild && props.saved.guilds[msg.guild.id] && (
-        props.saved.guilds[msg.guild.id].mutelist.includes(msg.author.id)
-      )
-    ) {
-    msg.delete();
-  }
-  
-  if (!msg.guild) {
-    logmsg(`dm from ${msg.author.tag} (channel ${msg.channel.id}) with contents ${util.inspect(msg.content)}`);
-    if (props.feat.savedms && !props.saved.dmchannels.includes(msg.channel.id)) {
-      props.saved.dmchannels.push(msg.channel.id);
-    }
-  }
-  
-  // argstring = the part after the workingprefix, command and args in one big string
-  // command = the actual command
-  // args = array of arguments
-  var isCommand = 0, cmdstring, command, argstring, args;
-  if (msg.guild) {
-    let guilddata = props.saved.guilds[msg.guild ? msg.guild.id : 'default'];
-    let workingprefix = guilddata ? guilddata.prefix : props.saved.guilds.default.prefix;
-    
-    if (msg.content.startsWith(universalprefix)) {
-      isCommand = 1;
-      cmdstring = msg.content.slice(universalprefix.length).trim();
-    } else if (msg.content.startsWith(workingprefix)) {
-      isCommand = 1;
-      cmdstring = msg.content.slice(workingprefix.length).trim();
-    }
-    
-    if (/^<@!?682719630967439378>$/.test(msg.content)) return msg.channel.send(`I am Thebotcat version ${version}, prefix \`${workingprefix}\``);
-    
-    // this code loops through the commands array to see if the stated text matches any known command
-    if (isCommand) {
-      for (var i = 0; i < commands.length; i++) {
-        if (commands[i].full_string && commands[i].name == cmdstring || !commands[i].full_string && cmdstring.startsWith(commands[i].name)) {
-          command = commands[i].name;
-          if (cmdstring[command.length] != ' ' && cmdstring[command.length] != '\n' && cmdstring.length > command.length) continue;
-          argstring = cmdstring.slice(command.length + 1);
-          args = argstring == '' ? [] : argstring.split(' ');
-          isCommand = 2 + i;
-          break;
-        }
-      }
-    }
-    
-    // this is the screening for bad words part
-    let isdeveloper = common.isDeveloper(msg), isadmin = common.isAdmin(msg), ismod = common.isMod(msg);
-    let dodelete = false;
-    let word, content, bypass;
-    for (var i = 0; i < badwords.length; i++) {
-      word = badwords[i];
-      if (word.enabled) {
-        content = msg.content;
-        if (word.type & 8) content = content.toLowerCase();
-        bypass = isdeveloper && word.adminbypass & 1 || isadmin && word.adminbypass & 2 || ismod && word.adminbypass & 4;
-        if (!bypass) {
-          switch (word.type & 7) {
-            case 0: break;
-            case 1:
-              if (content != word.word) break;
-              dodelete = true; if (!isCommand || isCommand && command != 'settings') msg.reply(word.retaliation.replace(/\$\(rcontent\)/g, msg.content.length < 1800 ? util.inspect(msg.content) : `Error: message length over 1800 characters`)); break;
-            case 2:
-              if (!content.split(/ +/g).some(x => x == word.word)) break;
-              dodelete = true; if (!isCommand || isCommand && command != 'settings') msg.reply(word.retaliation.replace(/\$\(rcontent\)/g, msg.content.length < 1800 ? util.inspect(msg.content) : `Error: message length over 1800 characters`)); break;
-            case 3:
-              if (!content.includes(word.word)) break;
-              dodelete = true; if (!isCommand || isCommand && command != 'settings') msg.reply(word.retaliation.replace(/\$\(rcontent\)/g, msg.content.length < 1800 ? util.inspect(msg.content) : `Error: message length over 1800 characters`)); break;
-            case 4:
-              if (!word.word.test(content)) break;
-              dodelete = true; if (!isCommand || isCommand && command != 'settings') msg.reply(word.retaliation.replace(/\$\(rcontent\)/g, msg.content.length < 1800 ? util.inspect(msg.content) : `Error: message length over 1800 characters`)); break;
-            default: break;
-          }
-        }
-      }
-    }
-    if (dodelete) {
-      if (!isCommand) msg.delete();
-      if (msg.content.toLowerCase() != 'heck') {
-        infomsg(msg, `user ${msg.author.tag} (id ${msg.author.id}) said ${util.inspect(msg.content)} in channel <#${msg.channel.id}> (id ${msg.channel.id})`);
-      } else {
-        logmsg(`user ${msg.author.tag} (id ${msg.author.id}) said ${util.inspect(msg.content)} in channel <#${msg.channel.id}> (id ${msg.channel.id})`);
-      }
-    }
-    if (isCommand >= 2)
-      return commands[isCommand - 2].execute(msg, cmdstring, command, argstring, args);
-  }
-};
-
-// used to clean up voice handler object if thebotcat is disconnected manually
-var voiceStateUpdateHandler = (oldState, newState) => {
-  let guilddata = props.saved.guilds[newState.guild.id];
-  if (!guilddata) return;
-  if (oldState.id == client.user.id) {
-    if (!newState.channelID)
-      common.clientVCManager.leave(guilddata.voice);
-    else
-      guilddata.voice.channel = newState.channel;
-  }
-};
 
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
@@ -580,22 +398,15 @@ client.on('disconnect', () => {
   console.log(`Disconnect!`);
 });
 
-client.on('message', msg => {
-  try {
-    messageHandler(msg);
-  } catch (e) {
-    console.error('ERROR, something bad happened');
-    console.error(e.stack);
-  }
-});
-
-client.on('voiceStateUpdate', (oldState, newState) => {
-  try {
-    voiceStateUpdateHandler(oldState, newState);
-  } catch (e) {
-    console.error('ERROR, something bad happened');
-    console.error(e.stack);
-  }
+['message', 'voiceStateUpdate'].forEach(evtType => {
+  client.on(evtType, (...args) => {
+    try {
+      if (handlers.event[evtType]) handlers.event[evtType](...args);
+    } catch (e) {
+      console.error('ERROR, something had happened');
+      console.error(e.stack);
+    }
+  });
 });
 
 // botcat tick function called every 60 seconds

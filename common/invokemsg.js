@@ -24,5 +24,5 @@ module.exports = function invokeMessageHandler(obj, options) {
       } else if (typeof obj.member == 'string') obj.member = obj.guild.members.cache.get(obj.guild);
     }
   } else return;
-  return messageHandler(obj);
+  return handlers.event.message(obj);
 };
