@@ -151,28 +151,14 @@ module.exports = [
           if (args[1] != 'add' && args[1] != 'remove') return msg.channel.send('Commands: `!settings modroles list|add|remove`');
           if (!args[2]) return msg.channel.send('Usage: `!settings modroles add|remove <mention|id|name>`');
           if (!normalperms && ismod) return msg.channel.send('You do not have permission to run this command.');
-          let roleid;
-          if (/^<@&[0-9]+>$/.test(args[2])) roleid = args[2].slice(3, args[2].length - 1);
-          else if (/^[0-9]+$/.test(args[2])) roleid = args[2];
-          else {
-            let rolelist = msg.guild.roles.cache.keyArray().map(x => msg.guild.roles.cache.get(x)), roleres;
-            roleres = rolelist.filter(x => x.name == args[2]);
-            if (roleres.length > 2) return msg.channel.send('Error: ambigous role name');
-            else if (roleres.length == 1) roleid = roleres[0].id;
-            if (!roleid) {
-              let lowername = args[2].toLowerCase();
-              roleres = rolelist.filter(x => x.name.toLowerCase() == lowername);
-              if (roleres.length > 2) return msg.channel.send('Error: ambigous role name');
-              else if (roleres.length == 1) roleid = roleres[0].id;
-            }
-            if (!roleid) {
-              let lowername = args[2].toLowerCase();
-              roleres = rolelist.filter(x => x.name.toLowerCase().includes(lowername));
-              if (roleres.length > 2) return msg.channel.send('Error: ambigous role name');
-              else if (roleres.length == 1) roleid = roleres[0].id;
-            }
-            if (!roleid) return msg.channel.send('Error: could not find role with name ${args[2]}');
-          }
+          let roleid = common.searchCollection(msg.guild.roles.cache, args.slice(2, Infinity).join(' '));
+          if (Array.isArray(roleid)) return msg.channel.send({
+            embed: {
+              title: 'Query too vague',
+              description: 'Your query narrows it down to these roles:\n' +
+                roleid.map(x => `<@&${x}>`).join(' '),
+            },
+          });
           if (args[1] == 'add') {
             if (!props.saved.guilds[msg.guild.id].modroles.includes(roleid)) {
               props.saved.guilds[msg.guild.id].modroles.push(roleid);

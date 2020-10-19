@@ -90,7 +90,7 @@ var badwords = [
 var defaultprefix = '!';
 var universalprefix = '!(thebotcat)';
 
-var version = '1.4.4d';
+var version = '1.5.0';
 
 var commands = [];
 
@@ -125,68 +125,115 @@ if (fs.existsSync('props.json')) {
   } catch (e) { console.error(`Unable to load props.json: ${e.toString()}`); }
 }
 
+/* format for props.saved (its not like this right now, its pending a database migration and code change in next commit):
+  props.saved : object {
+    feat : object {
+      calc : bool (default false),
+      audio : int 0-3 (default 0; &1 = join/leave, &2 = music),
+      lamt : int (default 0),
+    },
+    guilds : object {
+      <guildid> : object {
+        prefix : string (default <defaultprefix>),
+        enabled_commands : object {
+          categories : object {
+            administrative : bool,
+            technical : bool,
+            interactive : bool,
+            vc_joinleave : bool,
+            music : bool,
+          },
+        },
+        logging : object {
+          main : string <channelid>,
+        },
+        perms : array [
+          object {
+            id : string <roleid>,
+            perms : int (
+              bits:
+                0 - normal bot commands
+                1 - get bot to join vc
+                2 - get bot to leave vc when there are others
+                3 - play songs
+                4 - play playlists
+                5 - voteskip
+                6 - forceskip and remove
+                7 - mute and tempmute
+                8 - kick
+                9 - ban
+                10 - change prefix
+            ),
+          },
+          ...
+        ],
+        overrides : object {
+          <channelid> : array [
+            object {
+              id : string <roleid/userid>,
+              allows : int,
+              denys : int,
+            },
+            ...
+          ],
+          ...
+        },
+        temp : object {
+          channeloverrides : object {
+            <channelid> : object {
+              id : string <roleid/userid>,
+              type : string 'role' / 'user',
+              allow : int,
+              deny : int,
+            },
+            ...
+          },
+        },
+        [EMPHEMERAL] voice : object {
+          channel : null / VoiceChannel,
+          connection : null / VoiceConnection,
+          dispatcher : null / StreamDispatcher,
+          proc : null / child_process (ffmpeg),
+          procpipe : null / common.BufferStream,
+          proc2 : null / child_process (ffmpeg),
+          proc2pipe : null / common.BufferStream,
+          mainloop : int 0 (not playing) / 1 (playing) / 2 (skip request) / 3 (terminate song mainloop),
+          songslist : array [
+            object {
+              query : string,
+              url : string,
+              desc : string,
+              expectedLength : int (msec),
+            },
+            ...
+          ],
+          volume : null,
+          loop : null,
+        },
+      },
+      ...
+    },
+    users : object {
+      'default' / <userid> : object {
+        calc_scope : string (math.js calc scope, serialized),
+        [EMPHEMERAL] calc_scope_working : object {
+          shared : props.saved.users.default.calc_scope,
+          ...
+        } (math.js calc scope),
+      },
+      ...
+    },
+    misc : object {
+      dmchannels : array [
+        string <channnelid>,
+        ...
+      ],
+      sendmsgid : string <messageid>,
+    },
+  }
+ */
 if (!props.saved) {
-  props.saved = {
-    feat: {
-      calc: false,
-      audio: 0, // audio&1 = join/leave, audio&2 = music
-      lamt: 0,
-    },
-    guilds: {
-      'default': {
-        modroles: [],
-        infochannel: '736426551050109010',
-        mutelist: [],
-        savedperms: {},
-      },
-      '711668012528304178': {
-        modroles: ['730919511284252754'],
-        infochannel: '724006510576926810',
-        mutelist: [],
-        savedperms: {},
-        prefix: defaultprefix,
-      },
-      '671477379482517516': {
-        modroles: [],
-        infochannel: '710670425318883409',
-        mutelist: [],
-        savedperms: {},
-        prefix: defaultprefix,
-      },
-      '688806155530534931': {
-        modroles: [],
-        infochannel: '736426551050109010',
-        mutelist: [],
-        savedperms: {},
-        prefix: defaultprefix,
-      },
-      '717268211246301236': {
-        modroles: [],
-        infochannel: '739314876182167602',
-        mutelist: [],
-        savedperms: {},
-        prefix: defaultprefix,
-      },
-      '475143894074392580': {
-        modroles: [],
-        infochannel: '509071244340232193',
-        mutelist: [],
-        savedperms: {},
-        prefix: defaultprefix,
-      },
-      '756683767732764672': {
-        modroles: [],
-        infochannel: '756699972451172412',
-        mutelist: [],
-        savedperms: {},
-        prefix: defaultprefix,
-      }
-    },
-    calc_scopes: {},
-    dmchannels: [],
-    sendmsgid: '741850132672151604',
-  };
-  Object.assign(props.saved.calc_scopes, JSON.parse('{"shared":{"vars":{"te":"when thebotcat te <@!312737536546177025>","woosh":{"c":{"0":{"mathjs":"DenseMatrix","data":["gor mamam"],"size":[1]}},"w":{"0":{"mathjs":"DenseMatrix","data":["Gor manam","Gie mama","Goem a ma"],"size":[3]},"1":{"mathjs":"DenseMatrix","data":["goe mamema","goe emmaen"],"size":[2]}}},"wooshold":{"mathjs":"DenseMatrix","data":["Gor manam","Gie mama","Goem a ma"],"size":[3]}}},"312737536546177025":{"v":{"mathjs":"BigNumber","value":"45"},"vars":{"te":"when thebotcat te <@!312737536546177025>","woosh":{"c":{"0":{"mathjs":"DenseMatrix","data":["gor mamam"],"size":[1]}},"w":{"0":{"mathjs":"DenseMatrix","data":["Gor manam","Gie mama","Goem a ma"],"size":[3]},"1":{"mathjs":"DenseMatrix","data":["goe mamema","goe emmaen"],"size":[2]}}}},"v8":"javascript engine lel","matr":{"mathjs":"DenseMatrix","data":["v","t","a"],"size":[3]}},"386966483978158080":{"y":{"mathjs":"BigNumber","value":"334"}}}', math.reviver));
+  props.saved = JSON.parse(fs.readFileSync('props-backup.json').toString(), math.reviver);
   propsSave();
 }
 
@@ -324,11 +371,13 @@ function getCommandsCategorized() {
   return [commandsList, commandsCategorized];
 }
 
+addCommands(require('./commands/information.js'), 'Information');
 addCommands(require('./commands/administrative.js'), 'Administrative');
-addCommands(require('./commands/technical.js'), 'Technical');
 addCommands(require('./commands/interactive.js'), 'Interactive');
+addCommands(require('./commands/vc.js'), 'Voice Channel');
 addCommands(require('./commands/music.js'), 'Music');
 addCommands(require('./commands/content.js'), 'Content');
+addCommands(require('./commands/troll.js'), 'Troll');
 
 global.handlers = common.handlers;
 

@@ -5,8 +5,8 @@ function serializePermissionOverwrites(channel) {
     ({
       id: x.id,
       type: x.type,
-      deny: x.deny.bitfield,
       allow: x.allow.bitfield,
+      deny: x.deny.bitfield,
     })
   );
 }

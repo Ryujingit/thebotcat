@@ -12,6 +12,8 @@ var { isDeveloper, isConfirmDeveloper, isOwner, isAdmin, isMod, getPermissions }
 
 var { serializePermissionOverwrites, partialDeserializePermissionOverwrites, completeDeserializePermissionOverwrites, serializedPermissionsEqual } = require('./permserialize');
 
+var searchCollection = require('./searchcollection');
+
 var { leftPadID, getFancyGuilds, getSortedChannels, getFancyChannels } = require('./generalserialize');
 
 var invokeMessageHandler = require('./invokemsg');
@@ -36,6 +38,7 @@ module.exports = {
   serializePermissionOverwrites,
   partialDeserializePermissionOverwrites, completeDeserializePermissionOverwrites,
   serializedPermissionsEqual,
+  searchCollection,
   leftPadID, getFancyGuilds, getSortedChannels, getFancyChannels,
   invokeMessageHandler,
   rps,

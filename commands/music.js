@@ -1,58 +1,63 @@
 module.exports = [
   {
-    name: 'join',
+    name: 'play',
     full_string: false,
-    description: '`!join` for me to join the voice channel you are in\n`!join <channel>` for me to join a voice channel',
+    description: '`!play <url>` to play the audio of a youtube url, like every other music bot in existence',
     public: true,
     async execute(msg, cmdstring, command, argstring, args) {
-      if (!(props.saved.feat.audio & 1)) return msg.channel.send('Join/leave features are disabled');
+      if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata;
-      if (!(guilddata = props.saved.guilds[msg.guild.id])) return msg.channel.send('Error: cannot join voice channel, guild not in database');
-      let channel;
-      if (args.length == 0) {
-        if (!msg.member.voice.channelID) return msg.channel.send('You are not in a voice channel.');
-        channel = client.channels.cache.get(msg.member.voice.channelID);
-      } else if (args.length == 1) {
-        if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg)))
-          return msg.channel.send('Only admins and mods can get me to remotely join a voice channel.');
-        let channelid;
-        if (/^<#[0-9]+>$/.test(args[0])) channelid = args[0].slice(2, args[0].length - 1);
-        channel = msg.guild.channels.cache.get(channelid);
-        if (!channel) return msg.channel.send('Invalid channel mention.');
-      }
-      if (guilddata.voice.channel && guilddata.voice.channel.id == channel.id) return msg.channel.send(`Already joined channel <#${channel.id}>`);
-      let channelPerms = channel.permissionsFor(msg.member);
-      let requiresMod = channel.full || guilddata.voice.channel && guilddata.voice.channel.members.keyArray().length == 1 && guilddata.voice.songslist.length == 0;
-      if (requiresMod && !(
-          common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || channelPerms.has('MOVE_MEMBERS')
-        ) || !requiresMod && !(
-          common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || channelPerms.has('MOVE_MEMBERS') || channelPerms.has('CONNECT')
-        )) return msg.channel.send('You do not have permission to get me to join the voice channel you are in.');
+      if (!(guilddata = props.saved.guilds[msg.guild.id])) return msg.channel.send('Error: cannot play music in voice channel, guild not in database');
+      if (!guilddata.voice.channel) return msg.channel.send('I\'m not in a voice channel');
+      if (!(msg.member.voice.channelID == guilddata.voice.channel.id || common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg)))
+        return msg.channel.send('You must be in the same voice channel as I\'m in to play a song.  Admins and mods can bypass this though.');
+      let latestobj;
       try {
-        await common.clientVCManager.join(guilddata.voice, channel);
-        return msg.channel.send(`Joined channel <#${channel.id}>`);
+        latestobj = await common.clientVCManager.addSong(guilddata.voice, args[0]);
       } catch (e) {
-        console.error(e);
-        return msg.channel.send(`Error in joining channel <#${channel.id}>`);
+        if (e.toString() != 'Error: invalid url') console.error(e);
+        return msg.channel.send('Invalid url');
       }
+      msg.channel.send(`${latestobj.desc} added to queue`);
+      return common.clientVCManager.startMainLoop(guilddata.voice, msg.channel);
     }
   },
   {
-    name: 'leave',
+    name: 'pause',
     full_string: false,
-    description: '`!leave` for me to leave the voice channel I am in',
+    description: '`!pause` pauses the currently playing song',
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
-      if (!(props.saved.feat.audio & 1)) return msg.channel.send('Join/leave features are disabled');
+      if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata;
-      if (!(guilddata = props.saved.guilds[msg.guild.id])) return msg.channel.send('Error: cannot join voice channel, guild not in database');
+      if (!(guilddata = props.saved.guilds[msg.guild.id])) return msg.channel.send('Error: cannot pause song in voice channel, guild not in database');
       let channel;
       if (!(channel = guilddata.voice.channel)) return msg.channel.send('I\'m not in a voice channel');
+      if (!guilddata.voice.dispatcher) return msg.channel.send('Error: no song is playing');
       let vcmembers = channel.members.keyArray();
-      if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || channelPerms.has('MOVE_MEMBERS') || channelPerms.has('DISCONNECT') || vcmembers.length == 2 && vcmembers.includes(msg.author.id) || vcmembers.length == 1 && guilddata.voice.songslist.length == 0))
-        return msg.channel.send('You do not have permission to get me to leave the voice channel.');
-      common.clientVCManager.leave(guilddata.voice);
-      return msg.channel.send(`Left channel <#${channel.id}>`);
+      if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || vcmembers.length == 2 && vcmembers.includes(msg.author.id)))
+        return msg.channel.send('Only admins and mods can pause / resume / stop, or someone who is alone with me in a voice channel.');
+      common.clientVCManager.pause(guilddata.voice);
+      return msg.channel.send(`Paused`);
+    }
+  },
+  {
+    name: 'resume',
+    full_string: false,
+    description: '`!resume` resumes the currently paused song',
+    public: true,
+    execute(msg, cmdstring, command, argstring, args) {
+      if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
+      let guilddata;
+      if (!(guilddata = props.saved.guilds[msg.guild.id])) return msg.channel.send('Error: cannot resume song in voice channel, guild not in database');
+      let channel;
+      if (!(channel = guilddata.voice.channel)) return msg.channel.send('I\'m not in a voice channel');
+      if (!guilddata.voice.dispatcher) return msg.channel.send('Error: no song is playing');
+      let vcmembers = channel.members.keyArray();
+      if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || vcmembers.length == 2 && vcmembers.includes(msg.author.id)))
+        return msg.channel.send('Only admins and mods can pause / resume / stop, or someone who is alone with me in a voice channel.');
+      common.clientVCManager.resume(guilddata.voice);
+      return msg.channel.send(`Resumed`);
     }
   },
   {
@@ -99,44 +104,6 @@ module.exports = [
     }
   },
   {
-    name: 'pause',
-    full_string: false,
-    description: '`!pause` pauses the currently playing song',
-    public: true,
-    execute(msg, cmdstring, command, argstring, args) {
-      if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
-      let guilddata;
-      if (!(guilddata = props.saved.guilds[msg.guild.id])) return msg.channel.send('Error: cannot pause song in voice channel, guild not in database');
-      let channel;
-      if (!(channel = guilddata.voice.channel)) return msg.channel.send('I\'m not in a voice channel');
-      if (!guilddata.voice.dispatcher) return msg.channel.send('Error: no song is playing');
-      let vcmembers = channel.members.keyArray();
-      if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || vcmembers.length == 2 && vcmembers.includes(msg.author.id)))
-        return msg.channel.send('Only admins and mods can pause / resume, or someone who is alone with me in a voice channel.');
-      common.clientVCManager.pause(guilddata.voice);
-      return msg.channel.send(`Paused`);
-    }
-  },
-  {
-    name: 'resume',
-    full_string: false,
-    description: '`!resume` resumes the currently paused song',
-    public: true,
-    execute(msg, cmdstring, command, argstring, args) {
-      if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
-      let guilddata;
-      if (!(guilddata = props.saved.guilds[msg.guild.id])) return msg.channel.send('Error: cannot resume song in voice channel, guild not in database');
-      let channel;
-      if (!(channel = guilddata.voice.channel)) return msg.channel.send('I\'m not in a voice channel');
-      if (!guilddata.voice.dispatcher) return msg.channel.send('Error: no song is playing');
-      let vcmembers = channel.members.keyArray();
-      if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || vcmembers.length == 2 && vcmembers.includes(msg.author.id)))
-        return msg.channel.send('Only admins and mods can pause / resume, or someone who is alone with me in a voice channel.');
-      common.clientVCManager.resume(guilddata.voice);
-      return msg.channel.send(`Resumed`);
-    }
-  },
-  {
     name: 'forceskip',
     full_string: false,
     description: '`!forceskip` skips the currently playing song',
@@ -156,26 +123,22 @@ module.exports = [
     }
   },
   {
-    name: 'play',
+    name: 'stop',
     full_string: false,
-    description: '`!play <url>` to play the audio of a youtube url, like every other music bot in existence',
+    description: '`!stop` clears the song list and stops playing',
     public: true,
-    async execute(msg, cmdstring, command, argstring, args) {
+    execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata;
-      if (!(guilddata = props.saved.guilds[msg.guild.id])) return msg.channel.send('Error: cannot play music in voice channel, guild not in database');
-      if (!guilddata.voice.channel) return msg.channel.send('I\'m not in a voice channel');
-      if (!(msg.member.voice.channelID == guilddata.voice.channel.id || common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg)))
-        return msg.channel.send('You must be in the same voice channel as I\'m in to play a song.  Admins and mods can bypass this though.');
-      let latestobj;
-      try {
-        latestobj = await common.clientVCManager.addSong(guilddata.voice, args[0]);
-      } catch (e) {
-        if (e.toString() != 'Error: invalid url') console.error(e);
-        return msg.channel.send('Invalid url');
-      }
-      msg.channel.send(`${latestobj.desc} added to queue`);
-      return common.clientVCManager.startMainLoop(guilddata.voice, msg.channel);
+      if (!(guilddata = props.saved.guilds[msg.guild.id])) return msg.channel.send('Error: cannot pause song in voice channel, guild not in database');
+      let channel;
+      if (!(channel = guilddata.voice.channel)) return msg.channel.send('I\'m not in a voice channel');
+      if (!guilddata.voice.dispatcher) return msg.channel.send('Error: no song is playing');
+      let vcmembers = channel.members.keyArray();
+      if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || vcmembers.length == 2 && vcmembers.includes(msg.author.id)))
+        return msg.channel.send('Only admins and mods can pause / resume / stop, or someone who is alone with me in a voice channel.');
+      common.clientVCManager.stopMainLoop(guilddata.voice);
+      return msg.channel.send(`Stopped`);
     }
   },
   {

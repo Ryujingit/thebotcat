@@ -16,6 +16,7 @@ var clientVCManager = {
       loop: null,
     };
   },
+
   // all of these functions have self explanatory names, and the first parameter of each function is the guild's voice state object
   join: async function join(voice, channel) {
     if (voice.channel) clientVCManager.leave(voice);
@@ -29,6 +30,7 @@ var clientVCManager = {
     voice.volume = 1;
     voice.loop = false;
   },
+
   leave: function leave(voice) {
     try { voice.proc.kill(); } catch (e) {}
     try { voice.proc2.kill(); } catch (e) {}
@@ -45,25 +47,32 @@ var clientVCManager = {
     voice.volume = null;
     voice.loop = null;
   },
+
   getVolume: function getVolume(voice) {
     return voice.volume;
   },
+
   setVolume: function setVolume(voice, wantedvolume) {
     if (voice.dispatcher) voice.dispatcher.setVolume(wantedvolume);
     voice.volume = wantedvolume;
   },
+
   getLoop: function getLoop(voice) {
     return voice.loop;
   },
+
   toggleLoop: function toggleLoop(voice) {
     voice.loop = !voice.loop;
   },
+
   pause: function pause(voice) {
     voice.dispatcher.pause();
   },
+
   resume: function pause(voice) {
     voice.dispatcher.resume();
   },
+
   addSong: async function addSong(voice, query) {
     if (!/^https?:\/\/(?:www.)?youtube.com\/[A-Za-z0-9?&=\-_%.]+$/.test(query)) throw new Error('invalid url');
     let videoinfo;
@@ -89,9 +98,11 @@ var clientVCManager = {
     songslist.push(latestobj);
     return latestobj;
   },
+
   forceSkip: function (voice) {
     if (voice.mainloop) voice.mainloop = 2;
   },
+
   startMainLoop: async function startMainLoop(voice, msgchannel) {
     if (voice.mainloop) return;
     voice.mainloop = 1;
@@ -121,10 +132,14 @@ var clientVCManager = {
           if (voice.dispatcher && voice.dispatcher.streamTime > voice.songslist[0].expectedLength - 2) voice.mainloop = 2;
           if (voice.mainloop == 2) {
             voice.dispatcher.destroy();
+          } else if (voice.mainloop == 3) {
+            voice.dispatcher.destroy();
+            voice.songslist.length = 0;
           }
         }
-        if (voice.mainloop != 2 && voice.dispatcher && voice.dispatcher.streamTime < voice.songslist[0].expectedLength - 5000) msgchannel.send(`Error: something broke when playing ${voice.songslist[0].desc}`);
-        if (voice.mainloop == 2) voice.mainloop = 1;
+        if (voice.mainloop != 2 && voice.mainloop != 3 && voice.dispatcher && voice.dispatcher.streamTime < voice.songslist[0].expectedLength - 5000)
+          msgchannel.send(`Error: something broke when playing ${voice.songslist[0].desc}`);
+        if (voice.mainloop == 2 || voice.mainloop == 3) voice.mainloop = 1;
         if (!voice.loop) voice.songslist.splice(0, 1);
         try { voice.proc.kill(); } catch (e) {}
         voice.proc = null;
@@ -135,6 +150,13 @@ var clientVCManager = {
       console.error(e);
     }
     voice.mainloop = 0;
+  },
+
+  stopMainLoop: function stopMainLoop(voice) {
+    voice.mainloop = 3;
+    return new Promise(resolve => {
+      voice.dispatcher.on('destroy', r);
+    });
   },
 };
 
