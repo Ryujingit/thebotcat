@@ -2,7 +2,7 @@ var starttime = new Date(), loadtime, readytime;
 
 var exitHandled = false;
 
-var doWorkers = false;
+var doWorkers = true;
 
 var https = require('https');
 var fs = require('fs');
@@ -87,10 +87,7 @@ var badwords = [
   { enabled: false, type: 3, adminbypass: 0, word: `The first time I drank coffee I cried. I didn't cry because of the taste, that would be stupid. I cried because of the cup. I looked down into my coffee and bugs filled the premises. Disgusted I threw the cup down but nothing was there. Not the cup, not the bugs, not the street. I'm not blind, I do see darkness, and it was dark but not nighttime. I was alone in the city. My arms weren't there. My hands were gone. My image was nothing but a figment. I cried. I'm crying. I'm lost without an end. I won't ever drink coffee again.`, retaliation: 'dez\'s life story is private information' },
 ];
 
-var defaultprefix = '!';
-var universalprefix = '!(thebotcat)';
-
-var version = '1.5.0';
+var version = '1.5.1';
 
 var commands = [];
 
@@ -98,8 +95,9 @@ var procs = [];
 
 var props = {
   feat: {
-    repl: false,
-    savedms: false,
+    version: 'canary',
+    repl: true,
+    savedms: true,
     loaddms: false,
   },
   saved: null,
@@ -115,6 +113,22 @@ var props = {
   botStatusMsg: null,
   botStatusMsgResolve: null,
 };
+
+var defaultprefix = props.feat.version == 'normal' ? '!' : '?';
+var universalprefix = props.feat.version == 'normal' ? '!(thebotcat)' : '?(thebotcat)';
+
+try {
+  fs.readFileSync('.env').toString().split(/\r?\n/g).forEach(entry => {
+    if (entry[0] == '#') return;
+    var split = entry.split(':');
+    var key = split[0].trim();
+    var value = split.slice(1).join(':').trim();
+    process.env[key] = value;
+  });
+} catch (e) {
+  console.error('Error parsing .env, thebotcat will not be able to login');
+  console.error(e);
+}
 
 if (fs.existsSync('props.json')) {
   try {
@@ -410,7 +424,11 @@ global.handlers = common.handlers;
   loadtime = new Date();
   try {
     props.botStatusChannel = await client.channels.fetch('759507043685105757');
-    props.botStatusMsg = await props.botStatusChannel.messages.fetch('762432760680808479');
+    if (props.feat.version == 'normal') {
+      props.botStatusMsg = await props.botStatusChannel.messages.fetch('762432760680808479');
+    } else if (props.feat.version == 'canary') {
+      props.botStatusMsg = { edit: () => Promise.resolve(null) };
+    }
   } catch (e) {
     console.error(`couldn't fetch bot status message`);
     console.error(e);
@@ -510,7 +528,12 @@ process.on('exit', exitHandler);
 
 process.on('SIGINT', exitHandler);
 
-require('./normal.js');
+if (props.feat.version == 'normal') {
+  client.login(process.env.THEBOTCAT_TOKEN);
+} else if (props.feat.version == 'canary') {
+  client.login(process.env.THEBOTCAT_CANARY_TOKEN);
+}
+
 
 if (props.feat.repl) {
   console.log('To shut down thebotcat press Ctrl+C twice or Ctrl+D to exit the repl, after which a shutdown is performed that cleans up variables.  Just pressing X could lead to data loss if props.saved was modified.');
