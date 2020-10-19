@@ -20,4 +20,5 @@ COPY ./worker.js /home/thebotcat/worker.js
 COPY ./common /home/thebotcat/common
 COPY ./commands /home/thebotcat/commands
 COPY ./index.js /home/thebotcat/index.js
+#RUN [ "sed", "-i", "s/version: 'canary'/version: 'normal'/", "/home/thebotcat/index.js" ]
 CMD node index.js
