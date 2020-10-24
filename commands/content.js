@@ -339,6 +339,30 @@ module.exports = [
     }
   },
   {
+    name: 'bonk',
+    full_string: false,
+    public: true,
+    execute(msg, cmdstring, command, argstring, args) {
+      if (!args[0]) args[0] = Math.floor(Math.random() * 5 + 1);
+      if (args[0] == '1') {
+        var bonk = new Discord.MessageEmbed() .setImage('https://media1.tenor.com/images/9e525a45499a65f44adfbec2a3c62d74/tenor.gif?itemid=18272416'); //https://tenor.com/view/bonk-gif-18272416 
+        return msg.channel.send(bonk);
+      } else if (args[0] == '2') {
+        var bonk = new Discord.MessageEmbed() .setImage('https://media1.tenor.com/images/be13cad325ddb680b607aaed09444fc7/tenor.gif?itemid=18715315'); //https://tenor.com/view/bonk-gif-18715315
+        return msg.channel.send(bonk);
+      } else if (args [0] == '3') {
+        var bonk = new Discord.MessageEmbed() .setImage('https://media1.tenor.com/images/c7864d3503714217331ce18482c7b2e4/tenor.gif?itemid=17425385'); //https://tenor.com/view/goose-grey-mess-with-the-honk-you-get-the-bonk-statewide-rp-gif-17425385
+        return msg.channel.send(bonk);
+      } else if (args [0] == '4') {
+        var bonk = new Discord.MessageEmbed() .setImage('https://media1.tenor.com/images/c658ef8183c978dd6fb528d4c06632c2/tenor.gif?itemid=17177822'); //https://tenor.com/view/sad-cat-bonk-awaken-sleep-gif-17177822
+        return msg.channel.send(bonk);
+      } else if (args [0] == '5') {
+        var bonk = new Discord.MessageEmbed() .setImage('https://media1.tenor.com/images/d7ee4336725809f0fb1350e134b6974c/tenor.gif?itemid=18247759') //https://tenor.com/view/hammer-bonk-hammer-bonk-hammer-bonk-screen-gif-18247759
+        return msg.channel.send(bonk);
+      }
+    }
+  },
+  {
     name: 'cute animal',
     full_string: false,
     public: true,
