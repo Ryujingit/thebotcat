@@ -79,4 +79,15 @@ module.exports = [
       });
     }
   },
+  {
+    name: 'discord',
+    full_string: false,
+    public: true,
+    execute(msg, cmdstring, command, argstring, args) {
+      var discord = new Discord.MessageEmbed()
+        .setTitle('This is Thebotcat\'s discord bot server if you wanna join click the link! https://discord.gg/NamrBZc')
+        .setFooter('Server for thebotcat discord bot come along and say hi!');
+      return msg.channel.send(discord);
+    }
+  },
 ];

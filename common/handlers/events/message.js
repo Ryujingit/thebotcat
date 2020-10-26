@@ -32,13 +32,8 @@ module.exports = msg => {
 
   if (msg.author.bot) return;
 
-  if (mutelist.includes(msg.author.id) ||
-    msg.guild && props.saved.guilds[msg.guild.id] && (
-      props.saved.guilds[msg.guild.id].mutelist.includes(msg.author.id)
-    )
-  ) {
+  if (mutelist.includes(msg.author.id))
     msg.delete();
-  }
 
   if (!msg.guild) {
     logmsg(`dm from ${msg.author.tag} (channel ${msg.channel.id}) with contents ${util.inspect(msg.content)}`);
@@ -80,7 +75,7 @@ module.exports = msg => {
     }
 
     // this is the screening for bad words part
-    let isdeveloper = common.isDeveloper(msg), isadmin = common.isAdmin(msg), ismod = common.isMod(msg);
+    let isdeveloper = common.isDeveloper(msg), isadmin = common.isAdmin(msg);
     let dodelete = false;
     let word, content, bypass;
     for (var i = 0; i < badwords.length; i++) {
@@ -88,7 +83,7 @@ module.exports = msg => {
       if (word.enabled) {
         content = msg.content;
         if (word.type & 8) content = content.toLowerCase();
-        bypass = isdeveloper && word.adminbypass & 1 || isadmin && word.adminbypass & 2 || ismod && word.adminbypass & 4;
+        bypass = isdeveloper && word.adminbypass & 1 || isadmin && word.adminbypass & 2;
         if (!bypass) {
           switch (word.type & 7) {
             case 0: break;

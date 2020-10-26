@@ -1,5 +1,6 @@
 module.exports = [
   msg => {
+    if (props.feat.version == 'canary') return;
     if (msg.channel.id == '738599826765250632') {
       msg.delete();
       client.channels.cache.get('738593863958003756').send(`${msg.author.tag}: ${msg.content}`);

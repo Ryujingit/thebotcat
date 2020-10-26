@@ -6,7 +6,7 @@ module.exports = [
     async execute(msg, cmdstring, command, argstring, args) {
       if (!(common.isDeveloper(msg) || common.isConfirmDeveloper(msg))) return;
       let text = cmdstring.slice(4);
-      console.debug(`say from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(text)}`);
+      nonlogmsg(`say from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(text)}`);
       if (global.confirmeval && common.isConfirmDeveloper(msg)) {
         if (!(await confirmeval(`say from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(text)}`)))
           return;
@@ -30,7 +30,7 @@ module.exports = [
       let text = argr.slice(1).join(' ');
       let channel;
       if (channel = client.channels.cache.get(channelid)) {
-        console.debug(`sayy from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${channel.guild?channel.guild.name+':'+channel.name:'dms'}: ${util.inspect(text)}`);
+        nonlogmsg(`sayy from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${channel.guild?channel.guild.name+':'+channel.name:'dms'}: ${util.inspect(text)}`);
         return channel.send(text);
       }
     }
@@ -126,7 +126,7 @@ module.exports = [
     description: '`!settings` to see available settings\n`!settings <setting>` for help on a specific setting',
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
-      if (!props.saved.guilds[msg.guild.id]) return msg.channel.send('Error: cannot run any settings commands, guild not in database');
+      if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject();
       let normalperms = common.isDeveloper(msg) || common.isAdmin(msg);
       let ismod = common.isMod(msg);
       if (!(normalperms || ismod)) return msg.channel.send('You do not have permission to run this command.');
@@ -184,14 +184,14 @@ module.exports = [
     }
   },
   {
-    name: 'c-mute',
+    name: 'mute',
     full_string: false,
-    description: '`!c-mute @person` to auto-delete any messages sent by person in this guild',
+    description: '`!mute @person` to mute someone by adding the muted role to them',
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
       var user;
       if (!(user = msg.mentions.users.first())) return;
-      if (!props.saved.guilds[msg.guild.id]) return msg.channel.send('Error: cannot mute, guild not in database');
+      if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject();
       if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg))) return msg.channel.send('You do not have permission to run this command.');
       let promise;
       if (!props.saved.guilds[msg.guild.id].mutelist.includes(user.id)) {
@@ -205,14 +205,14 @@ module.exports = [
     }
   },
   {
-    name: 'c-unmute',
+    name: 'unmute',
     full_string: false,
-    description: '`!c-unmute @person` to stop auto-deleting messages sent by person in this guild',
+    description: '`!unmute @person` to unmute someone by removing the muted role from them',
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
       var user;
       if (!(user = msg.mentions.users.first())) return;
-      if (!props.saved.guilds[msg.guild.id]) return msg.channel.send('Error: cannot mute, guild not in database');
+      if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject();
       if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg))) return msg.channel.send('You do not have permission to run this command.');
       let ind;
       let promise;
@@ -232,53 +232,51 @@ module.exports = [
     description: '`!lock` to lock this channel, preventing anyone other than moderators from talking in it\n`!lock #channel` to lock a specific channel',
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
-      if (!props.saved.guilds[msg.guild.id]) return msg.channel.send('Error: cannot lock channel, guild not in database');
-      let promise;
+      if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject();
+
+      let channelid, channel;
+
       if (args.length == 0) {
-        if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || msg.channel.permissionsFor(msg.member).has('MANAGE_CHANNELS'))) return msg.channel.send('You do not have permission to run this command.');
-        let perms = common.serializePermissionOverwrites(msg.channel);
-        let newperms = perms.map(x => Object.assign({}, x));
-        let type = { dm: 0, text: 1, voice: 2, category: 3, news: 1, store: 1, unknown: 0 }[msg.channel.type];
-        let bits = Discord.Permissions.FLAGS['SEND_MESSAGES'] * (type & 1) | Discord.Permissions.FLAGS['CONNECT'] * (type & 2);
-        newperms.forEach(x => {
-          if (!(props.saved.guilds[msg.guild.id].modroles.includes(x.id) || x.type == 'role' && msg.guild.roles.cache.get(x.id).permissions.has('MANAGE_CHANNELS'))) {
-            x.allow &= ~bits;
-            x.deny |= bits;
-          }
-        });
-        if (!common.serializedPermissionsEqual(perms, newperms)) {
-          props.saved.guilds[msg.guild.id].savedperms[msg.channel.id] = perms;
-          common.partialDeserializePermissionOverwrites(msg.channel, newperms);
-          promise = msg.channel.send(`Locked channel <#${msg.channel.id}> (id ${msg.channel.id})`);
-          schedulePropsSave();
-        } else {
-          promise = msg.channel.send(`Channel <#${msg.channel.id}> (id ${msg.channel.id}) already locked or no permissions to change`);
-        }
+        channelid = msg.channel.id;
+        channel = msg.channel;
       } else if (/<#[0-9]+>/.test(args[0])) {
-        let channelid = args[0].slice(2, args[0].length - 1), channel;
-        if (channel = msg.guild.channels.find(x => x.id == channelid)) {
-          if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || channel.permissionsFor(msg.member).has('MANAGE_CHANNELS'))) return msg.channel.send('You do not have permission to run this command.');
-          let perms = common.serializePermissionOverwrites(channel);
-          let newperms = perms.map(x => Object.assign({}, x));
-          let type = { dm: 0, text: 1, voice: 2, category: 3, news: 1, store: 1, unknown: 0 }[channel.type];
-          let bits = Discord.Permissions.FLAGS['SEND_MESSAGES'] * (type & 1) | Discord.Permissions.FLAGS['CONNECT'] * (type & 2);
-          newperms.forEach(x => {
-            if (!props.saved.guilds[msg.guild.id].modroles.includes(x.id)) {
-              x.allow &= ~bits;
-              x.deny |= bits;
-            }
-          });
-          if (!common.serializedPermissionsEqual(perms, newperms)) {
-            props.saved.guilds[msg.guild.id].savedperms[channelid] = perms;
-            common.partialDeserializePermissionOverwrites(channel, newperms);
-            promise = msg.channel.send(`Locked channel <#${channelid}> (id ${channelid})`);
-            schedulePropsSave();
-          } else {
-            promise = msg.channel.send(`Channel <#${channelid}> (id ${channelid}) already locked or no permissions to change`);
-          }
-        } else return msg.channel.send('Cannot lock channel outside of this guild.');
+        let channelid = args[0].slice(2, args[0].length - 1);
+        channel = msg.guild.channels.find(x => x.id == channelid);
+        if (!channel) return msg.channel.send('Cannot lock channel outside of this guild.');
       }
-      return promise;
+
+      if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.LOCK_CHANNEL))
+        return msg.channel.send('You do not have permission to run this command.');
+
+      let perms = common.serializePermissionOverwrites(channel);
+      let newperms = perms.map(x => Object.assign({}, x));
+      let type = { dm: 0, text: 1, voice: 2, category: 3, news: 1, store: 1, unknown: 0 }[channel.type];
+      let bits = Discord.Permissions.FLAGS['SEND_MESSAGES'] * (type & 1) | Discord.Permissions.FLAGS['CONNECT'] * (type & 2);
+      newperms.forEach(x => {
+        if (!props.saved.guilds[msg.guild.id].perms.filter(y => y.id == x.id && y.perms & (common.constants.botRolePermBits.LOCK_CHANNEL | common.constants.botRolePermBits.BYPASS_LOCK)).length) {
+          x.allow &= ~bits;
+          x.deny |= bits;
+        }
+      });
+      let newpermids = newperms.map(x => x.id);
+      props.saved.guilds[msg.guild.id].perms.forEach(x => {
+        if (x.perms & (common.constants.botRolePermBits.LOCK_CHANNEL | common.constants.botRolePermBits.BYPASS_LOCK) && !newpermids.includes(x.id))
+          newperms.push({
+            id: x.id,
+            type: 'role',
+            allow: bits,
+            deny: 0,
+          });
+      });
+
+      if (!common.serializedPermissionsEqual(perms, newperms)) {
+        props.saved.guilds[msg.guild.id].temp.stashed.channeloverrides[channelid] = perms;
+        common.partialDeserializePermissionOverwrites(channel, newperms);
+        schedulePropsSave();
+        return msg.channel.send(`Locked channel <#${channelid}> (id ${channelid})`);
+      } else {
+        return msg.channel.send(`Channel <#${channelid}> (id ${channelid}) already locked or no permissions to change`);
+      }
     }
   },
   {
@@ -287,35 +285,31 @@ module.exports = [
     description: '`!unlock` to unlock this channel, resetting permissions to what they were before the lock\n`!unlock #channel` to unlock a specific channel',
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
-      if (!props.saved.guilds[msg.guild.id]) return msg.channel.send('Error: cannot unlock channel, guild not in database');
-      let promise;
+      if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject();
+
+      let channelid, channel;
+
       if (args.length == 0) {
-        if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || msg.channel.permissionsFor(msg.member).has('MANAGE_CHANNELS'))) return msg.channel.send('You do not have permission to run this command.');
-        let perms;
-        if (perms = props.saved.guilds[msg.guild.id].savedperms[msg.channel.id]) {
-          common.partialDeserializePermissionOverwrites(msg.channel, perms);
-          delete props.saved.guilds[msg.guild.id].savedperms[msg.channel.id];
-          promise = msg.channel.send(`Unlocked channel <#${msg.channel.id}> (id ${msg.channel.id})`);
-          schedulePropsSave();
-        } else {
-          promise = msg.channel.send(`Channel <#${msg.channel.id}> (id ${msg.channel.id}) not locked`);
-        }
+        channelid = msg.channel.id;
+        channel = msg.channel;
       } else if (/<#[0-9]+>/.test(args[0])) {
-        let channelid = args[0].slice(2, args[0].length - 1), channel;
-        if (channel = msg.guild.channels.find(x => x.id == channelid)) {
-          if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || msg.channel.permissionsFor(msg.member).has('MANAGE_CHANNELS'))) return msg.channel.send('You do not have permission to run this command.');
-          let perms;
-          if (perms = props.saved.guilds[msg.guild.id].savedperms[channelid]) {
-            common.partialDeserializePermissionOverwrites(channel, perms);
-            delete props.saved.guilds[msg.guild.id].savedperms[channelid];
-            promise = msg.channel.send(`Unlocked channel <#${channelid}> (id ${channelid})`);
-            schedulePropsSave();
-          } else {
-            promise = msg.channel.send(`Channel <#${channelid}> (id ${channelid}) not locked`);
-          }
-        } else return msg.channel.send('Cannot unlock channel outside of this guild.');
+        let channelid = args[0].slice(2, args[0].length - 1);
+        channel = msg.guild.channels.find(x => x.id == channelid);
+        if (!channel) return msg.channel.send('Cannot unlock channel outside of this guild.');
       }
-      return promise;
+
+      if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.LOCK_CHANNEL))
+        return msg.channel.send('You do not have permission to run this command.');
+
+      let perms = props.saved.guilds[msg.guild.id].temp.stashed.channeloverrides[channelid];
+      if (perms) {
+        common.partialDeserializePermissionOverwrites(channel, perms);
+        delete props.saved.guilds[msg.guild.id].temp.stashed.channeloverrides[channelid];
+        schedulePropsSave();
+        return msg.channel.send(`Unlocked channel <#${channelid}> (id ${channelid})`);
+      } else {
+        return msg.channel.send(`Channel <#${channelid}> (id ${channelid}) not locked`);
+      }
     }
   },/*
   {
@@ -355,29 +349,48 @@ module.exports = [
     description: '`!kick @person` to kick someone from this guild',
     public: true,
     async execute(msg, cmdstring, command, argstring, args) {
-      var user;
-      if (!(user = msg.mentions.users.first())) return;
-      if (!(common.isDeveloper(msg) || common.isOwner(msg) || common.isAdmin(msg) || common.isMod(msg) || msg.member.hasPermission('KICK_MEMBERS')))
+      if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.KICK))
         return msg.channel.send('You do not have permission to run this command.');
-      var member = msg.mentions.members.first();
-      if (member == null) return;
-      if (!msg.guild.me.hasPermission('KICK_MEMBERS')) {
-        var kickerror = new Discord.MessageEmbed()
-          .setTitle("Error")
-          .setDescription(`I do not have permission to kick members.`);
-        return msg.channel.send(kickerror);
+
+      let memberid;
+      if (args[0]) {
+        if (/<@!?[0-9]+>|[0-9]+/.test(args[0]))
+          memberid = args[0].replace(/[<@!>]/g, '');
       }
+      if (!memberid) return;
+
+      let member;
       try {
-        await member.kick();
-        var kick = new Discord.MessageEmbed()
-          .setTitle("Goodbye!")
-          .setDescription(`${member.displayName} has been successfully kicked`);
-        return msg.channel.send(kick);
+        member = await msg.guild.members.fetch(memberid);
+        if (!member) return msg.channel.send('Could not find user.');
       } catch (e) {
-        var kickerror = new Discord.MessageEmbed()
-          .setTitle("Error")
-          .setDescription(`Cannot kick ${member.displayName}, not high enough in the role hierarchy`);
-        return msg.channel.send(kickerror);
+        return msg.channel.send('Could not find user.');
+      }
+
+      let kickreason = args.slice(1).join(' ');
+
+      if (!msg.guild.me.hasPermission('KICK_MEMBERS'))
+        return msg.channel.send('Error: I do not have permission to kick members.');
+
+      if (msg.member.roles.highest.position <= member.roles.highest.position)
+        return msg.channel.send('You cannot kick someone equal or higher than you in the role hierarchy.');
+
+      if (msg.guild.me.roles.highest.position <= member.roles.highest.position)
+        return msg.channel.send('Error: I cannot kick someone equal or higher than me in the role hierarchy.');
+
+      try {
+        let kickconfirm = await msg.channel.send(`Are you sure you want to kick user ${member.user.tag} (id ${member.id})${kickreason ? ' with reason ' + util.inspect(kickreason) : ''}?`);
+        let kickreacts = kickconfirm.awaitReactions((react, user) => (react.emoji.name == '✅' || react.emoji.name == '❌') && user.id == msg.author.id, { time: 60000, max: 1 });
+        await kickconfirm.react('✅');
+        await kickconfirm.react('❌');
+        kickreacts = await kickreacts;
+        if (kickreacts.keyArray().length == 0 || kickreacts.keyArray()[0] == '❌')
+          return msg.channel.send('Kick cancelled.');
+        await member.kick(`[By ${msg.author.tag} (id ${msg.author.id})]${kickreason ? ' ' + kickreason : ''}`);
+        return msg.channel.send(`${member.user.tag} (id ${member.id}) has been successfully kicked`);
+      } catch (e) {
+        console.error(e);
+        return msg.channel.send('Error: something went wrong.');
       }
     }
   },
@@ -387,29 +400,48 @@ module.exports = [
     description: '`!ban @person` to ban someone from this guild',
     public: true,
     async execute(msg, cmdstring, command, argstring, args) {
-      var user;
-      if (!(user = msg.mentions.users.first())) return;
-      if (!(common.isDeveloper(msg) || common.isOwner(msg) || common.isAdmin(msg) || msg.member.hasPermission('BAN_MEMBERS')))
+      if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.BAN))
         return msg.channel.send('You do not have permission to run this command.');
-      var member = msg.mentions.members.first();
-      if (member == null) return;
-      if (!msg.guild.me.hasPermission('BAN_MEMBERS')) {
-        var banerror = new Discord.MessageEmbed()
-          .setTitle("Error")
-          .setDescription(`I do not have permission to ban members.`);
-        return msg.channel.send(banerror);
+
+      let memberid;
+      if (args[0]) {
+        if (/<@!?[0-9]+>|[0-9]+/.test(args[0]))
+          memberid = args[0].replace(/[<@!>]/g, '');
       }
+      if (!memberid) return;
+
+      let member;
       try {
-        await member.ban();
-        var ban = new Discord.MessageEmbed()
-          .setTitle("Goodbye!")
-          .setDescription(`${member.displayName} has been successfully banned`);
-        return msg.channel.send(ban);
+        member = await msg.guild.members.fetch(memberid);
+        if (!member) return msg.channel.send('Could not find user.');
       } catch (e) {
-        var banerror = new Discord.MessageEmbed()
-          .setTitle("Error")
-          .setDescription(`Cannot ban ${member.displayName}, not high enough in the role hierarchy`);
-        return msg.channel.send(banerror);
+        return msg.channel.send('Could not find user.');
+      }
+
+      let banreason = args.slice(1).join(' ');
+
+      if (!msg.guild.me.hasPermission('BAN_MEMBERS'))
+        return msg.channel.send('Error: I do not have permission to ban members.');
+
+      if (msg.member.roles.highest.position <= member.roles.highest.position)
+        return msg.channel.send('You cannot ban someone equal or higher than you in the role hierarchy.');
+
+      if (msg.guild.me.roles.highest.position <= member.roles.highest.position)
+        return msg.channel.send('Error: I cannot ban someone equal or higher than me in the role hierarchy.');
+
+      try {
+        let banconfirm = await msg.channel.send(`Are you sure you want to ban user ${member.user.tag} (id ${member.id})${banreason ? ' with reason ' + util.inspect(banreason) : ''}?`);
+        let banreacts = banconfirm.awaitReactions((react, user) => (react.emoji.name == '✅' || react.emoji.name == '❌') && user.id == msg.author.id, { time: 60000, max: 1 });
+        await banconfirm.react('✅');
+        await banconfirm.react('❌');
+        banreacts = await banreacts;
+        if (banreacts.keyArray().length == 0 || banreacts.keyArray()[0] == '❌')
+          return msg.channel.send('Ban cancelled.');
+        await member.ban({ reason: `[By ${msg.author.tag} (id ${msg.author.id})]${banreason ? ' ' + banreason : ''}` });
+        return msg.channel.send(`${member.user.tag} (id ${member.id}) has been successfully banned`);
+      } catch (e) {
+        console.error(e);
+        return msg.channel.send('Error: something went wrong.');
       }
     }
   },
@@ -419,29 +451,41 @@ module.exports = [
     description: '`!unban @person` to unban someone from this guild',
     public: true,
     async execute(msg, cmdstring, command, argstring, args) {
-      var user;
-      if (!(user = msg.mentions.users.first())) return;
-      if (!(common.isDeveloper(msg) || common.isOwner(msg) || common.isAdmin(msg) || common.isMod(msg) || msg.member.hasPermission('MANAGE_SERVER')))
+      if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.BAN))
         return msg.channel.send('You do not have permission to run this command.');
-      var member = msg.mentions.members.first();
-      if (member == null) return;
-      if (!msg.guild.me.hasPermission('MANAGE_SERVER')) {
-        var unbanerror = new Discord.MessageEmbed()
-          .setTitle("Error")
-          .setDescription(`I do not have permission to unban members.`);
-        return msg.channel.send(unbanerror);
+
+      let memberid;
+      if (args[0]) {
+        if (/<@!?[0-9]+>|[0-9]+/.test(args[0]))
+          memberid = args[0].replace(/[<@!>]/g, '');
       }
+      if (!memberid) return;
+
+      let baninfo;
       try {
-        await msg.guild.unban(member);
-        var unban = new Discord.MessageEmbed()
-          .setTitle("Welcome back")
-          .setDescription(`${member.displayName} has been successfully unbanned`);
-        return msg.channel.send(unban);
+        baninfo = await msg.guild.fetchBan(memberid);
+        if (!baninfo) return msg.channel.send('User not banned or nonexistent.');
       } catch (e) {
-        var unbanerror = new Discord.MessageEmbed()
-          .setTitle("Error")
-          .setDescription(`Cannot unban ${member.displayName}`);
-        return msg.channel.send(unbanerror);
+        return msg.channel.send('User not banned or nonexistent.');
+      }
+
+      let unbanreason = args.slice(1).join(' ');
+
+      if (!msg.guild.me.hasPermission('BAN_MEMBERS'))
+        return msg.channel.send('Error: I do not have permission to unban members.');
+
+      try {
+        let unbanconfirm = await msg.channel.send(`Are you sure you want to unban user ${baninfo.user.tag} (id ${baninfo.user.id})${unbanreason ? ' with reason ' + util.inspect(unbanreason) : ''}?`);
+        let unbanreacts = unbanconfirm.awaitReactions((react, user) => (react.emoji.name == '✅' || react.emoji.name == '❌') && user.id == msg.author.id, { time: 60000, max: 1 });
+        await unbanconfirm.react('✅');
+        await unbanconfirm.react('❌');
+        unbanreacts = await unbanreacts;
+        if (unbanreacts.keyArray().length == 0 || unbanreacts.keyArray()[0] == '❌')
+          return msg.channel.send('Unban cancelled.');
+        await msg.guild.members.unban(memberid, `[By ${msg.author.tag} (id ${msg.author.id})]${unbanreason ? ' ' + unbanreason : ''}`);
+        return msg.channel.send(`${baninfo.user.tag} (id ${baninfo.user.id}) has been successfully unbanned`);
+      } catch (e) {
+        return msg.channel.send('Error: something went wrong.');
       }
     }
   },
@@ -481,7 +525,7 @@ module.exports = [
       if (!(common.isDeveloper(msg) || common.isConfirmDeveloper(msg)))
         return msg.channel.send('You do not have permissions to run this command.');
       let cmd = argstring, res;
-      console.debug(`evaluating from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(cmd)}`);
+      nonlogmsg(`evaluating from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(cmd)}`);
       if (args.length == 2 && (args[0] == 'deez' && args[1] == 'nuts' || args[0] == 'goe' && args[1] == 'mama')) return msg.channel.send('no');
       if (global.confirmeval && common.isConfirmDeveloper(msg)) {
         if (!(await confirmeval(`evaluating from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(cmd)}`))) {
@@ -513,7 +557,7 @@ module.exports = [
       if (!(common.isDeveloper(msg) || common.isConfirmDeveloper(msg)))
         return msg.channel.send('You do not have permissions to run this command.');
       let cmd = argstring, res;
-      console.debug(`evaluating (output voided) from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(cmd)}`);
+      nonlogmsg(`evaluating (output voided) from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(cmd)}`);
       if (global.confirmeval && common.isConfirmDeveloper(msg)) {
         if (!(await confirmeval(`evaluating (output voided) from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(cmd)}`)))
           return;
@@ -535,7 +579,7 @@ module.exports = [
       if (!(common.isDeveloper(msg) || common.isConfirmDeveloper(msg)))
         return msg.channel.send('You do not have permissions to run this command.');
       let cmd = argstring, res;
-      console.debug(`shell exec from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(cmd)}`);
+      nonlogmsg(`shell exec from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(cmd)}`);
       if (global.confirmeval && common.isConfirmDeveloper(msg)) {
         if (!(await confirmeval(`shell exec from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(cmd)}`))) {
           return msg.channel.send('Eval command failed');

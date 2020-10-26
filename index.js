@@ -87,9 +87,9 @@ var badwords = [
   { enabled: false, type: 3, adminbypass: 0, word: `The first time I drank coffee I cried. I didn't cry because of the taste, that would be stupid. I cried because of the cup. I looked down into my coffee and bugs filled the premises. Disgusted I threw the cup down but nothing was there. Not the cup, not the bugs, not the street. I'm not blind, I do see darkness, and it was dark but not nighttime. I was alone in the city. My arms weren't there. My hands were gone. My image was nothing but a figment. I cried. I'm crying. I'm lost without an end. I won't ever drink coffee again.`, retaliation: 'dez\'s life story is private information' },
 ];
 
-var version = '1.5.1c';
+var version = '1.5.2-beta1';
 
-var commands = [];
+var commands = [], commandCategories = ['Information', 'Administrative', 'Interactive', 'Voice Channel', 'Music', 'Content', 'Troll'];
 
 var procs = [];
 
@@ -130,16 +130,16 @@ try {
   console.error(e);
 }
 
+var specialGuilds = process.env.SPECIAL_GUILDS.split(', ');
+
 if (fs.existsSync('props.json')) {
   try {
-    let val = JSON.parse(props.savedstringify = fs.readFileSync('props.json').toString(), math.reviver);
-    if (val.feat && val.guilds && val.calc_scopes) props.saved = val;
-    else throw new Error('Loaded props.json but incomplete');
+    props.saved = JSON.parse(props.savedstringify = fs.readFileSync('props.json').toString());
     console.log('Successfully loaded props.json');
   } catch (e) { console.error(`Unable to load props.json: ${e.toString()}`); }
 }
 
-/* format for props.saved (its not like this right now, its pending a database migration and code change in next commit):
+/* format for props.saved:
   props.saved : object {
     feat : object {
       calc : bool (default false),
@@ -150,16 +150,16 @@ if (fs.existsSync('props.json')) {
       <guildid> : object {
         prefix : string (default <defaultprefix>),
         enabled_commands : object {
+          global : bool (default true),
           categories : object {
-            administrative : bool,
-            technical : bool,
-            interactive : bool,
-            vc_joinleave : bool,
-            music : bool,
+            <CommandCategoryName> : bool (default true),
+          },
+          commands : object {
+            <CommandName> : bool (default true),
           },
         },
         logging : object {
-          main : string <channelid>,
+          main : string <channelid> / null,
         },
         perms : array [
           object {
@@ -167,16 +167,19 @@ if (fs.existsSync('props.json')) {
             perms : int (
               bits:
                 0 - normal bot commands
-                1 - get bot to join vc
-                2 - get bot to leave vc when there are others
-                3 - play songs
-                4 - play playlists
-                5 - voteskip
-                6 - forceskip and remove
-                7 - mute and tempmute
-                8 - kick
-                9 - ban
-                10 - change prefix
+                1 - bypass channel lock
+                2 - get bot to join vc and leave when bot and caller are only people in vc
+                3 - get bot to leave vc when there are others
+                4 - play songs
+                5 - play playlists
+                6 - voteskip
+                7 - forceskip and remove
+                8 - delete messages
+                9 - lock channel
+                10 - mute and tempmute
+                11 - kick
+                12 - ban
+                13 - change prefix, logchannel
             ),
           },
           ...
@@ -185,22 +188,32 @@ if (fs.existsSync('props.json')) {
           <channelid> : array [
             object {
               id : string <roleid/userid>,
-              allows : int,
-              denys : int,
+              allows : int <perms>,
+              denys : int <perms>,
             },
             ...
           ],
           ...
         },
+        mutedrole : string <roleid> / null,
+        events : array [
+          object {
+            triggers : array [],
+            actions : array [],
+          },
+          ...
+        ],
         temp : object {
-          channeloverrides : object {
-            <channelid> : object {
-              id : string <roleid/userid>,
-              type : string 'role' / 'user',
-              allow : int,
-              deny : int,
+          stashed : object {
+            channeloverrides : object {
+              <channelid> : object {
+                id : string <roleid/userid>,
+                type : string 'role' / 'member',
+                allow : int,
+                deny : int,
+              },
+              ...
             },
-            ...
           },
         },
         [EMPHEMERAL] voice : object {
@@ -247,7 +260,7 @@ if (fs.existsSync('props.json')) {
   }
  */
 if (!props.saved) {
-  props.saved = JSON.parse(fs.readFileSync('props-backup.json').toString(), math.reviver);
+  props.saved = JSON.parse(fs.readFileSync('props-backup.json').toString());
   propsSave();
 }
 
@@ -263,38 +276,10 @@ Object.defineProperty(props.saved.guilds.default, 'prefix', {
   configurable: true, enumerable: false, get: () => defaultprefix, set: val => defaultprefix = val,
 });
 
-// props.saved integrity checks
-(() => {
-  if (!props.saved.calc_scopes.shared) props.saved.calc_scopes.shared = {};
-  if (!('calc' in props.saved.feat)) props.saved.feat.calc = false;
-  if (!('audio' in props.saved.feat)) props.saved.feat.audio = 0;
-  if (!('lamt' in props.saved.feat)) props.saved.feat.lamt = 0;
-  let ks = Object.keys(props.saved.guilds), obj;
-  for (var i = 0; i < ks.length; i++) {
-    obj = props.saved.guilds[ks[i]];
-    if (!obj.modroles) obj.modroles = [];
-    if (obj.infochannel === undefined) obj.infochannel = null;
-    if (!obj.mutelist) obj.mutelist = [];
-    if (!obj.savedperms) obj.savedperms = {};
-    if (!obj.prefix) obj.prefix = defaultprefix;
-    Object.defineProperty(obj, 'voice', {
-      configurable: true,
-      enumerable: false,
-      writeable: true,
-      value: common.clientVCManager.getEmptyVoiceObject(),
-    });
-  }
-  ks = Object.keys(props.saved.calc_scopes);
-  for (var i = 0; i < ks.length; i++) {
-    obj = props.saved.calc_scopes[ks[i]];
-    Object.defineProperty(obj, 'shared', {
-      configurable: true,
-      enumerable: false,
-      get: () => props.saved.calc_scopes.shared,
-    });
-  }
-})();
-propsSave();
+global.cleanPropsSaved = () => {
+  props.saved = common.propsSavedCreateVerifiedCopy(props.saved);
+  propsSave();
+};
 
 function propsSave() {
   let val;
@@ -313,20 +298,24 @@ function schedulePropsSave() {
   }, 60000);
 }
 
-var indexeval = function (val) { return eval(val); };
+var indexeval = val => eval(val);
 var infomsg = function (msg, val) {
   let guildinfo, channelid;
-  if ((guildinfo = msg.guild ? props.saved.guilds[msg.guild.id] : undefined) && (channelid = guildinfo.infochannel) || (guildinfo = props.saved.guilds['default']) && (channelid = guildinfo.infochannel)) {
-    console.log(`infomsg for ${msg.guild.name}: ${val}`);
+  if ((guildinfo = msg.guild ? props.saved.guilds[msg.guild.id] : undefined) && (channelid = guildinfo.logging.main) ||
+    (guildinfo = props.saved.guilds['default']) && (channelid = guildinfo.logging.main)) {
+    console.log(`[${new Date().toISOString()}] infomsg for ${msg.guild.name}: ${val}`);
     return client.channels.cache.get(channelid).send(val);
   }
 };
 var logmsg = function (val) {
-  console.log(`logmsg ${val}`);
+  console.log(`[${new Date().toISOString()}] logmsg ${val}`);
   return client.channels.cache.get('736426551050109010').send(val);
 };
+var nonlogmsg = function (val) {
+  console.log(`[${new Date().toISOString()}] ${val}`);
+};
 
-Object.assign(global, { https, fs, util, v8, vm, cp, stream, Discord, ytdl, common, math, client, developers, confirmdevelopers, mutelist, badwords, commands, procs, props, propsSave, schedulePropsSave, indexeval, infomsg, logmsg, addBadWord, removeBadWord, addCommand, addCommands, removeCommand, removeCommands, getCommandsCategorized });
+Object.assign(global, { https, fs, util, v8, vm, cp, stream, Discord, ytdl, common, math, client, developers, confirmdevelopers, mutelist, badwords, commands, commandCategories, specialGuilds, procs, props, propsSave, schedulePropsSave, indexeval, infomsg, logmsg, nonlogmsg, addBadWord, removeBadWord, addCommand, addCommands, removeCommand, removeCommands, getCommandsCategorized });
 Object.defineProperties(global, {
   exitHandled: { configurable: true, enumerable: true, get: () => exitHandled, set: val => exitHandled = val },
   starttime: { configurable: true, enumerable: true, get: () => starttime, set: val => starttime = val },
@@ -341,6 +330,8 @@ Object.defineProperties(global, {
   voiceStateUpdateHandler: { configurable: true, enumerable: true, get: () => voiceStateUpdateHandler, set: val => voiceStateUpdateHandler = val },
   exitHandler: { configurable: true, enumerable: true, get: () => exitHandler, set: val => exitHandler = val },
 });
+
+cleanPropsSaved();
 
 function addBadWord(word, msgreply) { badwords.push([word.toLowerCase(), msgreply]); }
 function removeBadWord(word) { badwords.splice(badwords.map(x => x[0]).indexOf(word), 1); }
@@ -398,29 +389,31 @@ global.handlers = common.handlers;
 (async () => {
   while (!readytime)
     await new Promise(r => setTimeout(r, 1000));
-  console.log('Checking for new messages in send only channel');
-  let channel = client.channels.cache.get('738599826765250632'), messages;
-  try {
-    while (channel.lastMessageID != props.saved.sendmsgid) {
-      console.log('New messages detected');
-      messages = await channel.messages.fetch({ after: props.saved.sendmsgid });
-      console.log('Loaded up to 50 new messages');
-      messages = messages.keyArray().map(x => messages.get(x)).sort((a, b) => { a = a.createdTimestamp; b = b.createdTimestamp; if (a > b) { return 1; } else if (a < b) { return -1; } else { return 0; } });
-      if (messages.length == 0) {
-        props.saved.sendmsgid = channel.lastMessageID;
-        break;
+  if (props.feat.version != 'canary') {
+    console.log('Checking for new messages in send only channel');
+    let channel = client.channels.cache.get('738599826765250632'), messages;
+    try {
+      while (channel.lastMessageID != props.saved.sendmsgid) {
+        console.log('New messages detected');
+        messages = await channel.messages.fetch({ after: props.saved.sendmsgid });
+        console.log('Loaded up to 50 new messages');
+        messages = messages.keyArray().map(x => messages.get(x)).sort((a, b) => { a = a.createdTimestamp; b = b.createdTimestamp; if (a > b) { return 1; } else if (a < b) { return -1; } else { return 0; } });
+        if (messages.length == 0) {
+          props.saved.sendmsgid = channel.lastMessageID;
+          break;
+        }
+        for (var i = 0; i < messages.length; i++) {
+          console.log(`message handlering from ${props.saved.sendmsgid}`);
+          handlers.extra.message[0](messages[i]);
+          await new Promise(r => setTimeout(r, 500));
+        }
       }
-      for (var i = 0; i < messages.length; i++) {
-        console.log(`message handlering from ${props.saved.sendmsgid}`);
-        handlers.extra.message[0](messages[i]);
-        await new Promise(r => setTimeout(r, 500));
-      }
+    } catch (e) {
+      console.error(e.toString());
     }
-  } catch (e) {
-    console.error(e.toString());
+    console.log('All caught up');
+    cleanPropsSaved();
   }
-  console.log('All caught up');
-  propsSave();
   loadtime = new Date();
   try {
     props.botStatusChannel = await client.channels.fetch('759507043685105757');
@@ -470,11 +463,12 @@ client.on('disconnect', () => {
     try {
       if (handlers.event[evtType]) handlers.event[evtType](...args);
     } catch (e) {
-      console.error('ERROR, something had happened');
+      console.error('ERROR, something bad happened');
       console.error(e.stack);
     }
   });
 });
+
 
 // botcat tick function called every 60 seconds
 var ticks = 0;
@@ -506,6 +500,7 @@ Object.defineProperties(global, {
   tickTimTemp: { configurable: true, enumerable: true, get: () => tickTimTemp, set: val => tickTimTemp = val },
 });
 
+
 process.on('uncaughtException', function (err) {
   console.error('ERROR: an exception was uncaught by an exception handler.  This is very bad and could leave the bot in an unstable state.  If this is seen contact coolguy284 or another developer immediately.');
   console.error(err);
@@ -527,6 +522,7 @@ function exitHandler() {
 process.on('exit', exitHandler);
 
 process.on('SIGINT', exitHandler);
+
 
 if (props.feat.version == 'normal') {
   client.login(process.env.THEBOTCAT_TOKEN);

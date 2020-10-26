@@ -628,15 +628,4 @@ module.exports = [
       return msg.channel.send(bruh);
     }
   },
-  {
-    name: 'discord',
-    full_string: false,
-    public: true,
-    execute(msg, cmdstring, command, argstring, args) {
-      var discord = new Discord.MessageEmbed() .setImage('http://www.fraghero.com/wp-content/uploads/2017/03/discord_logo__1489184841_48114.jpg')
-        .setTitle('This is Thebotcat\'s discord bot server if you wanna join click the link! https://discord.gg/NamrBZc')
-        .setFooter('Server for thebotcat discord bot come along and say hi!');
-      return msg.channel.send(discord);
-    }
-  },
 ];

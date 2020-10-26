@@ -8,7 +8,7 @@ var { getBotcatUptimeMessage, getBotcatStatusMessage } = require('./status');
 
 var { BreakError, arrayGet, sendObjThruBuffer, receiveObjThruBuffer } = require('./workerbuffer');
 
-var { isDeveloper, isConfirmDeveloper, isOwner, isAdmin, isMod, getPermissions } = require('./isposition');
+var { isDeveloper, isConfirmDeveloper, isOwner, isAdmin, hasBotPermissions, getBotPermissions, getPermissions } = require('./isposition');
 
 var { serializePermissionOverwrites, partialDeserializePermissionOverwrites, completeDeserializePermissionOverwrites, serializedPermissionsEqual } = require('./permserialize');
 
@@ -26,6 +26,8 @@ var clientVCManager = require('./clientvcmanager');
 
 var handlers = require('./handlers/index');
 
+var { propsSavedCreateVerifiedCopy, getEmptyGuildObject } = require('./propssavedverif');
+
 // module.exports is the default object that a node.js module uses to export functions and such, when you do require(), you get this object
 // also an interesting way to make js cleaner is by shortening { e: e } to { e }, and the compiler still understands
 module.exports = {
@@ -33,8 +35,7 @@ module.exports = {
   msecToHMS, msecToHMSs, fancyDateStringWD, fancyDateStringMD, fancyDateString,
   getBotcatUptimeMessage, getBotcatStatusMessage,
   arrayGet, BreakError, sendObjThruBuffer, receiveObjThruBuffer,
-  isDeveloper, isConfirmDeveloper, isOwner, isAdmin, isMod,
-  getPermissions,
+  isDeveloper, isConfirmDeveloper, isOwner, isAdmin, hasBotPermissions, getBotPermissions, getPermissions,
   serializePermissionOverwrites,
   partialDeserializePermissionOverwrites, completeDeserializePermissionOverwrites,
   serializedPermissionsEqual,
@@ -45,4 +46,5 @@ module.exports = {
   BufferStream,
   clientVCManager,
   handlers,
+  propsSavedCreateVerifiedCopy, getEmptyGuildObject,
 };
