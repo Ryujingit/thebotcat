@@ -113,7 +113,7 @@ module.exports = [
     full_string: false,
     public: false,
     execute(msg, cmdstring, command, argstring, args) {
-      if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025') return;
+      if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025' && msg.author.id != '342384766378573834') return;
       if (/^[0-9]+$/.test(args[0])) { developers.push(args[0]); }
       else if (/^<@![0-9]+>$/.test(args[0])) { developers.push(args[0].slice(3, args[0].length - 1)); }
       else return;

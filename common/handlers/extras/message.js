@@ -16,7 +16,7 @@ module.exports = [
       schedulePropsSave();
     }
     if ((msg.channel.id == '732083047649771604' || msg.channel.id == '732082491611152443') && msg.author.id == '159985870458322944') {
-      msg.publish();
+      msg.crosspost();
     }
     if (msg.content == 'pp' && msg.channel.id == '711745085984866344') msg.reply('fuck you');
   },

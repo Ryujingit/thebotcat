@@ -1,4 +1,4 @@
-FROM node:12
+FROM node:14
 WORKDIR /home/thebotcat
 RUN apt update && apt -y upgrade
 RUN apt -y install ffmpeg
