@@ -88,7 +88,7 @@ var badwords = [
 ];
 
 
-var version = '1.5.2-beta2';
+var version = '1.5.2-beta2b';
 global.statusMsg = '';
 global.setStatusVar = () => {
   statusMsg = `${defaultprefix} | ${client.guilds.cache.size} servers | spooky month`;
@@ -144,123 +144,6 @@ if (fs.existsSync('props.json')) {
   } catch (e) { console.error(`Unable to load props.json: ${e.toString()}`); }
 }
 
-/* format for props.saved:
-  props.saved : object {
-    feat : object {
-      calc : bool (default false),
-      audio : int 0-3 (default 0; &1 = join/leave, &2 = music),
-      lamt : int (default 0),
-    },
-    guilds : object {
-      <guildid> : object {
-        prefix : string (default <defaultprefix>),
-        enabled_commands : object {
-          global : bool (default true),
-          categories : object {
-            <CommandCategoryName> : bool (default true),
-          },
-          commands : object {
-            <CommandName> : bool (default true),
-          },
-        },
-        logging : object {
-          main : string <channelid> / null,
-        },
-        perms : object {
-          <roleid> : int (perms) (
-              bits:
-                0 - normal bot commands
-                1 - bypass channel lock
-                2 - get bot to join vc and leave when bot and caller are only people in vc
-                3 - get bot to leave vc when there are others
-                4 - play songs
-                5 - play playlists
-                6 - voteskip
-                7 - forceskip and remove
-                8 - delete messages
-                9 - lock channel
-                10 - mute and tempmute
-                11 - kick
-                12 - ban
-                13 - change prefix, logchannel
-                14 - complete manage bot
-            ),
-          ...
-        },
-        overrides : object {
-          <channelid> : object {
-            <roleid/userid> : object {
-              allows : int <perms>,
-              denys : int <perms>,
-            },
-            ...
-          },
-          ...
-        },
-        mutedrole : string <roleid> / null,
-        events : array [
-          object {
-            triggers : array [],
-            actions : array [],
-          },
-          ...
-        ],
-        temp : object {
-          stashed : object {
-            channeloverrides : object {
-              <channelid> : object {
-                id : string <roleid/userid>,
-                type : string 'role' / 'member',
-                allow : int,
-                deny : int,
-              },
-              ...
-            },
-          },
-        },
-        [EMPHEMERAL] voice : object {
-          channel : null / VoiceChannel,
-          connection : null / VoiceConnection,
-          dispatcher : null / StreamDispatcher,
-          proc : null / child_process (ffmpeg),
-          procpipe : null / common.BufferStream,
-          proc2 : null / child_process (ffmpeg),
-          proc2pipe : null / common.BufferStream,
-          mainloop : int 0 (not playing) / 1 (playing) / 2 (skip request) / 3 (terminate song mainloop),
-          songslist : array [
-            object {
-              query : string,
-              url : string,
-              desc : string,
-              expectedLength : int (msec),
-            },
-            ...
-          ],
-          volume : null,
-          loop : null,
-        },
-      },
-      ...
-    },
-    users : object {
-      'default' / <userid> : object {
-        calc_scope : string (math.js calc scope, serialized),
-        [EMPHEMERAL] calc_scope_working : object {
-          shared : props.saved.users.default.calc_scope,
-          ...
-        } (math.js calc scope),
-      },
-      ...
-    },
-    misc : object {
-      dmchannels : array [
-        string <channnelid>,
-        ...
-      ],
-      sendmsgid : string <messageid>,
-    },
-  }
- */
 if (!props.saved) {
   props.saved = JSON.parse(fs.readFileSync('props-backup.json').toString());
   propsSave();
@@ -379,7 +262,9 @@ function getCommandsCategorized() {
 }
 
 addCommands(require('./commands/information.js'), 'Information');
-addCommands(require('./commands/administrative.js'), 'Administrative');
+addCommands(require('./commands/administrative-other.js'), 'Administrative');
+addCommands(require('./commands/administrative-settings.js'), 'Administrative');
+addCommands(require('./commands/administrative-main.js'), 'Administrative');
 addCommands(require('./commands/interactive.js'), 'Interactive');
 addCommands(require('./commands/vc.js'), 'Voice Channel');
 addCommands(require('./commands/music.js'), 'Music');

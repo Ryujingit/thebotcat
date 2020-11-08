@@ -254,4 +254,12 @@ module.exports = [
       return promise;
     }
   },
+  {
+    name: 'echoargs',
+    full_string: false,
+    public: false,
+    execute(msg, cmdstring, command, argstring, args) {
+      return msg.channel.send(cmdstring.split('').map(x => ((x == '<') ? ('\\' + x) : x)).join(''));
+    }
+  },
 ];

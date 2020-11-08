@@ -1,5 +1,17 @@
 module.exports = [
   {
+    name: '@someone',
+    full_string: false,
+    description: '`!@someone` pings a random person on the server',
+    public: true,
+    execute(msg, cmdstring, command, argstring, args) {
+      if (!(common.isAdmin(msg) || msg.guild.id == '717268211246301236')) return;
+      var members = msg.guild.members.cache.keyArray().map(x => msg.guild.members.cache.get(x)).filter(x => !x.user.bot);
+      var random_member = members[Math.floor(Math.random() * members.length)];
+      return msg.channel.send(`Random ping: <@!${random_member.user.id}>`);
+    }
+  },
+  {
     name: 'ghostdot',
     full_string: false,
     description: '`!ghostdot` to send a message then delete it in this channel\n`!ghostdot #channel1 [#channel2 ...]` to send a message and delete it in a certain channel or channels\n`!ghostdot all` to send a message then immediately delete it in every channel in a guild',
