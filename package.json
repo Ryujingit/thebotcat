@@ -1,6 +1,6 @@
 {
   "name": "Thebotcat",
-  "version": "1.5.2-beta1",
+  "version": "1.5.2-beta2",
   "description": "A general purpose discord bot with a focus on administration and fun. (Bot Description: My discord bot just for your server used for administration and to keep your self nice n clean.)",
   "main": "index.js",
   "scripts": {

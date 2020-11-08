@@ -8,11 +8,11 @@ var { getBotcatUptimeMessage, getBotcatStatusMessage } = require('./status');
 
 var { BreakError, arrayGet, sendObjThruBuffer, receiveObjThruBuffer } = require('./workerbuffer');
 
-var { isDeveloper, isConfirmDeveloper, isOwner, isAdmin, hasBotPermissions, getBotPermissions, getPermissions } = require('./isposition');
+var { isDeveloper, isConfirmDeveloper, isOwner, isAdmin, hasBotPermissions, getBotPermissions, getBotPermissionsArray, getPermissions } = require('./isposition');
 
 var { serializePermissionOverwrites, partialDeserializePermissionOverwrites, completeDeserializePermissionOverwrites, serializedPermissionsEqual } = require('./permserialize');
 
-var searchCollection = require('./searchcollection');
+var { searchRoles, searchMembers, searchRole, searchMember } = require('./searchcollection');
 
 var { leftPadID, getFancyGuilds, getSortedChannels, getFancyChannels } = require('./generalserialize');
 
@@ -26,7 +26,7 @@ var clientVCManager = require('./clientvcmanager');
 
 var handlers = require('./handlers/index');
 
-var { propsSavedCreateVerifiedCopy, getEmptyGuildObject } = require('./propssavedverif');
+var { isId, propsSavedCreateVerifiedCopy, getEmptyGuildObject, getEmptyUserObject } = require('./propssavedverif');
 
 // module.exports is the default object that a node.js module uses to export functions and such, when you do require(), you get this object
 // also an interesting way to make js cleaner is by shortening { e: e } to { e }, and the compiler still understands
@@ -35,16 +35,16 @@ module.exports = {
   msecToHMS, msecToHMSs, fancyDateStringWD, fancyDateStringMD, fancyDateString,
   getBotcatUptimeMessage, getBotcatStatusMessage,
   arrayGet, BreakError, sendObjThruBuffer, receiveObjThruBuffer,
-  isDeveloper, isConfirmDeveloper, isOwner, isAdmin, hasBotPermissions, getBotPermissions, getPermissions,
+  isDeveloper, isConfirmDeveloper, isOwner, isAdmin, hasBotPermissions, getBotPermissions, getBotPermissionsArray, getPermissions,
   serializePermissionOverwrites,
   partialDeserializePermissionOverwrites, completeDeserializePermissionOverwrites,
   serializedPermissionsEqual,
-  searchCollection,
+  searchRoles, searchMembers, searchRole, searchMember,
   leftPadID, getFancyGuilds, getSortedChannels, getFancyChannels,
   invokeMessageHandler,
   rps,
   BufferStream,
   clientVCManager,
   handlers,
-  propsSavedCreateVerifiedCopy, getEmptyGuildObject,
+  isId, propsSavedCreateVerifiedCopy, getEmptyGuildObject, getEmptyUserObject,
 };

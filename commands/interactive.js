@@ -70,12 +70,13 @@ module.exports = [
     public: true,
     async execute(msg, cmdstring, command, argstring, args) {
       if (!props.saved.feat.calc) return msg.channel.send('Calculation features are disabled');
+      if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject();
       let expr = argstring, res;
       console.debug(`calculating from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(expr)}`);
-      let scope;
-      if (!(scope = props.saved.calc_scopes[msg.author.id])) {
-        scope = props.saved.calc_scopes[msg.author.id] = {};
-      }
+      let user = props.saved.user[msg.author.id];
+      if (!user)
+        user = props.saved.user[msg.author.id] = common.getEmptyUserObject(props.saved.guilds[msg.guild.id]);
+      let scope = user.calc_scope_working;
       global.calccontext = scope;
       let promise;
       try {
@@ -182,7 +183,11 @@ module.exports = [
       } finally {
         global.calccontext = null;
       }
-      schedulePropsSave();
+      let scopeSerialized = JSON.serialize(scope, math.replacer);
+      if (scopeSerialized != user.calc_scope) {
+        user.calc_scope = scopeSerialized;
+        schedulePropsSave();
+      }
       return promise;
     }
   },
@@ -193,6 +198,7 @@ module.exports = [
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
       if (!props.saved.feat.calc) return msg.channel.send('Calculation features are disabled');
+      if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(props.saved.guilds[msg.guild.id]);
       console.debug(`calc_scopeview from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}`);
       let scope = props.saved.calc_scopes[msg.author.id], text;
       let promise;
@@ -229,7 +235,11 @@ module.exports = [
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
       if (!props.saved.feat.calc) return msg.channel.send('Calculation features are disabled');
+      if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject();
       console.debug(`calc_scopeclear from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}`);
+      let user = props.saved.user[msg.author.id];
+      if (!user)
+        user = props.saved.user[msg.author.id] = common.getEmptyUserObject(props.saved.guilds[msg.guild.id]);
       let scope = props.saved.calc_scopes[msg.author.id], text;
       let promise;
       if (scope) {

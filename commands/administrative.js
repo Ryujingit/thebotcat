@@ -127,60 +127,274 @@ module.exports = [
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
       if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject();
-      let normalperms = common.isDeveloper(msg) || common.isAdmin(msg);
-      let ismod = common.isMod(msg);
-      if (!(normalperms || ismod)) return msg.channel.send('You do not have permission to run this command.');
-      let promise;
-      if (args.length == 0) promise = msg.channel.send(`List of settings:\nprefix, modroles`);
-      else if (args.length == 1) {
-        if (args[0] == 'prefix') promise = msg.channel.send(`The current server prefix is: \`${props.saved.guilds[msg.guild.id].prefix}\`\n\`!settings prefix <newprefix>\` to set`);
-        else if (args[0] == 'modroles') {
-          let roles = props.saved.guilds[msg.guild.id].modroles.map(x => `<@&${x}>`).join(' ');
-          msg.channel.send({ embed: { title: 'Moderator Roles', description: `${roles||'No moderator roles'}\n\nCommands:\n\`!settings modroles list\`\n\`!settings modroles add|remove <mention|id|name>\`` } });
-        } else promise = msg.channel.send(`No such setting \`${args[0]}\``);
-      } else {
-        if (args[0] == 'prefix') {
-          props.saved.guilds[msg.guild.id].prefix = args[1];
-          promise = msg.channel.send(`Server prefix set to: \`${args[1]}\``);
-          schedulePropsSave();
-        } else if (args[0] == 'modroles') {
-          if (args[1] == 'list') {
-            let roles = props.saved.guilds[msg.guild.id].modroles.map(x => `<@&${x}>`).join(' ');
-            return msg.channel.send({ embed: { title: 'Moderator Roles', description: `${roles||'No moderator roles'}` } });
-          }
-          if (args[1] != 'add' && args[1] != 'remove') return msg.channel.send('Commands: `!settings modroles list|add|remove`');
-          if (!args[2]) return msg.channel.send('Usage: `!settings modroles add|remove <mention|id|name>`');
-          if (!normalperms && ismod) return msg.channel.send('You do not have permission to run this command.');
-          let roleid = common.searchCollection(msg.guild.roles.cache, args.slice(2, Infinity).join(' '));
-          if (Array.isArray(roleid)) return msg.channel.send({
-            embed: {
-              title: 'Query too vague',
-              description: 'Your query narrows it down to these roles:\n' +
-                roleid.map(x => `<@&${x}>`).join(' '),
-            },
-          });
-          if (args[1] == 'add') {
-            if (!props.saved.guilds[msg.guild.id].modroles.includes(roleid)) {
-              props.saved.guilds[msg.guild.id].modroles.push(roleid);
-              promise = msg.channel.send({ embed: { title: 'Moderator Roles', description: `Added <@&${roleid}> as moderator role` } });
-              schedulePropsSave();
-            } else {
-              promise = msg.channel.send({ embed: { title: 'Moderator Roles', description: `<@&${roleid}> already moderator role` } });
-            }
-          } else if (args[1] == 'remove') {
-            let ind;
-            if ((ind = props.saved.guilds[msg.guild.id].modroles.indexOf(roleid)) != -1) {
-              props.saved.guilds[msg.guild.id].modroles.splice(ind, 1);
-              promise = msg.channel.send({ embed: { title: 'Moderator Roles', description: `Removed <@&${roleid}> as moderator role` } });
-              schedulePropsSave();
-            } else {
-              promise = msg.channel.send({ embed: { title: 'Moderator Roles', description: `<@&${roleid}> not moderator role` } });
-            }
-          }
-        }
-        else promise = msg.channel.send(`No such setting \`${args[0]}\``);
+
+      let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.MANAGE_BOT | common.constants.botRolePermBits.MANAGE_BOT_FULL);
+
+      let basicperms = perms & common.constants.botRolePermBits.MANAGE_BOT, fullperms = perms & common.constants.botRolePermBits.MANAGE_BOT_FULL;
+
+      if (!basicperms) return msg.channel.send('You do not have permission to run this command.');
+
+      if (args.length == 0) {
+        return msg.channel.send(`List of settings:\nprefix, mutedrole, roles, enabledcmds`);
       }
-      return promise;
+
+      switch (args[0]) {
+        case 'prefix':
+          if (args.length == 1) {
+            return msg.channel.send(`The current server prefix is: \`${props.saved.guilds[msg.guild.id].prefix}\`\n\`${props.saved.guilds[msg.guild.id].prefix}settings prefix <newprefix>\` to set`);
+          } else {
+            props.saved.guilds[msg.guild.id].prefix = args.slice(1).join(' ');
+            schedulePropsSave();
+            return msg.channel.send(`Server prefix set to: \`${props.saved.guilds[msg.guild.id].prefix}\``);
+          }
+          break;
+
+        case 'mutedrole':
+          if (!fullperms) return msg.channel.send('You do not have permission to run this command.');
+          if (args.length == 1) {
+            return msg.channel.send({
+              embed: {
+                title: 'Muted Role',
+                description: `The muted role is currently set to: ${props.saved.guilds[msg.guild.id].mutedrole ? '<@&' + props.saved.guilds[msg.guild.id].mutedrole + '>' : 'nothing'}\n` +
+                  `To change, run \`settings mutedrole set <@mention|id|name|query>\`.\nTo reset, run \`settings mutedrole reset\`.`,
+              }
+            });
+          } else {
+            if (args[1] == 'set') {
+              let role = common.searchRoles(msg.guild.roles, args.slice(2).join(' '));
+              if (Array.isArray(role)) {
+                return msg.channel.send({
+                  embed: { title: 'Not Specific Enough', description: `Your query narrows it down to these roles:\n${roles.map(x => '<@&' + x.id + '>').join(' ')}` }
+                });
+              } else {
+                props.saved.guilds[msg.guild.id].mutedrole = role.id;
+                return msg.channel.send({ embed: { title: 'Muted Role', description: `<@&${role.id}> set as muted role.` } });
+              }
+            } else if (args[1] == 'reset') {
+              if (props.saved.guilds[msg.guild.id].mutedrole) {
+                props.saved.guilds[msg.guild.id].mutedrole = null;
+                return msg.channel.send('Muted role reset.');
+              } else {
+                return msg.channel.send('Muted role not set in the first place.');
+              }
+            } else {
+              return msg.channel.send('Invalid option. To change, run `settings mutedrole set <@mention|id|name|query>`.\nTo reset, run `settings mutedrole reset`.');
+            }
+          }
+          break;
+
+        case 'roles':
+          if (!fullperms) return msg.channel.send('You do not have permission to run this command.');
+          if (args.length == 1) {
+            return msg.channel.send(
+              'This command configures the bot-level permissions certain roles have, ranging from music command access to muting, locking, kicking, banning, and bot settings control.\n\n' +
+              'To view roles with bot-level permissions set, run `settings roles view`.\n' +
+              'To view the permissions for one role, run `settings roles view <@mention|name|query>\n' +
+              'To create permissions for a role, run `settings roles init <@mention|name|query>\n' +
+              'To remove permissions for a role, run `settings roles clear <@mention|name|query>\n' +
+              'To set a specific permission for a role, run `settings roles setperm <@mention|name|query> <permission name|permission id> [<2nd permission name|permission id> ...] <\'enable\'/\'disable\'>`',
+            );
+          } else {
+            switch (args[1]) {
+              case 'view':
+                if (args.length == 2) {
+                  return msg.channel.send({
+                    embed: {
+                      title: 'Roles',
+                      description: 'Roles with bot-level permissions:\n' + Object.keys(props.saved.guilds[msg.guild.id].perms).map(x => `<@&${x}>`),
+                    }
+                  });
+                } else {
+                  let role = common.searchRoles(msg.guild.roles, args.slice(2).join(' '));
+                  if (Array.isArray(role)) {
+                    return msg.channel.send({
+                      embed: { title: 'Not Specific Enough', description: `Your query narrows it down to these roles:\n${role.map(x => '<@&' + x.id + '>').join(' ')}` }
+                    });
+                  } else {
+                    if (!props.saved.guilds[msg.guild.id].perms[role.id])
+                      return msg.channel.send({
+                        embed: {
+                          title: 'No Permissions',
+                          description: `No bot-level permissions for role <@&${role.id}>.`
+                        }
+                      });
+                    return msg.channel.send({
+                      embed: {
+                        title: 'Permissions',
+                        description: `Permissions for <@&${role.id}>:\n` + 
+                          common.getBotPermissionsArray(props.saved.guilds[msg.guild.id].perms[role.id]).map(x => `${x[1] ? '🟩' : '🟥'} ${x[0]}`).join('\n')
+                      }
+                    });
+                  }
+                }
+                break;
+
+              case 'init':
+                let role = common.searchRoles(msg.guild.roles, args.slice(2).join(' '));
+                if (Array.isArray(role)) {
+                  return msg.channel.send({
+                    embed: { title: 'Not Specific Enough', description: `Your query narrows it down to these roles:\n${role.map(x => '<@&' + x.id + '>').join(' ')}` }
+                  });
+                } else {
+                  if (props.saved.guilds[msg.guild.id].perms[role.id])
+                    return msg.channel.send({
+                      embed: {
+                        title: 'Permissions Exist',
+                        description: `Bot-level permissions already exist for role <@&${role.id}>.`
+                      }
+                    });
+                  props.saved.guilds[msg.guild.id].perms[role.id] = props.saved.guilds[msg.guild.id].perms[msg.guild.id];
+                  schedulePropsSave();
+                  return msg.channel.send({
+                    embed: {
+                      title: 'Permissions Created',
+                      description: `Permissions created for role <@&${role.id}>`
+                    }
+                  });
+                }
+                break;
+
+              case 'clear':
+                let role2 = common.searchRoles(msg.guild.roles, args.slice(2).join(' '));
+                if (Array.isArray(role2)) {
+                  return msg.channel.send({
+                    embed: { title: 'Not Specific Enough', description: `Your query narrows it down to these roles:\n${role2.map(x => '<@&' + x.id + '>').join(' ')}` }
+                  });
+                } else {
+                  if (!props.saved.guilds[msg.guild.id].perms[role2.id])
+                    return msg.channel.send({
+                      embed: {
+                        title: 'Permissions Do Not Exist',
+                        description: `Bot-level permissions do not exist for role <@&${role2.id}>.`
+                      }
+                    });
+                  delete props.saved.guilds[msg.guild.id].perms[role2.id];
+                  schedulePropsSave();
+                  return msg.channel.send({
+                    embed: {
+                      title: 'Permissions Cleared',
+                      description: `Permissions cleared for role <@&${role2.id}>`
+                    }
+                  });
+                }
+                break;
+
+              case 'setperm':
+                let role3 = common.searchRoles(msg.guild.roles, args[2]);
+                if (Array.isArray(role3)) {
+                  return msg.channel.send({
+                    embed: { title: 'Not Specific Enough', description: `Your query narrows it down to these roles:\n${role3.map(x => '<@&' + x.id + '>').join(' ')}` }
+                  });
+                } else {
+                  if (!props.saved.guilds[msg.guild.id].perms[role3.id])
+                    return msg.channel.send({
+                      embed: {
+                        title: 'Permissions Do Not Exist',
+                        description: `Bot-level permissions do not exist for role <@&${role3.id}>.`
+                      }
+                    });
+                  let permsToChange = args.slice(3, args.length - 1).map(perm => {
+
+                  }).filter(x => x != null);
+                  schedulePropsSave();
+                  return msg.channel.send({
+                    embed: {
+                      title: 'Permissions Cleared',
+                      description: `Permissions cleared for role <@&${role3.id}>`
+                    }
+                  });
+                }
+                break;
+
+              default:
+                return msg.channel.send('Invalid option. Run `settings roles` to view options.');
+                break;
+            }
+          }
+          break;
+
+        case 'enabledcmds':
+          if (!fullperms) return msg.channel.send('You do not have permission to run this command.');
+          if (args.length == 1) {
+            return msg.channel.send(
+              'This command configures which commands are enabled.\n\n' +
+              'To view whether commands are enabled globally, run `settings enabledcmds view global`.\n' +
+              'To view whether a particular command or category is enabled, run `settings enabledcmds view <\'category\'/\'command\'> <command/category>`.\n' +
+              'To turn on or off whether commands are enabled globally, run `settings enabledcmds <\'enable\'/\'disable\'> global`.\n' +
+              'To turn on or off whether a particular command or category, run `settings enabledcmds <\'enable\'/\'disable\'> <\'category\'/\'command\'> <command/category>`.\n',
+            );
+          } else {
+            switch (args[1]) {
+              case 'view':
+                switch (args[2]) {
+                  case 'global':
+                    return msg.channel.send(`Commands are globally ${props.saved.guilds[msg.guild.id].enabled_commands.global ? 'enabled' : 'disabled'}`);
+                    break;
+
+                  case 'category':
+                    let category = props.saved.guilds[msg.guild.id].enabled_commands.categories[args.slice(3).join(' ')];
+                    if (category != null) {
+                      return msg.channel.send(`The category '${args.slice(3).join(' ')}' is ${category ? 'enabled' : 'disabled'}`);
+                    } else {
+                      return msg.channel.send(`The category '${ args.slice(3).join(' ')}' does not exist.`);
+                    }
+                    break;
+
+                  case 'command':
+                    let command = props.saved.guilds[msg.guild.id].enabled_commands.commands[args.slice(3).join(' ')];
+                    if (command != null) {
+                      return msg.channel.send(`The command '${args.slice(3).join(' ')}' is ${command ? 'enabled' : 'disabled'}`);
+                    } else {
+                      return msg.channel.send(`The command '${args.slice(3).join(' ')}' does not exist.`);
+                    }
+                    break;
+
+                  default:
+                    return msg.channel.send('Invalid option. Run `settings enabledcmds` to view options.');
+                    break;
+                }
+                break;
+
+              case 'enable':
+              case 'disable':
+                switch (args[2]) {
+                  case 'global':
+                    props.saved.guilds[msg.guild.id].enabled_commands.global = args[1] == 'enable';
+                    schedulePropsSave();
+                    return msg.channel.send(`Global commands have been successfully ${args[1] == 'enable' ? 'enabled' : 'disabled'}`);
+                    break;
+
+                  case 'category':
+                    let category = props.saved.guilds[msg.guild.id].enabled_commands.categories[args.slice(3).join(' ')];
+                    if (category != null) {
+                      props.saved.guilds[msg.guild.id].enabled_commands.categories[args.slice(3).join(' ')] = args[1] == 'enable';
+                      schedulePropsSave();
+                      return msg.channel.send(`The category '${args.slice(3).join(' ')}' has been successfully ${args[1] == 'enable' ? 'enabled' : 'disabled'}`);
+                    } else {
+                      return msg.channel.send(`The category '${args.slice(3).join(' ')}' does not exist.`);
+                    }
+                    break;
+
+                  case 'command':
+                    let command = props.saved.guilds[msg.guild.id].enabled_commands.commands[args.slice(3).join(' ')];
+                    if (command != null) {
+                      props.saved.guilds[msg.guild.id].enabled_commands.commands[args.slice(3).join(' ')] = args[1] == 'enable';
+                      schedulePropsSave();
+                      return msg.channel.send(`The command '${args.slice(3).join(' ')}' has been successfully ${args[1] == 'enable' ? 'enabled' : 'disabled'}`);
+                    } else {
+                      return msg.channel.send(`The command '${args.slice(3).join(' ')}' does not exist.`);
+                    }
+                    break;
+                }
+                break;
+
+              default:
+                return msg.channel.send('Invalid option. Run `settings enabledcmds` to view options.');
+                break;
+            }
+          }
+          break;
+      }
     }
   },
   {
@@ -188,18 +402,30 @@ module.exports = [
     full_string: false,
     description: '`!mute @person` to mute someone by adding the muted role to them',
     public: true,
-    execute(msg, cmdstring, command, argstring, args) {
-      var user;
-      if (!(user = msg.mentions.users.first())) return;
+    async execute(msg, cmdstring, command, argstring, args) {
       if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject();
-      if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg))) return msg.channel.send('You do not have permission to run this command.');
-      let promise;
-      if (!props.saved.guilds[msg.guild.id].mutelist.includes(user.id)) {
-        props.saved.guilds[msg.guild.id].mutelist.push(user.id);
-        promise = msg.channel.send(`Muted ${user.tag}`);
-        schedulePropsSave();
+
+      if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.MUTE))
+        return msg.channel.send('You do not have permission to run this command.');
+
+      if (!props.saved.guilds[msg.guild.id].mutedrole)
+        return msg.channel.send('Error: no guild muted role specified, set one with `!settings mutedrole <@role|id|name|query>`');
+
+      let member;
+      try {
+        member = await common.searchMember(msg.guild.members, args[0]);
+        if (!member) return msg.channel.send('Could not find member.');
+      } catch (e) {
+        return msg.channel.send('Could not find member.');
+      }
+
+      let mutereason = args.slice(1).join(' ');
+
+      if (!member.roles.cache.get(props.saved.guilds[msg.guild.id].mutedrole)) {
+        await member.roles.add(props.saved.guilds[msg.guild.id].mutedrole, `[By ${msg.author.tag} (id ${msg.author.id})]${mutereason ? ' ' + mutereason : ''}`);
+        return msg.channel.send(`Muted ${member.user.tag}`);
       } else {
-        promise = msg.channel.send(`${user.tag} already muted`);
+        return msg.channel.send(`${member.user.tag} already muted`);
       }
       return promise;
     }
@@ -209,21 +435,31 @@ module.exports = [
     full_string: false,
     description: '`!unmute @person` to unmute someone by removing the muted role from them',
     public: true,
-    execute(msg, cmdstring, command, argstring, args) {
-      var user;
-      if (!(user = msg.mentions.users.first())) return;
+    async execute(msg, cmdstring, command, argstring, args) {
       if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject();
-      if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg))) return msg.channel.send('You do not have permission to run this command.');
-      let ind;
-      let promise;
-      if ((ind = props.saved.guilds[msg.guild.id].mutelist.indexOf(user.id)) != -1) {
-        props.saved.guilds[msg.guild.id].mutelist.splice(ind, 1);
-        promise = msg.channel.send(`Unmuted ${user.tag}`);
-        schedulePropsSave();
-      } else {
-        promise = msg.channel.send(`${user.tag} not muted`);
+
+      if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.MUTE))
+        return msg.channel.send('You do not have permission to run this command.');
+
+      if (!props.saved.guilds[msg.guild.id].mutedrole)
+        return msg.channel.send('Error: no guild muted role specified, set one with `!settings mutedrole <@role|id|name|query>`');
+
+      let member;
+      try {
+        member = await common.searchMember(msg.guild.members, args[0]);
+        if (!member) return msg.channel.send('Could not find member.');
+      } catch (e) {
+        return msg.channel.send('Could not find member.');
       }
-      return promise;
+
+      let unmutereason = args.slice(1).join(' ');
+
+      if (member.roles.cache.get(props.saved.guilds[msg.guild.id].mutedrole)) {
+        await member.roles.remove(props.saved.guilds[msg.guild.id].mutedrole, `[By ${msg.author.tag} (id ${msg.author.id})]${unmutereason ? ' ' + unmutereason : ''}`);
+        return msg.channel.send(`Unmuted ${member.user.tag}`);
+      } else {
+        return msg.channel.send(`${member.user.tag} not muted`);
+      }
     }
   },
   {
@@ -352,26 +588,20 @@ module.exports = [
       if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.KICK))
         return msg.channel.send('You do not have permission to run this command.');
 
-      let memberid;
-      if (args[0]) {
-        if (/<@!?[0-9]+>|[0-9]+/.test(args[0]))
-          memberid = args[0].replace(/[<@!>]/g, '');
-      }
-      if (!memberid) return;
-
       let member;
       try {
-        member = await msg.guild.members.fetch(memberid);
-        if (!member) return msg.channel.send('Could not find user.');
+        member = await common.searchMember(msg.guild.members, args[0]);
+        if (!member) return msg.channel.send('Could not find member.');
       } catch (e) {
-        return msg.channel.send('Could not find user.');
+        console.error(e);
+        return msg.channel.send('Could not find member.');
       }
-
+      
       let kickreason = args.slice(1).join(' ');
 
       if (!msg.guild.me.hasPermission('KICK_MEMBERS'))
         return msg.channel.send('Error: I do not have permission to kick members.');
-
+      
       if (msg.member.roles.highest.position <= member.roles.highest.position)
         return msg.channel.send('You cannot kick someone equal or higher than you in the role hierarchy.');
 
@@ -403,45 +633,64 @@ module.exports = [
       if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.BAN))
         return msg.channel.send('You do not have permission to run this command.');
 
-      let memberid;
-      if (args[0]) {
-        if (/<@!?[0-9]+>|[0-9]+/.test(args[0]))
-          memberid = args[0].replace(/[<@!>]/g, '');
-      }
-      if (!memberid) return;
-
-      let member;
+      let member, nomember;
       try {
-        member = await msg.guild.members.fetch(memberid);
-        if (!member) return msg.channel.send('Could not find user.');
+        member = await common.searchMember(msg.guild.members, args[0]);
+        if (!member) {
+          if (/[0-9]+/.test(args[0])) nomember = true;
+          else return msg.channel.send('Could not find member.');
+        }
       } catch (e) {
-        return msg.channel.send('Could not find user.');
+        if (/[0-9]+/.test(args[0])) nomember = true;
+        else return msg.channel.send('Could not find member.');
       }
 
-      let banreason = args.slice(1).join(' ');
+      if (nomember) {
+        let banreason = args.slice(1).join(' ');
 
-      if (!msg.guild.me.hasPermission('BAN_MEMBERS'))
-        return msg.channel.send('Error: I do not have permission to ban members.');
+        if (!msg.guild.me.hasPermission('BAN_MEMBERS'))
+          return msg.channel.send('Error: I do not have permission to ban members.');
 
-      if (msg.member.roles.highest.position <= member.roles.highest.position)
-        return msg.channel.send('You cannot ban someone equal or higher than you in the role hierarchy.');
+        try {
+          let banconfirm = await msg.channel.send(`Are you sure you want to ban unknown user${banreason ? ' with reason ' + util.inspect(banreason) : ''}?`);
+          let banreacts = banconfirm.awaitReactions((react, user) => (react.emoji.name == '✅' || react.emoji.name == '❌') && user.id == msg.author.id, { time: 60000, max: 1 });
+          await banconfirm.react('✅');
+          await banconfirm.react('❌');
+          banreacts = await banreacts;
+          if (banreacts.keyArray().length == 0 || banreacts.keyArray()[0] == '❌')
+            return msg.channel.send('Ban cancelled.');
+          await msg.guild.members.ban(member, { reason: `[By ${msg.author.tag} (id ${msg.author.id})]${banreason ? ' ' + banreason : ''}` });
+          return msg.channel.send(`unknown user has been successfully banned`);
+        } catch (e) {
+          console.error(e);
+          return msg.channel.send('Error: something went wrong.');
+        }
+      } else {
+        let banreason = args.slice(1).join(' ');
 
-      if (msg.guild.me.roles.highest.position <= member.roles.highest.position)
-        return msg.channel.send('Error: I cannot ban someone equal or higher than me in the role hierarchy.');
+        if (!msg.guild.me.hasPermission('BAN_MEMBERS'))
+          return msg.channel.send('Error: I do not have permission to ban members.');
 
-      try {
-        let banconfirm = await msg.channel.send(`Are you sure you want to ban user ${member.user.tag} (id ${member.id})${banreason ? ' with reason ' + util.inspect(banreason) : ''}?`);
-        let banreacts = banconfirm.awaitReactions((react, user) => (react.emoji.name == '✅' || react.emoji.name == '❌') && user.id == msg.author.id, { time: 60000, max: 1 });
-        await banconfirm.react('✅');
-        await banconfirm.react('❌');
-        banreacts = await banreacts;
-        if (banreacts.keyArray().length == 0 || banreacts.keyArray()[0] == '❌')
-          return msg.channel.send('Ban cancelled.');
-        await member.ban({ reason: `[By ${msg.author.tag} (id ${msg.author.id})]${banreason ? ' ' + banreason : ''}` });
-        return msg.channel.send(`${member.user.tag} (id ${member.id}) has been successfully banned`);
-      } catch (e) {
-        console.error(e);
-        return msg.channel.send('Error: something went wrong.');
+        if (msg.member.roles.highest.position <= member.roles.highest.position)
+          return msg.channel.send('You cannot ban someone equal or higher than you in the role hierarchy.');
+
+        if (msg.guild.me.roles.highest.position <= member.roles.highest.position)
+          return msg.channel.send('Error: I cannot ban someone equal or higher than me in the role hierarchy.');
+
+        try {
+          let banconfirm = await msg.channel.send(`Are you sure you want to ban user ${member.user.tag} (id ${member.id})${banreason ? ' with reason ' + util.inspect(banreason) : ''}?`);
+          let banreacts = banconfirm.awaitReactions((react, user) => (react.emoji.name == '✅' || react.emoji.name == '❌') && user.id == msg.author.id, { time: 60000, max: 1 });
+          await banconfirm.react('✅');
+          await banconfirm.react('❌');
+          banreacts = await banreacts;
+          if (banreacts.keyArray().length == 0 || banreacts.keyArray()[0] == '❌')
+            return msg.channel.send('Ban cancelled.');
+          await msg.guild.members.ban(member, { reason: `[By ${msg.author.tag} (id ${msg.author.id})]${banreason ? ' ' + banreason : ''}` });
+          return msg.channel.send(`${member.user.tag} (id ${member.id}) has been successfully banned`);
+        } catch (e) {
+          console.error(e);
+          return msg.channel.send('Error: something went wrong.');
+        }
       }
     }
   },

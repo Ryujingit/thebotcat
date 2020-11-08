@@ -46,7 +46,7 @@ if (doWorkers) {
   try {
     var workerpool = require('workerpool');
   } catch (e) {
-    console.log('doWorkers set to true but workerpool not available so doWorkers set to false');
+    console.log('doWorkers set to true but workerpool not available so doWorkers ignored');
     doWorkers = false;
   }
 }
@@ -87,7 +87,12 @@ var badwords = [
   { enabled: false, type: 3, adminbypass: 0, word: `The first time I drank coffee I cried. I didn't cry because of the taste, that would be stupid. I cried because of the cup. I looked down into my coffee and bugs filled the premises. Disgusted I threw the cup down but nothing was there. Not the cup, not the bugs, not the street. I'm not blind, I do see darkness, and it was dark but not nighttime. I was alone in the city. My arms weren't there. My hands were gone. My image was nothing but a figment. I cried. I'm crying. I'm lost without an end. I won't ever drink coffee again.`, retaliation: 'dez\'s life story is private information' },
 ];
 
-var version = '1.5.2-beta1';
+
+var version = '1.5.2-beta2';
+global.statusMsg = '';
+global.setStatusVar = () => {
+  statusMsg = `${defaultprefix} | ${client.guilds.cache.size} servers | spooky month`;
+};
 
 var commands = [], commandCategories = ['Information', 'Administrative', 'Interactive', 'Voice Channel', 'Music', 'Content', 'Troll'];
 
@@ -161,10 +166,8 @@ if (fs.existsSync('props.json')) {
         logging : object {
           main : string <channelid> / null,
         },
-        perms : array [
-          object {
-            id : string <roleid>,
-            perms : int (
+        perms : object {
+          <roleid> : int (perms) (
               bits:
                 0 - normal bot commands
                 1 - bypass channel lock
@@ -180,19 +183,18 @@ if (fs.existsSync('props.json')) {
                 11 - kick
                 12 - ban
                 13 - change prefix, logchannel
+                14 - complete manage bot
             ),
-          },
           ...
-        ],
+        },
         overrides : object {
-          <channelid> : array [
-            object {
-              id : string <roleid/userid>,
+          <channelid> : object {
+            <roleid/userid> : object {
               allows : int <perms>,
               denys : int <perms>,
             },
             ...
-          ],
+          },
           ...
         },
         mutedrole : string <roleid> / null,
@@ -298,6 +300,7 @@ function schedulePropsSave() {
   }, 60000);
 }
 
+
 var indexeval = val => eval(val);
 var infomsg = function (msg, val) {
   let guildinfo, channelid;
@@ -331,7 +334,6 @@ Object.defineProperties(global, {
   exitHandler: { configurable: true, enumerable: true, get: () => exitHandler, set: val => exitHandler = val },
 });
 
-cleanPropsSaved();
 
 function addBadWord(word, msgreply) { badwords.push([word.toLowerCase(), msgreply]); }
 function removeBadWord(word) { badwords.splice(badwords.map(x => x[0]).indexOf(word), 1); }
@@ -384,7 +386,12 @@ addCommands(require('./commands/music.js'), 'Music');
 addCommands(require('./commands/content.js'), 'Content');
 addCommands(require('./commands/troll.js'), 'Troll');
 
+
+cleanPropsSaved();
+
+
 global.handlers = common.handlers;
+
 
 (async () => {
   while (!readytime)
@@ -431,7 +438,8 @@ global.handlers = common.handlers;
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
   
-  client.user.setActivity(`${defaultprefix} | ${client.guilds.cache.size} servers | wash your hands kids`);
+  setStatusVar();
+  client.user.setActivity(statusMsg);
   
   readytime = new Date();
   
@@ -441,13 +449,15 @@ client.on('ready', () => {
 client.on('guildCreate', guild => {
   console.log(`Joined a new guild: ${guild.name}`);
   
-  client.user.setActivity(`${defaultprefix} | ${client.guilds.cache.size} servers | wash your hands kids`);
+  setStatusVar();
+  client.user.setActivity(statusMsg);
 });
 
 client.on('guildDelete', guild => {
   console.log(`Left a guild: ${guild.name}`);
   
-  client.user.setActivity(`${defaultprefix} | ${client.guilds.cache.size} servers | wash your hands kids`);
+  setStatusVar();
+  client.user.setActivity(statusMsg);
 });
 
 client.on('reconnecting', () => {
@@ -459,9 +469,12 @@ client.on('disconnect', () => {
 });
 
 ['message', 'voiceStateUpdate'].forEach(evtType => {
-  client.on(evtType, (...args) => {
+  client.on(evtType, async (...args) => {
     try {
-      if (handlers.event[evtType]) handlers.event[evtType](...args);
+      if (handlers.event[evtType]) {
+        if (handlers.event[evtType].constructor == Function) handlers.event[evtType](...args);
+        else await handlers.event[evtType](...args);
+      }
     } catch (e) {
       console.error('ERROR, something bad happened');
       console.error(e.stack);

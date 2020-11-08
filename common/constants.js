@@ -22,6 +22,7 @@ module.exports = {
     KICK:            1 << 11,
     BAN:             1 << 12,
     MANAGE_BOT:      1 << 13,
+    MANAGE_BOT_FULL: 1 << 14,
   },
   botRolePermDef: 0b00000001110101,
   botRolePermMod: 0b00111111111111,

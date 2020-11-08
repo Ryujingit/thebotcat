@@ -72,6 +72,14 @@ module.exports = [
     }
   },
   {
+    name: 'pp',
+    full_string: true,
+    public: true,
+    execute(msg, cmdstring, command, argstring, args) {
+      return msg.reply('fuck you');
+    }
+  },
+  {
     name: 'lamo',
     full_string: false,
     public: true,

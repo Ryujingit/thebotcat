@@ -1,7 +1,12 @@
 var commonConstants = require('./constants');
 
 // props.saved integrity checks / conversion from older format
+function isId(val) {
+  return typeof val == 'string' && /[0-9]{16,20}/.test(val);
+}
+
 module.exports = {
+  isId,
   propsSavedCreateVerifiedCopy: function propsSavedCreateVerifiedCopy(obj) {
     if (typeof obj != 'object') obj = {};
     if (!Number.isSafeInteger(obj.version) || obj.version == 1) {
@@ -25,21 +30,19 @@ module.exports = {
             })(),
           },
           logging: {
-            main: guildIsObj && typeof guild.infochannel == 'string' ? guild.infochannel : null,
+            main: guildIsObj && isId(guild.infochannel) ? guild.infochannel : null,
           },
           perms: (() => {
             let includesEveryone = false;
-            let arr = (guildIsObj && Array.isArray(guild.modroles) ? guild.modroles : [])
-              .map(x => {
-                if (typeof x != 'string') return null;
+            let obj = {};
+            (guildIsObj && Array.isArray(guild.modroles) ? guild.modroles : [])
+              .forEach(x => {
+                if (!isId(x)) return null;
                 if (x == id && !includesEveryone) includesEveryone = true;
-                return {
-                  id: x,
-                  perms: commonConstants.botRolePermMod,
-                };
-              }).filter(x => x != null);
-            if (!includesEveryone) arr.push({ id, perms: commonConstants.botRolePermDef });
-            return arr;
+                obj[x] = commonConstants.botRolePermMod;
+              });
+            if (!includesEveryone) obj[id] = commonConstants.botRolePermDef;
+            return obj;
           })(),
           overrides: {},
           mutedrole: null,
@@ -98,7 +101,7 @@ module.exports = {
         guilds: { default: perGuildFunc(guildsIsObj ? obj.guilds.default : null) },
         users: { default: perUserFunc(typeof obj.calc_scopes == 'object' ? obj.calc_scopes.shared : null) },
         misc: {
-          dmchannels: Array.isArray(obj.dmchannels) ? obj.dmchannels.filter(x => typeof x == 'string') : [],
+          dmchannels: Array.isArray(obj.dmchannels) ? obj.dmchannels.filter(x => isId(x)) : [],
           sendmsgid: typeof obj.sendmsgid == 'string' ? obj.sendmsgid : '1',
         },
       };
@@ -107,7 +110,7 @@ module.exports = {
         let props = Object.getOwnPropertyDescriptors(obj.guilds);
         let keys = Object.keys(props);
         for (var i = 0; i < keys.length; i++) {
-          if (props[keys[i]].enumerable)
+          if (props[keys[i]].enumerable && isId(keys[i]))
             newObj.guilds[keys[i]] = perGuildFunc(obj.guilds[keys[i]], keys[i]);
           else if (props[keys[i]].get)
             Object.defineProperty(newObj.guilds, keys[i], {
@@ -118,7 +121,7 @@ module.exports = {
         }
       }
       if (typeof obj.calc_scopes == 'object')
-        Object.keys(obj.calc_scopes).forEach(x => x != 'shared' ? newObj.users[x] = perUserFunc(obj.calc_scopes[x]) : null);
+        Object.keys(obj.calc_scopes).forEach(x => x != 'shared' && isId(x) ? newObj.users[x] = perUserFunc(obj.calc_scopes[x]) : null);
       return newObj;
     } else if (obj.version == 2) {
       let featIsObj = typeof obj.feat == 'object';
@@ -143,41 +146,39 @@ module.exports = {
             })(),
           },
           logging: {
-            main: guildIsObj && typeof guild.logging == 'object' && typeof guild.logging.main == 'string' ? guild.logging.main : null,
+            main: guildIsObj && typeof guild.logging == 'object' && isId(guild.logging.main) ? guild.logging.main : null,
           },
           perms: (() => {
-              let includesEveryone = false;
-              let arr = (guildIsObj && Array.isArray(guild.perms) ? guild.perms : [])
-                .map(x => {
-                  if (typeof x != 'object' || typeof x.id != 'string') return null;
-                  if (x.id == id && !includesEveryone) includesEveryone = true;
-                  return {
-                    id: x.id,
-                    perms: Number.isSafeInteger(x.perms) ? x.perms : 0,
-                  };
-                }).filter(x => x != null);
-              if (!includesEveryone) arr.push({ id, perms: commonConstants.botRolePermDef });
-              return arr;
-            })(),
+            let includesEveryone = false;
+            let obj = (guildIsObj && typeof guild.perms == 'object' ? guild.perms : {}), newObj = {};
+            Object.keys(obj)
+              .forEach(x => {
+                if (!isId(x)) return;
+                if (x == id && !includesEveryone) includesEveryone = true;
+                newObj[x] = Number.isSafeInteger(obj[x]) ? obj[x] : 0;
+              });
+            if (!includesEveryone) newObj[id] = commonConstants.botRolePermDef;
+            return newObj;
+          })(),
           overrides: (() => {
             if (!guildIsObj || typeof guild.overrides != 'object') return {};
             let overObj = {};
             Object.keys(guild.overrides).forEach(x => {
-              if (!Array.isArray(guild.overrides[x])) return;
-              let arr = guild.overrides[x].map(y => {
-                if (typeof y != 'object' || typeof y.id != 'string') return null;
-                return {
-                  id: y.id,
-                  allow: Number.isSafeInteger(y.allow) ? y.allow : 0,
-                  deny: Number.isSafeInteger(y.deny) ? y.deny : 0,
-                };
-              }).filter(x => x != null);
-              overObj[x] = arr;
+              let includesEveryone = false;
+              let obj = guild.overrides[x], newObj = {};
+              Object.keys(obj)
+                .forEach(x => {
+                  if (!isId(x)) return;
+                  if (x == id && !includesEveryone) includesEveryone = true;
+                  newObj[x] = Number.isSafeInteger(obj[x]) ? obj[x] : 0;
+                });
+              if (!includesEveryone) newObj[id] = commonConstants.botRolePermDef;
+              overObj[x] = newObj;
             });
             return overObj;
           })(),
           mutedrole: guildIsObj && typeof guild.mutedrole == 'string' ? guild.mutedrole : null,
-          events: guildIsObj && Array.isArray(guild.events) ? guild.events : null,
+          events: guildIsObj && Array.isArray(guild.events) ? guild.events : [],
           temp: {
             stashed: {
               channeloverrides: (() => {
@@ -210,20 +211,29 @@ module.exports = {
         });
         return newGuild;
       };
+      let newObj;
       let perUserFunc = user => {
         let userIsObj = typeof user == 'object';
         let userObj = {
           calc_scope: userIsObj && typeof user.calc_scope == 'string' ? user.calc_scope : '{}',
         };
+        let scope = JSON.parse(userObj.calc_scope, math.reviver);
+        if (newObj && newObj.users && newObj.users.default)
+          Object.defineProperty(scope, 'shared', {
+            configurable: false,
+            enumerable: false,
+            writable: false,
+            value: newObj.users.default.calc_scope_working,
+          });
         Object.defineProperty(userObj, 'calc_scope_working', {
           configurable: true,
           enumerable: false,
           writable: true,
-          value: JSON.parse(userObj.calc_scope, math.reviver),
+          value: scope,
         });
         return userObj;
       };
-      let newObj = {
+      newObj = {
         version: 2,
         feat: {
           calc: featIsObj && typeof obj.feat.calc == 'boolean' ? obj.feat.calc : true,
@@ -242,7 +252,7 @@ module.exports = {
         let props = Object.getOwnPropertyDescriptors(obj.guilds);
         let keys = Object.keys(props);
         for (var i = 0; i < keys.length; i++) {
-          if (props[keys[i]].enumerable)
+          if (props[keys[i]].enumerable && isId(keys[i]))
             newObj.guilds[keys[i]] = perGuildFunc(obj.guilds[keys[i]], keys[i]);
           else if (props[keys[i]].get)
             Object.defineProperty(newObj.guilds, keys[i], {
@@ -253,7 +263,7 @@ module.exports = {
         }
       }
       if (typeof obj.users == 'object')
-        Object.keys(obj.users).forEach(x => x != 'default' ? newObj.users[x] = perUserFunc(obj.users[x]) : null);
+        Object.keys(obj.users).forEach(x => x != 'default' && isId(x) ? newObj.users[x] = perUserFunc(obj.users[x]) : null);
       return newObj;
     }
   },
@@ -287,5 +297,26 @@ module.exports = {
         },
       },
     };
+  },
+  
+  getEmptyUserObject: (guildObj) => {
+    let obj = {
+      calc_scope: '',
+    };
+    let scope = {};
+    if (guildObj && guildObj.users && guildObj.users.default)
+      Object.defineProperty(scope, 'shared', {
+        configurable: false,
+        enumerable: false,
+        writable: false,
+        value: guildObj.users.default.calc_scope_working,
+      });
+    Object.defineProperty(obj, 'calc_scope_working', {
+      configurable: true,
+      enumerable: false,
+      writable: true,
+      value: {},
+    });
+    return obj;
   },
 };

@@ -30,9 +30,9 @@ function hasBotPermissions(msg, permMask, channel) {
 
   if (!channel) channel = msg.channel;
 
-  let permGuildIDs = props.saved.guilds[msg.guild.id].perms.map(x => x.id);
+  let permGuildIDs = Object.keys(props.saved.guilds[msg.guild.id].perms);
   
-  var perms = msg.member.roles.cache.array().map(x => x.id).filter(x => permGuildIDs.includes(x)).reduce((a, c) => a | props.saved.guilds[msg.guild.id].perms.filter(x => x.id == c).perms & permMask, 0);
+  var perms = msg.member.roles.cache.array().map(x => x.id).filter(x => permGuildIDs.includes(x)).reduce((a, c) => a | props.saved.guilds[msg.guild.id].perms[c].perms & permMask, 0) & commonConstants.botRolePermAll;
 
   if (permMask & commonConstants.botRolePermBits.LOCK_CHANNEL &&
     !(perms & commonConstants.botRolePermBits.LOCK_CHANNEL) &&
@@ -46,8 +46,9 @@ function hasBotPermissions(msg, permMask, channel) {
 
   if (permMask & commonConstants.botRolePermBits.MUTE &&
     !(perms & commonConstants.botRolePermBits.MUTE) &&
-    msg.member.hasPermission('MANAGE_ROLES') &&
-    (props.saved.guilds[msg.guild.id].mutedrole == null || msg.member.roles.highest.position > msg.guild.roles.cache.get(props.saved.guilds[msg.guild.id].mutedrole).position))
+    (msg.member.hasPermission('MANAGE_ROLES') &&
+      (props.saved.guilds[msg.guild.id].mutedrole == null ||
+        msg.member.roles.highest.position > msg.guild.roles.cache.get(props.saved.guilds[msg.guild.id].mutedrole).position) || isOwner(msg)))
     perms |= commonConstants.botRolePermBits.MUTE;
 
   if (permMask & commonConstants.botRolePermBits.KICK &&
@@ -62,19 +63,30 @@ function hasBotPermissions(msg, permMask, channel) {
 
   if (permMask & commonConstants.botRolePermBits.MANAGE_BOT &&
     !(perms & commonConstants.botRolePermBits.MANAGE_BOT) &&
-    msg.member.hasPermission('ADMINISTRATOR') &&
-    msg.member.roles.highest.position > msg.guild.me.roles.highest.position)
+    (msg.member.hasPermission('ADMINISTRATOR') &&
+      msg.member.roles.highest.position > msg.guild.me.roles.highest.position || isOwner(msg)))
     perms |= commonConstants.botRolePermBits.MANAGE_BOT;
+
+  if (permMask & commonConstants.botRolePermBits.MANAGE_BOT_FULL &&
+    !(perms & commonConstants.botRolePermBits.MANAGE_BOT_FULL) &&
+    (msg.member.hasPermission('ADMINISTRATOR') &&
+      msg.member.roles.highest.position > msg.guild.me.roles.highest.position || isOwner(msg)))
+    perms |= commonConstants.botRolePermBits.MANAGE_BOT_FULL;
 
   return perms;
 }
 
 
 function getBotPermissions(msg) {
-  var perms = hasBotPermissions(msg, commonConstants.botRolePermAll);
+  let perms = typeof msg == 'number' ? msg : hasBotPermissions(msg, commonConstants.botRolePermAll);
   let obj = {};
-  Object.keys(commonConstants.botRolePermBits).forEach(x => obj[x] = perms & commonConstants.botRolePermBits[x]);
+  Object.keys(commonConstants.botRolePermBits).forEach(x => x != 'MANAGE_BOT_FULL' ? obj[x] = Boolean(perms & commonConstants.botRolePermBits[x]) : null);
   return obj;
+}
+
+function getBotPermissionsArray(msg) {
+  let perms = getBotPermissions(msg);
+  return Object.keys(perms).map(x => [x, perms[x]]);
 }
 
 
@@ -90,4 +102,4 @@ function getPermissions(msg) {
 }
 
 
-module.exports = { isDeveloper, isConfirmDeveloper, isOwner, isAdmin, hasBotPermissions, getBotPermissions, getPermissions };
+module.exports = { isDeveloper, isConfirmDeveloper, isOwner, isAdmin, hasBotPermissions, getBotPermissions, getBotPermissionsArray, getPermissions };
