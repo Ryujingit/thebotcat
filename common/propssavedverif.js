@@ -7,6 +7,7 @@ function isId(val) {
 
 module.exports = {
   isId,
+
   propsSavedCreateVerifiedCopy: function propsSavedCreateVerifiedCopy(obj) {
     if (typeof obj != 'object') obj = {};
     if (!Number.isSafeInteger(obj.version) || obj.version == 1) {
@@ -51,19 +52,23 @@ module.exports = {
             stashed: {
               channeloverrides: (() => {
                 if (!guildIsObj || typeof guild.savedperms != 'object') return {};
+                let overrides = guild.savedperms;
                 let overObj = {};
-                Object.keys(guild.savedperms).forEach(x => {
-                  if (typeof guild.savedperms[x] != 'object' ||
-                    typeof guild.savedperms[x].id != 'string' ||
-                    guild.savedperms[x].type != 'role' && guild.savedperms[x].type != 'member' ||
-                    !Number.isSafeInteger(guild.savedperms[x].allow) ||
-                    !Number.isSafeInteger(guild.savedperms[x].deny)) return;
-                  overObj[x] = {
-                    id: guild.savedperms[x].id,
-                    type: guild.savedperms[x].type,
-                    allow: guild.savedperms[x].allow,
-                    deny: guild.savedperms[x].deny,
-                  };
+                Object.keys(overrides).forEach(x => {
+                  if (!Array.isArray(overrides[x])) return;
+                  overObj[x] = overrides[x].map(y => {
+                    if (typeof y != 'object' ||
+                      typeof y.id != 'string' ||
+                      y.type != 'role' && y.type != 'member' ||
+                      !Number.isSafeInteger(y.allow) ||
+                      !Number.isSafeInteger(y.deny)) return null;
+                    return {
+                      id: y.id,
+                      type: y.type,
+                      allow: y.allow,
+                      deny: y.deny,
+                    };
+                  }).filter(y => y != null);
                 });
                 return overObj;
               })(),
@@ -88,6 +93,12 @@ module.exports = {
           enumerable: false,
           writable: true,
           value: JSON.parse(userObj.calc_scope, math.reviver),
+        });
+        Object.defineProperty(userObj, 'calc_scope_running', {
+          configurable: true,
+          enumerable: false,
+          writable: true,
+          value: false,
         });
         return userObj;
       };
@@ -186,17 +197,20 @@ module.exports = {
                 let overrides = guild.temp.stashed.channeloverrides;
                 let overObj = {};
                 Object.keys(overrides).forEach(x => {
-                  if (typeof overrides[x] != 'object' ||
-                    typeof overrides[x].id != 'string' ||
-                    overrides[x].type != 'role' && overrides[x].type != 'member' ||
-                    !Number.isSafeInteger(overrides[x].allow) ||
-                    !Number.isSafeInteger(overrides[x].deny)) return;
-                  overObj[x] = {
-                    id: overrides[x].id,
-                    type: overrides[x].type,
-                    allow: overrides[x].allow,
-                    deny: overrides[x].deny,
-                  };
+                  if (!Array.isArray(overrides[x])) return;
+                  overObj[x] = overrides[x].map(y => {
+                    if (typeof y != 'object' ||
+                      typeof y.id != 'string' ||
+                      y.type != 'role' && y.type != 'member' ||
+                      !Number.isSafeInteger(y.allow) ||
+                      !Number.isSafeInteger(y.deny)) return null;
+                    return {
+                      id: y.id,
+                      type: y.type,
+                      allow: y.allow,
+                      deny: y.deny,
+                    };
+                  }).filter(y => y != null);
                 });
                 return overObj;
               })(),
@@ -230,6 +244,12 @@ module.exports = {
           enumerable: false,
           writable: true,
           value: scope,
+        });
+        Object.defineProperty(userObj, 'calc_scope_running', {
+          configurable: true,
+          enumerable: false,
+          writable: true,
+          value: false,
         });
         return userObj;
       };
@@ -268,7 +288,7 @@ module.exports = {
     }
   },
 
-  getEmptyGuildObject: () => {
+  getEmptyGuildObject: id => {
     return {
       prefix: defaultprefix,
       enabled_commands: {
@@ -287,7 +307,7 @@ module.exports = {
       logging: {
         main: null,
       },
-      perms: [],
+      perms: isId(id) ? { [id]: commonConstants.botRolePermDef } : {},
       overrides: {},
       mutedrole: null,
       events: [],
@@ -316,6 +336,12 @@ module.exports = {
       enumerable: false,
       writable: true,
       value: {},
+    });
+    Object.defineProperty(obj, 'calc_scope_running', {
+      configurable: true,
+      enumerable: false,
+      writable: true,
+      value: false,
     });
     return obj;
   },

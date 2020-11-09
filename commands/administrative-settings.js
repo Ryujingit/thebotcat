@@ -5,7 +5,7 @@ module.exports = [
     description: '`!settings` to see available settings\n`!settings <setting>` for help on a specific setting',
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
-      if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject();
+      if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
 
       let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.MANAGE_BOT | common.constants.botRolePermBits.MANAGE_BOT_FULL);
 
@@ -14,7 +14,10 @@ module.exports = [
       if (!basicperms) return msg.channel.send('You do not have permission to run this command.');
 
       if (args.length == 0) {
-        return msg.channel.send(`List of settings:\nprefix, mutedrole, roles, enabledcmds`);
+        if (fullperms)
+          return msg.channel.send(`List of settings:\nprefix, mutedrole, roles, enabledcmds`);
+        else
+          return msg.channel.send(`List of settings:\nprefix`);
       }
 
       switch (args[0]) {
@@ -68,9 +71,9 @@ module.exports = [
             return msg.channel.send(
               'This command configures the bot-level permissions certain roles have, ranging from music command access to muting, locking, kicking, banning, and bot settings control.\n\n' +
               'To view roles with bot-level permissions set, run `settings roles view`.\n' +
-              'To view the permissions for one role, run `settings roles view <@mention|name|query>\n' +
-              'To create permissions for a role, run `settings roles init <@mention|name|query>\n' +
-              'To remove permissions for a role, run `settings roles clear <@mention|name|query>\n' +
+              'To view the permissions for one role, run `settings roles view <@mention|name|query>`\n' +
+              'To create permissions for a role, run `settings roles init <@mention|name|query>`\n' +
+              'To remove permissions for a role, run `settings roles clear <@mention|name|query>`\n' +
               'To set a specific permission for a role, run `settings roles setperm <@mention|name|query> <permission name|permission id> [<2nd permission name|permission id> ...] <\'enable\'/\'disable\'>`',
             );
           } else {
@@ -172,14 +175,24 @@ module.exports = [
                         description: `Bot-level permissions do not exist for role <@&${role3.id}>.`
                       }
                     });
+                  let changedPerms = [];
                   let permsToChange = args.slice(3, args.length - 1).map(perm => {
-
-                  }).filter(x => x != null);
+                    let nperm = Number(perm);
+                    if (nperm == nperm) return Number.isSafeInteger(nperm) && nperm > 0 ? nperm : null;
+                    else return common.constants.botRolePermBits[perm];
+                  }).filter(x => x != null).reduce((a, c) => (changedPerms.push(common.constants.botRolePermBitsInv[c]), a + c), 0) & common.constants.botRolePermAll;
+                  switch (args[args.length - 1]) {
+                    case 'enable': props.saved.guilds[msg.guild.id].perms[role3.id] |= permsToChange; break;
+                    case 'disable': props.saved.guilds[msg.guild.id].perms[role3.id] &= ~permsToChange; break;
+                    default:
+                      return msg.channel.send('Invalid last option. Run `settings roles` to view options.');
+                      break;
+                  }
                   schedulePropsSave();
                   return msg.channel.send({
                     embed: {
-                      title: 'Permissions Cleared',
-                      description: `Permissions cleared for role <@&${role3.id}>`
+                      title: 'Permissions Updated',
+                      description: `Permissions ${changedPerms.map(x => `\'${x}\'`).join(', ')} ${args[args.length - 1] == 'enable' ? 'enabled' : 'disabled'} for role <@&${role3.id}>`
                     }
                   });
                 }

@@ -25,7 +25,7 @@ math.import({
   },
 }, { override: true });
 
-var mathVMContext = vm.createContext({ math });
+var mathVMContext = vm.createContext({ math, expr: null, scope: null, res: null });
 
 function sendObjThruBufferSync(buffer, i32arr, obj) {
   let i32v = Atomics.load(i32arr, 0);
@@ -120,7 +120,7 @@ function mathObjectProxy(buffer, i32arr, props) {
       }
     },
     set(_, nam, val) {
-      sendRecieve(buffer, i32arr, { type: 'set', props, prop: nam, val: JSON.stringify(val, math.replacer) });
+      return sendRecieve(buffer, i32arr, { type: 'set', props, prop: nam, val: JSON.stringify(val, math.replacer) });
     },
     deleteProperty(_, nam) {
       return sendRecieve(buffer, i32arr, { type: 'delete', props, prop: nam });
@@ -133,12 +133,12 @@ function mathObjectProxy(buffer, i32arr, props) {
 }
 
 workerpool.worker({
-  mathevaluate: function (authorid, expr, buffer) {
+  mathevaluate: function (authorid, expr, buffer, timeout) {
     let i32arr = new Int32Array(buffer);
     Atomics.wait(i32arr, 0, 1, 500);
     mathVMContext.expr = expr;
     mathVMContext.scope = mathObjectProxy(buffer, i32arr);
-    vm.runInContext('res = math.evaluate(expr, scope)', mathVMContext, {timeout: 5000});
+    vm.runInContext('res = math.evaluate(expr, scope)', mathVMContext, { timeout: timeout || 5000 });
     res = mathVMContext.res;
     if (res === undefined) res = 'undefined';
     else if (res === null) res = 'null';

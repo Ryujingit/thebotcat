@@ -77,17 +77,18 @@ var badwords = [
   { enabled: true, type: 9, adminbypass: 0, word: 'heck', retaliation: 'Refrain from using that heck word you frick' },
   { enabled: true, type: 11, adminbypass: 0, word: 'nigger', retaliation: 'You said the n word.  Mods can see this message and you will get perm banned. (message content $(rcontent))' },
   { enabled: true, type: 11, adminbypass: 0, word: 'faggot', retaliation: 'You said fa***t.  Mods can see this message and you will get perm banned. (message content $(rcontent))' },
-  { enabled: false, type: 12, adminbypass: 0, word: /(?:\bu[  /-]*w[  /-]*u\b)|(?:\bo[  /-]*w[  /-]*o\b)/, retaliation: 'uwu or owo are blacklisted and you will get banned' },
-  { enabled: false, type: 4, adminbypass: 0, word: '███████╗███████╗\n██╔════╝╚════██║\n█████╗░░░░███╔═╝\n██╔══╝░░██╔══╝░░\n███████╗███████╗\n╚══════╝╚══════╝', retaliation: 'at this point im just gonna say f you' },
-  { enabled: false, type: 12, adminbypass: 0, word: /(?:\bp[  /-]*p\b)/, retaliation: 'pp is blacklisted and you will get banned' },
-  { enabled: false, type: 3, adminbypass: 0, word: `The first time I drank coffee I cried. I didn't cry because of the taste, that would be stupid. I cried because of the cup. I looked down into my coffee and bugs filled the premises. Disgusted I threw the cup down but nothing was there. Not the cup, not the bugs, not the street. I'm not blind, I do see darkness, and it was dark but not nighttime. I was alone in the city. My arms weren't there. My hands were gone. My image was nothing but a figment. I cried. I'm crying. I'm lost without an end. I won't ever drink coffee again.`, retaliation: 'dez\'s life story is private information' },
 ];
 
 
-var version = '1.5.2-beta2c';
-global.statusMsg = '';
-global.setStatusVar = () => {
-  statusMsg = `${defaultprefix} | ${client.guilds.cache.size} servers | spooky month`;
+var version = '1.5.2-beta3';
+global.updateStatus = () => {
+  let newStatus = props.feat.status.replace('{prefix}', defaultprefix).replace('{guilds}', client.guilds.cache.size);
+  let currentStatus;
+  try {
+    currentStatus = client.user.presence.activities[0].name;
+  } catch (e) {}
+  if (currentStatus != newStatus)
+    client.user.setActivity(newStatus);
 };
 
 var commands = [], commandCategories = ['Information', 'Administrative', 'Interactive', 'Voice Channel', 'Music', 'Content', 'Troll'];
@@ -100,6 +101,7 @@ var props = {
     repl: true,
     savedms: true,
     loaddms: false,
+    status: '{prefix} | {guilds} servers | biden won 2020',
   },
   saved: null,
   savedstringify: null,
@@ -319,8 +321,7 @@ global.handlers = common.handlers;
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
   
-  setStatusVar();
-  client.user.setActivity(statusMsg);
+  updateStatus();
   
   readytime = new Date();
   
@@ -330,15 +331,13 @@ client.on('ready', () => {
 client.on('guildCreate', guild => {
   console.log(`Joined a new guild: ${guild.name}`);
   
-  setStatusVar();
-  client.user.setActivity(statusMsg);
+  updateStatus();
 });
 
 client.on('guildDelete', guild => {
   console.log(`Left a guild: ${guild.name}`);
   
-  setStatusVar();
-  client.user.setActivity(statusMsg);
+  updateStatus();
 });
 
 client.on('reconnecting', () => {
@@ -367,6 +366,8 @@ client.on('disconnect', () => {
 // botcat tick function called every 60 seconds
 var ticks = 0;
 var tickFunc = () => {
+  updateStatus();
+  
   props.pCPUUsage = props.cCPUUsage;
   props.pCPUUsageDate = props.cCPUUsageDate;
   props.cCPUUsage = process.cpuUsage();

@@ -70,12 +70,11 @@ module.exports = [
     public: true,
     async execute(msg, cmdstring, command, argstring, args) {
       if (!props.saved.feat.calc) return msg.channel.send('Calculation features are disabled');
-      if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject();
       let expr = argstring, res;
       console.debug(`calculating from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(expr)}`);
-      let user = props.saved.user[msg.author.id];
+      let user = props.saved.users[msg.author.id];
       if (!user)
-        user = props.saved.user[msg.author.id] = common.getEmptyUserObject(props.saved.guilds[msg.guild.id]);
+        user = props.saved.users[msg.author.id] = common.getEmptyUserObject(props.saved.guilds[msg.guild.id]);
       let scope = user.calc_scope_working;
       global.calccontext = scope;
       let promise;
@@ -115,7 +114,7 @@ module.exports = [
                   case 'set':
                     obj = common.arrayGet(scope, action.props);
                     obj[action.prop] = JSON.parse(action.val, math.reviver);
-                    await common.sendObjThruBuffer(buffer, i32arr, null, doLoopChecker);
+                    await common.sendObjThruBuffer(buffer, i32arr, true, doLoopChecker);
                     break;
                   case 'delete':
                     obj = common.arrayGet(scope, action.props);
@@ -140,20 +139,29 @@ module.exports = [
             }
           })();
           try {
-            res = await pool.exec('mathevaluate', [msg.author.id, expr, buffer]);
-            doLoop = false;
-            await loopFunc;
+            if (!user.calc_scope_running) {
+              try {
+                user.calc_scope_running = true;
+                res = await pool.exec('mathevaluate', [msg.author.id, expr, buffer]);
+                doLoop = false; console.log('e')
+                await loopFunc; console.log('a')
+              } catch (e) { throw e; }
+              finally {
+                user.calc_scope_running = false;
+              }
+            } else {
+              res = await pool.exec('mathevaluate', [msg.author.id, expr, buffer, 5]);
+              doLoop = false;
+              await loopFunc;
+            }
           } catch (e) {
             if (doLoop) doLoop = false;
             throw e;
           }
-          //console.log('monee');
-          //console.log(doLoop);
-          //console.log(doLoopChecker());
         } else {
           mathVMContext.expr = expr;
           mathVMContext.scope = scope;
-          vm.runInContext('res = math.evaluate(expr, scope)', mathVMContext, {timeout: common.isDeveloper(msg) ? 1000 : 100});
+          vm.runInContext('res = math.evaluate(expr, scope)', mathVMContext, {timeout: common.isDeveloper(msg) ? 1000 : 5});
           res = mathVMContext.res;
           if (res === undefined) res = 'undefined';
           else if (res === null) res = 'null';
@@ -183,9 +191,14 @@ module.exports = [
       } finally {
         global.calccontext = null;
       }
-      let scopeSerialized = JSON.serialize(scope, math.replacer);
+      let scopeSerialized = JSON.stringify(scope, math.replacer);
       if (scopeSerialized != user.calc_scope) {
         user.calc_scope = scopeSerialized;
+        schedulePropsSave();
+      }
+      scopeSerialized = JSON.stringify(props.saved.users.default.calc_scope_working, math.replacer);
+      if (scopeSerialized != props.saved.users.default.calc_scope) {
+        props.saved.users.default.calc_scope = scopeSerialized;
         schedulePropsSave();
       }
       return promise;
@@ -197,35 +210,35 @@ module.exports = [
     description: '`!calc_scopeview` returns JSON of your variable scope',
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
-      if (!props.saved.feat.calc) return msg.channel.send('Calculation features are disabled');
-      if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(props.saved.guilds[msg.guild.id]);
-      console.debug(`calc_scopeview from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}`);
-      let scope = props.saved.calc_scopes[msg.author.id], text;
-      let promise;
+      console.debug(`calc_scopeview from ${msg.author.tag} in ${msg.guild ? msg.guild.name + ':' + msg.channel.name : 'dms'}`);
+      let user = props.saved.users[msg.author.id];
+      if (!user)
+        user = props.saved.users[msg.author.id] = common.getEmptyUserObject(props.saved.guilds[msg.guild.id]);
+      let scope = user.calc_scope_working;
+      let text;
       if (scope) {
         try {
-          text = JSON.stringify(scope, math.replacer);
+          text = user.calc_scope;
           if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Scope', description: text } };
-          promise = msg.channel.send(text);
           console.log(text);
+          return msg.channel.send(text);
         } catch (e) {
           console.error(e);
           try {
             text = `Scope too big to fit in a discord message, variables:\n${Reflect.ownKeys(scope).join(', ')}`
             if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Scope', description: text } };
-            promise = msg.channel.send(text);
             console.log(text);
+            return msg.channel.send(text);
           } catch (e) {
             console.error(e);
-            promise = msg.channel.send(text = `Scope variables too big to fit in a discord message, use \`!calc_scopeclear\` to wipe`);
-            console.log(text);
+            console.log(text = `Scope variables too big to fit in a discord message, use \`!calc_scopeclear\` to wipe`);
+            return msg.channel.send(text);
           }
         }
       } else {
-        promise = msg.channel.send(text = `You do not have a scope created yet, one is created when \`!calc\` is run`);
-        console.log(text);
+        console.log(text = `You do not have a scope created yet, one is created when \`!calc\` is run`);
+        return msg.channel.send(text);
       }
-      return promise;
     }
   },
   {
@@ -234,24 +247,21 @@ module.exports = [
     description: '`!calc_scopeclear` wipes your scope for the `!calc` command clean',
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
-      if (!props.saved.feat.calc) return msg.channel.send('Calculation features are disabled');
-      if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject();
-      console.debug(`calc_scopeclear from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}`);
+      console.debug(`calc_scopeclear from ${msg.author.tag} in ${msg.guild ? msg.guild.name + ':' + msg.channel.name : 'dms'}`);
       let user = props.saved.user[msg.author.id];
       if (!user)
         user = props.saved.user[msg.author.id] = common.getEmptyUserObject(props.saved.guilds[msg.guild.id]);
-      let scope = props.saved.calc_scopes[msg.author.id], text;
-      let promise;
+      let scope = props.saved.users[msg.author.id].calc_scope, text;
       if (scope) {
-        delete props.saved.calc_scopes[msg.author.id];
-        promise = msg.channel.send(text = `Cleared scope successfully`);
-        console.log(text);
+        props.saved.users[msg.author.id].calc_scope = '{}';
+        Reflect.ownKeys(props.saved.users[msg.author.id].calc_scope_working).forEach(x => delete props.saved.users[msg.author.id].calc_scope_working[x]);
         schedulePropsSave();
+        console.log(text = `Cleared scope successfully`);
+        return msg.channel.send(text);
       } else {
-        promise = msg.channel.send(text = `You do not have a scope created yet`);
-        console.log(text);
+        console.log(text = `You do not have a scope created yet`);
+        return msg.channel.send(text);
       }
-      return promise;
     }
   },
   {

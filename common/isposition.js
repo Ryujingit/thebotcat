@@ -26,13 +26,13 @@ function hasBotPermissions(msg, permMask, channel) {
 
   if (!msg.guild) return 0;
 
-  if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject();
+  if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
 
   if (!channel) channel = msg.channel;
 
   let permGuildIDs = Object.keys(props.saved.guilds[msg.guild.id].perms);
   
-  var perms = msg.member.roles.cache.array().map(x => x.id).filter(x => permGuildIDs.includes(x)).reduce((a, c) => a | props.saved.guilds[msg.guild.id].perms[c].perms & permMask, 0) & commonConstants.botRolePermAll;
+  var perms = msg.member.roles.cache.array().map(x => x.id).filter(x => permGuildIDs.includes(x)).reduce((a, c) => a | props.saved.guilds[msg.guild.id].perms[c] & permMask, 0) & commonConstants.botRolePermAll;
 
   if (permMask & commonConstants.botRolePermBits.LOCK_CHANNEL &&
     !(perms & commonConstants.botRolePermBits.LOCK_CHANNEL) &&

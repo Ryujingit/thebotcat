@@ -5,13 +5,13 @@ module.exports = [
     description: '`!mute @person` to mute someone by adding the muted role to them',
     public: true,
     async execute(msg, cmdstring, command, argstring, args) {
-      if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject();
+      if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
 
       if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.MUTE))
         return msg.channel.send('You do not have permission to run this command.');
 
       if (!props.saved.guilds[msg.guild.id].mutedrole)
-        return msg.channel.send('Error: no guild muted role specified, set one with `!settings mutedrole <@role|id|name|query>`');
+        return msg.channel.send('Error: no guild muted role specified, set one with `!settings mutedrole set <@role|id|name|query>`');
 
       let member;
       try {
@@ -38,7 +38,7 @@ module.exports = [
     description: '`!unmute @person` to unmute someone by removing the muted role from them',
     public: true,
     async execute(msg, cmdstring, command, argstring, args) {
-      if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject();
+      if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
 
       if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.MUTE))
         return msg.channel.send('You do not have permission to run this command.');
@@ -70,37 +70,48 @@ module.exports = [
     description: '`!lock` to lock this channel, preventing anyone other than moderators from talking in it\n`!lock #channel` to lock a specific channel',
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
-      if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject();
-
-      let channelid, channel;
-
-      if (args.length == 0) {
-        channelid = msg.channel.id;
-        channel = msg.channel;
-      } else if (/<#[0-9]+>/.test(args[0])) {
-        let channelid = args[0].slice(2, args[0].length - 1);
-        channel = msg.guild.channels.find(x => x.id == channelid);
-        if (!channel) return msg.channel.send('Cannot lock channel outside of this guild.');
-      }
+      if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
 
       if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.LOCK_CHANNEL))
         return msg.channel.send('You do not have permission to run this command.');
 
+      let channel, reason = [];
+
+      for (var i = 0; i < args.length; i++) {
+        if (i > 0 || !/<#[0-9]+>/.test(args[i])) {
+          reason.push(args[i]);
+        } else {
+          channel = msg.guild.channels.cache.find(x => x.id == args[i]);
+          if (!channel) return msg.channel.send('Cannot lock channel outside of this guild.');
+        }
+      }
+
+      reason = reason.join(' ');
+      if (!channel) channel = msg.channel;
+
       let perms = common.serializePermissionOverwrites(channel);
       let newperms = perms.map(x => Object.assign({}, x));
+      if (newperms.filter(x => x.id == msg.guild.id).length == 0) {
+        newperms.push({
+          id: msg.guild.id,
+          type: 'role',
+          allow: 0,
+          deny: 0,
+        });
+      }
       let type = { dm: 0, text: 1, voice: 2, category: 3, news: 1, store: 1, unknown: 0 }[channel.type];
       let bits = Discord.Permissions.FLAGS['SEND_MESSAGES'] * (type & 1) | Discord.Permissions.FLAGS['CONNECT'] * (type & 2);
       newperms.forEach(x => {
-        if (!props.saved.guilds[msg.guild.id].perms.filter(y => y.id == x.id && y.perms & (common.constants.botRolePermBits.LOCK_CHANNEL | common.constants.botRolePermBits.BYPASS_LOCK)).length) {
+        if (!Object.keys(props.saved.guilds[msg.guild.id].perms).filter(y => y == x.id && props.saved.guilds[msg.guild.id].perms[y] & (common.constants.botRolePermBits.LOCK_CHANNEL | common.constants.botRolePermBits.BYPASS_LOCK)).length) {
           x.allow &= ~bits;
           x.deny |= bits;
         }
       });
       let newpermids = newperms.map(x => x.id);
-      props.saved.guilds[msg.guild.id].perms.forEach(x => {
-        if (x.perms & (common.constants.botRolePermBits.LOCK_CHANNEL | common.constants.botRolePermBits.BYPASS_LOCK) && !newpermids.includes(x.id))
+      Object.keys(props.saved.guilds[msg.guild.id].perms).forEach(x => {
+        if (props.saved.guilds[msg.guild.id].perms[x] & (common.constants.botRolePermBits.LOCK_CHANNEL | common.constants.botRolePermBits.BYPASS_LOCK) && !newpermids.includes(x))
           newperms.push({
-            id: x.id,
+            id: x,
             type: 'role',
             allow: bits,
             deny: 0,
@@ -108,12 +119,12 @@ module.exports = [
       });
 
       if (!common.serializedPermissionsEqual(perms, newperms)) {
-        props.saved.guilds[msg.guild.id].temp.stashed.channeloverrides[channelid] = perms;
+        props.saved.guilds[msg.guild.id].temp.stashed.channeloverrides[channel.id] = perms;
         common.partialDeserializePermissionOverwrites(channel, newperms);
         schedulePropsSave();
-        return msg.channel.send(`Locked channel <#${channelid}> (id ${channelid})`);
+        return msg.channel.send(`Locked channel <#${channel.id}> (id ${channel.id})`);
       } else {
-        return msg.channel.send(`Channel <#${channelid}> (id ${channelid}) already locked or no permissions to change`);
+        return msg.channel.send(`Channel <#${channel.id}> (id ${channel.id}) already locked or no permissions to change`);
       }
     }
   },
@@ -123,30 +134,33 @@ module.exports = [
     description: '`!unlock` to unlock this channel, resetting permissions to what they were before the lock\n`!unlock #channel` to unlock a specific channel',
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
-      if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject();
-
-      let channelid, channel;
-
-      if (args.length == 0) {
-        channelid = msg.channel.id;
-        channel = msg.channel;
-      } else if (/<#[0-9]+>/.test(args[0])) {
-        let channelid = args[0].slice(2, args[0].length - 1);
-        channel = msg.guild.channels.find(x => x.id == channelid);
-        if (!channel) return msg.channel.send('Cannot unlock channel outside of this guild.');
-      }
+      if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
 
       if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.LOCK_CHANNEL))
         return msg.channel.send('You do not have permission to run this command.');
 
-      let perms = props.saved.guilds[msg.guild.id].temp.stashed.channeloverrides[channelid];
+      let channel, reason = [];
+
+      for (var i = 0; i < args.length; i++) {
+        if (i > 0 || !/<#[0-9]+>/.test(args[i])) {
+          reason.push(args[i]);
+        } else {
+          channel = msg.guild.channels.cache.find(x => x.id == args[i]);
+          if (!channel) return msg.channel.send('Cannot unlock channel outside of this guild.');
+        }
+      }
+
+      reason = reason.join(' ');
+      if (!channel) channel = msg.channel;
+
+      let perms = props.saved.guilds[msg.guild.id].temp.stashed.channeloverrides[channel.id];
       if (perms) {
         common.partialDeserializePermissionOverwrites(channel, perms);
-        delete props.saved.guilds[msg.guild.id].temp.stashed.channeloverrides[channelid];
+        delete props.saved.guilds[msg.guild.id].temp.stashed.channeloverrides[channel.id];
         schedulePropsSave();
-        return msg.channel.send(`Unlocked channel <#${channelid}> (id ${channelid})`);
+        return msg.channel.send(`Unlocked channel <#${channel.id}> (id ${channel.id})`);
       } else {
-        return msg.channel.send(`Channel <#${channelid}> (id ${channelid}) not locked`);
+        return msg.channel.send(`Channel <#${channel.id}> (id ${channel.id}) not locked`);
       }
     }
   },/*

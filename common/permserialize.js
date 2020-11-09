@@ -12,14 +12,14 @@ function serializePermissionOverwrites(channel) {
 }
 
 // takes the array returned by the above function, and applies the permission overwrites it represents
-function partialDeserializePermissionOverwrites(channel, perms) {
-  channel.overwritePermissions(perms);
+function partialDeserializePermissionOverwrites(channel, perms, reason) {
+  channel.overwritePermissions(perms, reason);
 }
 
 // like the above function except that channel overwrites are wiped first so the channel ONLY has the permissions that were in the array
-function completeDeserializePermissionOverwrites(channel, perms) {
+function completeDeserializePermissionOverwrites(channel, perms, reason) {
   channel.lockPermissions();
-  partialDeserializePermissionOverwrites(channel, perms);
+  partialDeserializePermissionOverwrites(channel, perms, reason);
 }
 
 // checks if two serialzed permissions arrays are equal

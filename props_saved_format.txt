@@ -103,6 +103,7 @@ format for props.saved:
           shared : props.saved.users.default.calc_scope,
           ...
         } (math.js calc scope),
+        [EMPHEMERAL] calc_scope_running : boolean,
       },
       ...
     },

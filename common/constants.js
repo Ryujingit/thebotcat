@@ -24,7 +24,10 @@ module.exports = {
     MANAGE_BOT:      1 << 13,
     MANAGE_BOT_FULL: 1 << 14,
   },
+  botRolePermBitsInv: {},
   botRolePermDef: 0b00000001110101,
   botRolePermMod: 0b00111111111111,
   botRolePermAll: 0b11111111111111,
 };
+
+Object.keys(module.exports.botRolePermBits).forEach(x => module.exports.botRolePermBitsInv[module.exports.botRolePermBits[x]] = x);

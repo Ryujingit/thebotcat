@@ -7,7 +7,7 @@ module.exports = [
     async execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata;
-      if (!(guilddata = props.saved.guilds[msg.guild.id])) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject();
+      if (!(guilddata = props.saved.guilds[msg.guild.id])) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
       if (!guilddata.voice.channel) return msg.channel.send('I\'m not in a voice channel');
       if (!(msg.member.voice.channelID == guilddata.voice.channel.id || common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg)))
         return msg.channel.send('You must be in the same voice channel as I\'m in to play a song.  Admins and mods can bypass this though.');
@@ -30,7 +30,7 @@ module.exports = [
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata;
-      if (!(guilddata = props.saved.guilds[msg.guild.id])) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject();
+      if (!(guilddata = props.saved.guilds[msg.guild.id])) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
       let channel;
       if (!(channel = guilddata.voice.channel)) return msg.channel.send('I\'m not in a voice channel');
       if (!guilddata.voice.dispatcher) return msg.channel.send('Error: no song is playing');
@@ -49,7 +49,7 @@ module.exports = [
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata;
-      if (!(guilddata = props.saved.guilds[msg.guild.id])) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject();
+      if (!(guilddata = props.saved.guilds[msg.guild.id])) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
       let channel;
       if (!(channel = guilddata.voice.channel)) return msg.channel.send('I\'m not in a voice channel');
       if (!guilddata.voice.dispatcher) return msg.channel.send('Error: no song is playing');
@@ -68,7 +68,7 @@ module.exports = [
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata;
-      if (!(guilddata = props.saved.guilds[msg.guild.id])) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject();
+      if (!(guilddata = props.saved.guilds[msg.guild.id])) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
       let channel;
       if (!(channel = guilddata.voice.channel)) return msg.channel.send('I\'m not in a voice channel');
       if (args.length == 0) {
@@ -93,7 +93,7 @@ module.exports = [
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata;
-      if (!(guilddata = props.saved.guilds[msg.guild.id])) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject();
+      if (!(guilddata = props.saved.guilds[msg.guild.id])) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
       let channel;
       if (!(channel = guilddata.voice.channel)) return msg.channel.send('I\'m not in a voice channel');
       let vcmembers = channel.members.keyArray();
@@ -111,7 +111,7 @@ module.exports = [
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata;
-      if (!(guilddata = props.saved.guilds[msg.guild.id])) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject();
+      if (!(guilddata = props.saved.guilds[msg.guild.id])) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
       let channel;
       if (!(channel = guilddata.voice.channel)) return msg.channel.send('I\'m not in a voice channel');
       if (!guilddata.voice.dispatcher) return msg.channel.send('Error: no song is playing');
@@ -130,7 +130,7 @@ module.exports = [
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata;
-      if (!(guilddata = props.saved.guilds[msg.guild.id])) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject();
+      if (!(guilddata = props.saved.guilds[msg.guild.id])) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
       let channel;
       if (!(channel = guilddata.voice.channel)) return msg.channel.send('I\'m not in a voice channel');
       if (!guilddata.voice.dispatcher) return msg.channel.send('Error: no song is playing');
@@ -149,7 +149,7 @@ module.exports = [
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata;
-      if (!(guilddata = props.saved.guilds[msg.guild.id])) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject();
+      if (!(guilddata = props.saved.guilds[msg.guild.id])) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
       if (!guilddata.voice.channel) return msg.channel.send('I\'m not in a voice channel');
       let songslist = guilddata.voice.songslist;
       if (songslist.length == 0)
@@ -168,7 +168,7 @@ module.exports = [
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata;
-      if (!(guilddata = props.saved.guilds[msg.guild.id])) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject();
+      if (!(guilddata = props.saved.guilds[msg.guild.id])) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
       if (!guilddata.voice.channel) return msg.channel.send('I\'m not in a voice channel');
       let songslist = guilddata.voice.songslist;
       if (songslist.length == 0)
