@@ -19,7 +19,7 @@ module.exports = [
 
       if (args.length == 0) {
         if (fullperms)
-          return msg.channel.send(`List of settings:\nprefix, mutedrole, roles, enabledcmds`);
+          return msg.channel.send(`List of settings:\nprefix, logchannel, mutedrole, roles, enabledcmds`);
         else
           return msg.channel.send(`List of settings:\nprefix`);
       }
@@ -32,6 +32,45 @@ module.exports = [
             props.saved.guilds[msg.guild.id].prefix = args.slice(1).join(' ');
             schedulePropsSave();
             return msg.channel.send(`Server prefix set to: \`${props.saved.guilds[msg.guild.id].prefix}\``);
+          }
+          break;
+
+        case 'logchannel':
+          if (!fullperms) return silenced ? null : msg.channel.send('You do not have permission to run this command.');
+          if (args.length == 1) {
+            return msg.channel.send(
+              `The current logging channel is ` + (props.saved.guilds[msg.guild.id].logging.main ? `<#${props.saved.guilds[msg.guild.id].logging.main}> (id ${props.saved.guilds[msg.guild.id].logging.main})` : `none`) + '.\n' +
+              'To set logging channel to this channel run `settings logchannel set`.\n' +
+              'To set logging channel to a channel run `settings logchannel <#channel>`.\n' +
+              'To turn of logging run `settings logchannel null`.'
+            );
+          } else {
+            let logchannel = args.slice(1).join(' ');
+            if (logchannel == 'null') {
+              props.saved.guilds[msg.guild.id].logging.main = null;
+              schedulePropsSave();
+              return msg.channel.send('Logging channel disabled.');
+            } else if (logchannel == 'set' || logchannel == 'this') {
+              props.saved.guilds[msg.guild.id].logging.main = msg.channel.id;
+              schedulePropsSave();
+              return msg.channel.send(`Logging channel set to <#${msg.channel.id}> (id ${msg.channel.id}).`);
+            } else if (/<#[0-9]+>/.test(logchannel)) {
+              logchannel = logchannel.slice(2, logchannel.length - 1);
+              if (msg.guild.channels.cache.get(logchannel)) {
+                props.saved.guilds[msg.guild.id].logging.main = logchannel;
+                schedulePropsSave();
+                return msg.channel.send(`Logging channel set to <#${logchannel}> (id ${logchannel}).`);
+              } else {
+                return msg.channel.send('Channel nonexistent or not in this server.');
+              }
+            } else {
+              return msg.channel.send(
+                'Argument not a valid channel.\n' +
+                'To set logging channel to this channel run `settings logchannel set`.\n' +
+                'To set logging channel to a channel run `settings logchannel <#channel>`.\n' +
+                'To turn of logging run `settings logchannel null`.'
+              );
+            }
           }
           break;
 

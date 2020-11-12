@@ -70,7 +70,7 @@ module.exports = msg => {
             props.saved.guilds[msg.guild.id] && (
               !props.saved.guilds[msg.guild.id].enabled_commands.global ||
               !props.saved.guilds[msg.guild.id].enabled_commands.categories[commands[i].category] ||
-            !(props.saved.guilds[msg.guild.id].enabled_commands.commands[command]) || !commands[i].public && specialGuilds.includes(msg.guild.id))) continue;
+              !(props.saved.guilds[msg.guild.id].enabled_commands.commands[command] || !commands[i].public && specialGuilds.includes(msg.guild.id)))) continue;
           argstring = cmdstring.slice(command.length + 1);
           args = argstring == '' ? [] : argstring.split(' ');
           isCommand = 2 + i;
