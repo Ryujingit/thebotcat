@@ -105,8 +105,9 @@ module.exports = {
       let newObj = {
         version: 2,
         feat: {
+          _audio: null,
           calc: featIsObj && typeof obj.feat.calc == 'boolean' ? obj.feat.calc : true,
-          audio: featIsObj && Number.isSafeInteger(obj.feat.audio) && obj.feat.audio >= 0 && obj.feat.audio < 4 ? obj.feat.audio : 3,
+          audio: null,
           lamt: featIsObj && Number.isSafeInteger(obj.feat.lamt) ? obj.feat.lamt : 0,
         },
         guilds: { default: perGuildFunc(guildsIsObj ? obj.guilds.default : null) },
@@ -116,6 +117,42 @@ module.exports = {
           sendmsgid: typeof obj.sendmsgid == 'string' ? obj.sendmsgid : '1',
         },
       };
+      Object.defineProperties(newObj.feat, {
+        _audio: {
+          configurable: true,
+          enumerable: false,
+          writable: true,
+          value: featIsObj && Number.isSafeInteger(obj.feat.audio) && obj.feat.audio >= 0 && obj.feat.audio < 4 ? obj.feat.audio : 3,
+        },
+        audio: {
+          configurable: true,
+          enumerable: true,
+          get: () => newObj.feat._audio,
+          set: newVal => {
+            let oldVal = newObj.feat._audio;
+            if (oldVal & 1 && !(newVal & 1)) {
+              Object.keys(props.saved.guilds).forEach(guild => {
+                guild = props.saved.guilds[guild];
+                try {
+                  common.clientVCManager.leave(guild.voice);
+                } catch (e) {
+                  console.error(e);
+                }
+              });
+            } else if (oldVal & 2 && !(newVal & 2)) {
+              Object.keys(props.saved.guilds).forEach(guild => {
+                guild = props.saved.guilds[guild];
+                try {
+                  common.clientVCManager.stopMainLoop(guild.voice);
+                } catch (e) {
+                  console.error(e);
+                }
+              });
+            }
+            newObj.feat._audio = newVal;
+          },
+        }
+      });
       client.guilds.cache.keyArray().forEach(x => newObj.guilds[x] = perGuildFunc(guildsIsObj ? obj.guilds[x] : null, x));
       if (guildsIsObj) {
         let props = Object.getOwnPropertyDescriptors(obj.guilds);
@@ -141,21 +178,102 @@ module.exports = {
         let guildIsObj = typeof guild == 'object';
         let newGuild = {
           prefix: guildIsObj && typeof guild.prefix == 'string' ? guild.prefix : defaultprefix,
-          enabled_commands: {
-            global: guildIsObj && typeof guild.enabled_commands == 'object' && typeof guild.enabled_commands.global == 'boolean' ? guild.enabled_commands.global : true,
-            categories: (() => {
-              let ecco = guildIsObj && typeof guild.enabled_commands == 'object' && typeof guild.enabled_commands.categories == 'object';
-              let catObj = {};
-              commandCategories.forEach(x => catObj[x] = ecco && typeof guild.enabled_commands.categories[x] == 'boolean' ? guild.enabled_commands.categories[x] : true);
-              return catObj;
-            })(),
-            commands: (() => {
-              let ecco = guildIsObj && typeof guild.enabled_commands == 'object' && typeof guild.enabled_commands.commands == 'object';
-              let cmdObj = {};
-              commands.forEach(x => x.public ? (cmdObj[x.name] = ecco && typeof guild.enabled_commands.commands[x] == 'boolean' ? guild.enabled_commands.commands[x] : true) : null);
-              return cmdObj;
-            })(),
-          },
+          enabled_commands: (() => {
+            let enabledcmds = {
+              _global: null,
+              global: null,
+              categories: (() => {
+                let ecco = guildIsObj && typeof guild.enabled_commands == 'object' && typeof guild.enabled_commands.categories == 'object';
+                let catObj = {};
+                commandCategories.forEach(x => {
+                  if (x == 'Voice Channel') {
+                    Object.defineProperty(catObj, '_' + x, {
+                      configurable: true,
+                      enumerable: false,
+                      writable: true,
+                      value: ecco && typeof guild.enabled_commands.categories[x] == 'boolean' ? guild.enabled_commands.categories[x] : true,
+                    });
+                    Object.defineProperty(catObj, x, {
+                      configurable: true,
+                      enumerable: true,
+                      get: () => catObj['_' + x],
+                      set: val => {
+                        if (!val)
+                          common.clientVCManager.leave(newGuild.voice);
+                        catObj['_' + x] = val;
+                      },
+                    });
+                  } else if (x == 'Music') {
+                    Object.defineProperty(catObj, '_' + x, {
+                      configurable: true,
+                      enumerable: false,
+                      writable: true,
+                      value: ecco && typeof guild.enabled_commands.categories[x] == 'boolean' ? guild.enabled_commands.categories[x] : true,
+                    });
+                    Object.defineProperty(catObj, x, {
+                      configurable: true,
+                      enumerable: true,
+                      get: () => catObj['_' + x],
+                      set: val => {
+                        if (!val)
+                          common.clientVCManager.stopMainLoop(newGuild.voice);
+                        catObj['_' + x] = val;
+                      },
+                    });
+                  } else {
+                    catObj[x] = ecco && typeof guild.enabled_commands.categories[x] == 'boolean' ? guild.enabled_commands.categories[x] : true;
+                  }
+                });
+                return catObj;
+              })(),
+              commands: (() => {
+                let ecco = guildIsObj && typeof guild.enabled_commands == 'object' && typeof guild.enabled_commands.commands == 'object';
+                let cmdObj = {};
+                commands.forEach(x => {
+                  if (!x.public) return;
+                  if (x.name == 'leave') {
+                    Object.defineProperty(cmdObj, '_' + x.name, {
+                      configurable: true,
+                      enumerable: false,
+                      writable: true,
+                      value: ecco && typeof guild.enabled_commands.commands[x] == 'boolean' ? guild.enabled_commands.commands[x] : true,
+                    });
+                    Object.defineProperty(cmdObj, x.name, {
+                      configurable: true,
+                      enumerable: true,
+                      get: () => cmdObj['_' + x.name],
+                      set: val => {
+                        if (!val)
+                          common.clientVCManager.leave(newGuild.voice);
+                        cmdObj['_' + x.name] = val;
+                      },
+                    });
+                  } else {
+                    cmdObj[x.name] = ecco && typeof guild.enabled_commands.commands[x] == 'boolean' ? guild.enabled_commands.commands[x] : true;
+                  }
+                });
+                return cmdObj;
+              })(),
+            };
+            Object.defineProperties(enabledcmds, {
+              _global: {
+                configurable: true,
+                enumerable: false,
+                writable: true,
+                value: guildIsObj && typeof guild.enabled_commands == 'object' && typeof guild.enabled_commands.global == 'boolean' ? guild.enabled_commands.global : true,
+              },
+              global: {
+                configurable: true,
+                enumerable: true,
+                get: () => enabledcmds._global,
+                set: val => {
+                  common.clientVCManager.leave(newGuild.voice);
+                  enabledcmds._global = val;
+                },
+              },
+            });
+            return enabledcmds;
+          })(),
           logging: {
             main: guildIsObj && typeof guild.logging == 'object' && isId(guild.logging.main) ? guild.logging.main : null,
           },
@@ -256,8 +374,9 @@ module.exports = {
       newObj = {
         version: 2,
         feat: {
+          _audio: null,
           calc: featIsObj && typeof obj.feat.calc == 'boolean' ? obj.feat.calc : true,
-          audio: featIsObj && Number.isSafeInteger(obj.feat.audio) && obj.feat.audio >= 0 && obj.feat.audio < 4 ? obj.feat.audio : 3,
+          audio: null,
           lamt: featIsObj && Number.isSafeInteger(obj.feat.lamt) ? obj.feat.lamt : 0,
         },
         guilds: { default: perGuildFunc(guildsIsObj ? obj.guilds.default : null) },
@@ -267,6 +386,42 @@ module.exports = {
           sendmsgid: typeof obj.misc == 'object' && typeof obj.misc.sendmsgid == 'string' ? obj.misc.sendmsgid : '1',
         },
       };
+      Object.defineProperties(newObj.feat, {
+        _audio: {
+          configurable: true,
+          enumerable: false,
+          writable: true,
+          value: featIsObj && Number.isSafeInteger(obj.feat.audio) && obj.feat.audio >= 0 && obj.feat.audio < 4 ? obj.feat.audio : 3,
+        },
+        audio: {
+          configurable: true,
+          enumerable: true,
+          get: () => newObj.feat._audio,
+          set: newVal => {
+            let oldVal = newObj.feat._audio;
+            if (oldVal & 1 && !(newVal & 1)) {
+              Object.keys(props.saved.guilds).forEach(guild => {
+                guild = props.saved.guilds[guild];
+                try {
+                  common.clientVCManager.leave(guild.voice);
+                } catch (e) {
+                  console.error(e);
+                }
+              });
+            } else if (oldVal & 2 && !(newVal & 2)) {
+              Object.keys(props.saved.guilds).forEach(guild => {
+                guild = props.saved.guilds[guild];
+                try {
+                  common.clientVCManager.stopMainLoop(guild.voice);
+                } catch (e) {
+                  console.error(e);
+                }
+              });
+            }
+            newObj.feat._audio = newVal;
+          },
+        },
+      });
       client.guilds.cache.keyArray().forEach(x => newObj.guilds[x] = perGuildFunc(guildsIsObj ? obj.guilds[x] : null, x));
       if (guildsIsObj) {
         let props = Object.getOwnPropertyDescriptors(obj.guilds);

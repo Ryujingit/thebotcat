@@ -7,11 +7,15 @@ module.exports = [
     execute(msg, cmdstring, command, argstring, args) {
       if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
 
+      let silenced = !props.saved.guilds[msg.guild.id].enabled_commands.global ||
+        !props.saved.guilds[msg.guild.id].enabled_commands.categories.Administrative ||
+        !props.saved.guilds[msg.guild.id].enabled_commands.commands.settings;
+
       let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.MANAGE_BOT | common.constants.botRolePermBits.MANAGE_BOT_FULL);
 
       let basicperms = perms & common.constants.botRolePermBits.MANAGE_BOT, fullperms = perms & common.constants.botRolePermBits.MANAGE_BOT_FULL;
 
-      if (!basicperms) return msg.channel.send('You do not have permission to run this command.');
+      if (!basicperms) return silenced ? null : msg.channel.send('You do not have permission to run this command.');
 
       if (args.length == 0) {
         if (fullperms)
@@ -23,7 +27,7 @@ module.exports = [
       switch (args[0]) {
         case 'prefix':
           if (args.length == 1) {
-            return msg.channel.send(`The current server prefix is: \`${props.saved.guilds[msg.guild.id].prefix}\`\n\`${props.saved.guilds[msg.guild.id].prefix}settings prefix <newprefix>\` to set`);
+            return msg.channel.send(`The current server prefix is: \`${props.saved.guilds[msg.guild.id].prefix}\`\n\`${props.saved.guilds[msg.guild.id].prefix}settings prefix <newprefix>\` to set.`);
           } else {
             props.saved.guilds[msg.guild.id].prefix = args.slice(1).join(' ');
             schedulePropsSave();
@@ -32,7 +36,7 @@ module.exports = [
           break;
 
         case 'mutedrole':
-          if (!fullperms) return msg.channel.send('You do not have permission to run this command.');
+          if (!fullperms) return silenced ? null : msg.channel.send('You do not have permission to run this command.');
           if (args.length == 1) {
             return msg.channel.send({
               embed: {
@@ -66,7 +70,7 @@ module.exports = [
           break;
 
         case 'roles':
-          if (!fullperms) return msg.channel.send('You do not have permission to run this command.');
+          if (!fullperms) return silenced ? null : msg.channel.send('You do not have permission to run this command.');
           if (args.length == 1) {
             return msg.channel.send(
               'This command configures the bot-level permissions certain roles have, ranging from music command access to muting, locking, kicking, banning, and bot settings control.\n\n' +
@@ -130,7 +134,7 @@ module.exports = [
                   return msg.channel.send({
                     embed: {
                       title: 'Permissions Created',
-                      description: `Permissions created for role <@&${role.id}>`
+                      description: `Permissions created for role <@&${role.id}>.`
                     }
                   });
                 }
@@ -155,7 +159,7 @@ module.exports = [
                   return msg.channel.send({
                     embed: {
                       title: 'Permissions Cleared',
-                      description: `Permissions cleared for role <@&${role2.id}>`
+                      description: `Permissions cleared for role <@&${role2.id}>.`
                     }
                   });
                 }
@@ -192,7 +196,7 @@ module.exports = [
                   return msg.channel.send({
                     embed: {
                       title: 'Permissions Updated',
-                      description: `Permissions ${changedPerms.map(x => `\'${x}\'`).join(', ')} ${args[args.length - 1] == 'enable' ? 'enabled' : 'disabled'} for role <@&${role3.id}>`
+                      description: `Permissions ${changedPerms.map(x => `\'${x}\'`).join(', ')} ${args[args.length - 1] == 'enable' ? 'enabled' : 'disabled'} for role <@&${role3.id}>.`
                     }
                   });
                 }
@@ -206,27 +210,28 @@ module.exports = [
           break;
 
         case 'enabledcmds':
-          if (!fullperms) return msg.channel.send('You do not have permission to run this command.');
+          if (!fullperms) return silenced ? null : msg.channel.send('You do not have permission to run this command.');
           if (args.length == 1) {
             return msg.channel.send(
               'This command configures which commands are enabled.\n\n' +
               'To view whether commands are enabled globally, run `settings enabledcmds view global`.\n' +
               'To view whether a particular command or category is enabled, run `settings enabledcmds view <\'category\'/\'command\'> <command/category>`.\n' +
               'To turn on or off whether commands are enabled globally, run `settings enabledcmds <\'enable\'/\'disable\'> global`.\n' +
-              'To turn on or off whether a particular command or category, run `settings enabledcmds <\'enable\'/\'disable\'> <\'category\'/\'command\'> <command/category>`.\n',
+              'To turn on or off whether a particular command or category, run `settings enabledcmds <\'enable\'/\'disable\'> <\'category\'/\'command\'> <command/category>`.\n' +
+              'To enable or disable everything, run `settings enabledcmds <\'enable\'/\'disable\'> all`.',
             );
           } else {
             switch (args[1]) {
               case 'view':
                 switch (args[2]) {
                   case 'global':
-                    return msg.channel.send(`Commands are globally ${props.saved.guilds[msg.guild.id].enabled_commands.global ? 'enabled' : 'disabled'}`);
+                    return msg.channel.send(`Commands are globally ${props.saved.guilds[msg.guild.id].enabled_commands.global ? 'enabled' : 'disabled'}.`);
                     break;
 
                   case 'category':
                     let category = props.saved.guilds[msg.guild.id].enabled_commands.categories[args.slice(3).join(' ')];
                     if (category != null) {
-                      return msg.channel.send(`The category '${args.slice(3).join(' ')}' is ${category ? 'enabled' : 'disabled'}`);
+                      return msg.channel.send(`The category '${args.slice(3).join(' ')}' is ${category ? 'enabled' : 'disabled'}.`);
                     } else {
                       return msg.channel.send(`The category '${ args.slice(3).join(' ')}' does not exist.`);
                     }
@@ -235,7 +240,7 @@ module.exports = [
                   case 'command':
                     let command = props.saved.guilds[msg.guild.id].enabled_commands.commands[args.slice(3).join(' ')];
                     if (command != null) {
-                      return msg.channel.send(`The command '${args.slice(3).join(' ')}' is ${command ? 'enabled' : 'disabled'}`);
+                      return msg.channel.send(`The command '${args.slice(3).join(' ')}' is ${command ? 'enabled' : 'disabled'}.`);
                     } else {
                       return msg.channel.send(`The command '${args.slice(3).join(' ')}' does not exist.`);
                     }
@@ -253,7 +258,7 @@ module.exports = [
                   case 'global':
                     props.saved.guilds[msg.guild.id].enabled_commands.global = args[1] == 'enable';
                     schedulePropsSave();
-                    return msg.channel.send(`Global commands have been successfully ${args[1] == 'enable' ? 'enabled' : 'disabled'}`);
+                    return msg.channel.send(`Global commands have been successfully ${args[1] == 'enable' ? 'enabled' : 'disabled'}.`);
                     break;
 
                   case 'category':
@@ -261,7 +266,7 @@ module.exports = [
                     if (category != null) {
                       props.saved.guilds[msg.guild.id].enabled_commands.categories[args.slice(3).join(' ')] = args[1] == 'enable';
                       schedulePropsSave();
-                      return msg.channel.send(`The category '${args.slice(3).join(' ')}' has been successfully ${args[1] == 'enable' ? 'enabled' : 'disabled'}`);
+                      return msg.channel.send(`The category '${args.slice(3).join(' ')}' has been successfully ${args[1] == 'enable' ? 'enabled' : 'disabled'}.`);
                     } else {
                       return msg.channel.send(`The category '${args.slice(3).join(' ')}' does not exist.`);
                     }
@@ -272,10 +277,20 @@ module.exports = [
                     if (command != null) {
                       props.saved.guilds[msg.guild.id].enabled_commands.commands[args.slice(3).join(' ')] = args[1] == 'enable';
                       schedulePropsSave();
-                      return msg.channel.send(`The command '${args.slice(3).join(' ')}' has been successfully ${args[1] == 'enable' ? 'enabled' : 'disabled'}`);
+                      return msg.channel.send(`The command '${args.slice(3).join(' ')}' has been successfully ${args[1] == 'enable' ? 'enabled' : 'disabled'}.`);
                     } else {
                       return msg.channel.send(`The command '${args.slice(3).join(' ')}' does not exist.`);
                     }
+                    break;
+
+                  case 'all':
+                    let val = args[1] == 'enable';
+                    props.saved.guilds[msg.guild.id].enabled_commands.global = val;
+                    Object.keys(props.saved.guilds[msg.guild.id].enabled_commands.categories)
+                      .forEach(x => props.saved.guilds[msg.guild.id].enabled_commands.categories[x] = val);
+                    Object.keys(props.saved.guilds[msg.guild.id].enabled_commands.commands)
+                      .forEach(x => props.saved.guilds[msg.guild.id].enabled_commands.commands[x] = val);
+                    return msg.channel.send(`All commands and categories have been ${val ? 'enabled' : 'disabled'}.`);
                     break;
                 }
                 break;

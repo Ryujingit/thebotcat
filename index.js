@@ -80,7 +80,7 @@ var badwords = [
 ];
 
 
-var version = '1.5.2-beta3';
+var version = '1.5.2-beta4';
 global.updateStatus = () => {
   let newStatus = props.feat.status.replace('{prefix}', defaultprefix).replace('{guilds}', client.guilds.cache.size);
   let currentStatus;
@@ -244,8 +244,13 @@ function removeCommands(cmds) {
       commands.splice(index, 1);
   }
 }
-function getCommandsCategorized() {
-  let commandsList = commands.filter(x => x.public);
+function getCommandsCategorized(guilddata) {
+  let commandsList = commands.filter(x =>
+    x.public && !(x.name != 'settings' &&
+      guilddata && (
+        !guilddata.enabled_commands.global ||
+        !guilddata.enabled_commands.categories[x.category] ||
+        !guilddata.enabled_commands.commands[x.name])));
   let commandsCategorized = { Uncategorized: [] };
   commandsList.forEach(x =>
     x.category ?

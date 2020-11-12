@@ -6,7 +6,7 @@ module.exports = [
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
       if (args.length == 0) {
-        let [commandsList, commandsCategorized] = getCommandsCategorized();
+        let [commandsList, commandsCategorized] = getCommandsCategorized(props.saved.guilds[msg.guild.id]);
         return msg.channel.send({
           embed: {
             title: `Commands (${commandsList.length})`,

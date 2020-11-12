@@ -78,7 +78,7 @@ module.exports = [
         if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || vcmembers.length == 2 && vcmembers.includes(msg.author.id)))
           return msg.channel.send('Only admins and mods can change my volume, or someone who is alone with me in a voice channel.');
         let wantedvolume = Number(args[0]);
-        if (isNaN(wantedvolume) || wantedvolume == Infinity || wantedvolume == -Infinity || wantedvolume < 0 || wantedvolume > 2)
+        if (isNaN(wantedvolume) || wantedvolume == Infinity || wantedvolume == -Infinity || wantedvolume < 0 || wantedvolume > 10)
           return msg.channel.send('Volume out of bounds or not specified.');
         common.clientVCManager.setVolume(guilddata.voice, wantedvolume);
         return msg.channel.send(`Set playback volume to ${wantedvolume}`);
