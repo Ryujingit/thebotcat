@@ -80,15 +80,20 @@ var badwords = [
 ];
 
 
-var version = '1.5.2-beta4';
+var version = '1.5.2-beta4b';
 global.updateStatus = () => {
   let newStatus = props.feat.status.replace('{prefix}', defaultprefix).replace('{guilds}', client.guilds.cache.size);
   let currentStatus;
   try {
     currentStatus = client.user.presence.activities[0].name;
   } catch (e) {}
-  if (currentStatus != newStatus)
-    client.user.setActivity(newStatus);
+  if (currentStatus != newStatus) {
+    try {
+      client.user.setActivity(newStatus);
+    } catch (e) {
+      console.error(e);
+    }
+  }
 };
 
 var commands = [], commandCategories = ['Information', 'Administrative', 'Interactive', 'Voice Channel', 'Music', 'Content', 'Troll'];
@@ -133,7 +138,11 @@ try {
   console.error(e);
 }
 
-var specialGuilds = process.env.SPECIAL_GUILDS.split(', ');
+try {
+  var specialGuilds = process.env.SPECIAL_GUILDS.split(', ');
+} catch (e) {
+  var specialGuilds = [];
+}
 
 if (fs.existsSync('props.json')) {
   try {
@@ -284,21 +293,21 @@ global.handlers = common.handlers;
 (async () => {
   while (!readytime)
     await new Promise(r => setTimeout(r, 1000));
-  if (props.feat.version != 'canary') {
+  if (props.feat.version == 'normal') {
     console.log('Checking for new messages in send only channel');
     let channel = client.channels.cache.get('738599826765250632'), messages;
     try {
-      while (channel.lastMessageID != props.saved.sendmsgid) {
+      while (channel.lastMessageID != props.saved.misc.sendmsgid) {
         console.log('New messages detected');
-        messages = await channel.messages.fetch({ after: props.saved.sendmsgid });
+        messages = await channel.messages.fetch({ after: props.saved.misc.sendmsgid });
         console.log('Loaded up to 50 new messages');
         messages = messages.keyArray().map(x => messages.get(x)).sort((a, b) => { a = a.createdTimestamp; b = b.createdTimestamp; if (a > b) { return 1; } else if (a < b) { return -1; } else { return 0; } });
         if (messages.length == 0) {
-          props.saved.sendmsgid = channel.lastMessageID;
+          props.saved.misc.sendmsgid = channel.lastMessageID;
           break;
         }
         for (var i = 0; i < messages.length; i++) {
-          console.log(`message handlering from ${props.saved.sendmsgid}`);
+          console.log(`message handlering from ${props.saved.misc.sendmsgid}`);
           handlers.extra.message[0](messages[i]);
           await new Promise(r => setTimeout(r, 500));
         }
@@ -330,7 +339,7 @@ client.on('ready', () => {
   
   readytime = new Date();
   
-  if (props.feat.loaddms) props.saved.dmchannels.forEach(x => client.channels.fetch(x));
+  if (props.feat.loaddms) props.saved.misc.dmchannels.forEach(x => client.channels.fetch(x));
 });
 
 client.on('guildCreate', guild => {

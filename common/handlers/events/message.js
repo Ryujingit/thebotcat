@@ -37,8 +37,8 @@ module.exports = msg => {
 
   if (!msg.guild) {
     logmsg(`dm from ${msg.author.tag} (channel ${msg.channel.id}) with contents ${util.inspect(msg.content)}`);
-    if (props.feat.savedms && !props.saved.dmchannels.includes(msg.channel.id)) {
-      props.saved.dmchannels.push(msg.channel.id);
+    if (props.feat.savedms && !props.saved.misc.dmchannels.includes(msg.channel.id)) {
+      props.saved.misc.dmchannels.push(msg.channel.id);
     }
   }
 

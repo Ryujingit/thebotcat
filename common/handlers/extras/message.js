@@ -4,7 +4,7 @@ module.exports = [
     if (msg.channel.id == '738599826765250632') {
       msg.delete();
       client.channels.cache.get('738593863958003756').send(`${msg.author.tag}: ${msg.content}`);
-      props.saved.sendmsgid = msg.id;
+      props.saved.misc.sendmsgid = msg.id;
       schedulePropsSave();
     }
     if (msg.channel.id == '738602247549616170' && (props.saved.lastnum == null || props.saved.lastnum < 5000)) {
