@@ -80,7 +80,7 @@ var badwords = [
 ];
 
 
-var version = '1.5.2-beta6';
+var version = '1.5.2-beta7';
 global.updateStatus = () => {
   let newStatus = props.feat.status.replace('{prefix}', defaultprefix).replace('{guilds}', client.guilds.cache.size);
   let currentStatus;

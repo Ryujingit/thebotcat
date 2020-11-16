@@ -31,13 +31,14 @@ format for props.saved:
                 5 - play playlists
                 6 - voteskip
                 7 - forceskip and remove
-                8 - delete messages
-                9 - lock channel
-                10 - mute and tempmute
-                11 - kick
-                12 - ban
-                13 - change prefix, logchannel
-                14 - complete manage bot
+                8 - remote music commands
+                9 - delete messages
+                10 - lock channel
+                11 - mute and tempmute
+                12 - kick
+                13 - ban
+                14 - change prefix, logchannel
+                15 - complete manage bot
             ),
           ...
         },

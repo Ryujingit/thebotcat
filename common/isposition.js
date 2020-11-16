@@ -34,16 +34,58 @@ function hasBotPermissions(msg, permMask, channel) {
   
   var perms = msg.member.roles.cache.array().map(x => x.id).filter(x => permGuildIDs.includes(x)).reduce((a, c) => a | props.saved.guilds[msg.guild.id].perms[c] & permMask, 0) & commonConstants.botRolePermAll;
 
-  if (permMask & commonConstants.botRolePermBits.LOCK_CHANNEL &&
-    !(perms & commonConstants.botRolePermBits.LOCK_CHANNEL) &&
-    channel.permissionsFor(msg.member).has('MANAGE_ROLES'))
-    perms |= commonConstants.botRolePermBits.LOCK_CHANNEL;
-
+  if (permMask & commonConstants.botRolePermBits.NORMAL &&
+    !(perms & commonConstants.botRolePermBits.NORMAL) &&
+    (msg.member.hasPermission('ADMINISTRATOR') &&
+      msg.member.roles.highest.position > msg.guild.me.roles.highest.position || isOwner(msg)))
+    perms |= commonConstants.botRolePermBits.NORMAL;
+  
   if (permMask & commonConstants.botRolePermBits.BYPASS_LOCK &&
     !(perms & commonConstants.botRolePermBits.BYPASS_LOCK) &&
     (channel.permissionsFor(msg.member).has('MANAGE_ROLES') || perms & commonConstants.botRolePermBits.LOCK_CHANNEL))
     perms |= commonConstants.botRolePermBits.BYPASS_LOCK;
-
+  
+  if (permMask & commonConstants.botRolePermBits.JOIN_VC &&
+    !(perms & commonConstants.botRolePermBits.JOIN_VC) &&
+    (msg.member.hasPermission('ADMINISTRATOR') &&
+      msg.member.roles.highest.position > msg.guild.me.roles.highest.position || isOwner(msg)))
+    perms |= commonConstants.botRolePermBits.JOIN_VC;
+  
+  if (permMask & commonConstants.botRolePermBits.LEAVE_VC &&
+    !(perms & commonConstants.botRolePermBits.LEAVE_VC) &&
+    (msg.member.hasPermission('ADMINISTRATOR') &&
+      msg.member.roles.highest.position > msg.guild.me.roles.highest.position || isOwner(msg)))
+    perms |= commonConstants.botRolePermBits.LEAVE_VC;
+  
+  if (permMask & commonConstants.botRolePermBits.PLAY_SONG &&
+    !(perms & commonConstants.botRolePermBits.PLAY_SONG) &&
+    (msg.member.hasPermission('ADMINISTRATOR') &&
+      msg.member.roles.highest.position > msg.guild.me.roles.highest.position || isOwner(msg)))
+    perms |= commonConstants.botRolePermBits.PLAY_SONG;
+  
+  if (permMask & commonConstants.botRolePermBits.PLAY_PLAYLIST &&
+    !(perms & commonConstants.botRolePermBits.PLAY_PLAYLIST) &&
+    (msg.member.hasPermission('ADMINISTRATOR') &&
+      msg.member.roles.highest.position > msg.guild.me.roles.highest.position || isOwner(msg)))
+    perms |= commonConstants.botRolePermBits.PLAY_PLAYLIST;
+  
+  if (permMask & commonConstants.botRolePermBits.REMOTE_CMDS &&
+    !(perms & commonConstants.botRolePermBits.REMOTE_CMDS) &&
+    (msg.member.hasPermission('ADMINISTRATOR') &&
+      msg.member.roles.highest.position > msg.guild.me.roles.highest.position || isOwner(msg)))
+    perms |= commonConstants.botRolePermBits.REMOTE_CMDS;
+  
+  if (permMask & commonConstants.botRolePermBits.DELETE_MESSAGES &&
+    !(perms & commonConstants.botRolePermBits.DELETE_MESSAGES) &&
+    (msg.member.hasPermission('ADMINISTRATOR') &&
+      msg.member.roles.highest.position > msg.guild.me.roles.highest.position || isOwner(msg)))
+    perms |= commonConstants.botRolePermBits.DELETE_MESSAGES;
+  
+  if (permMask & commonConstants.botRolePermBits.LOCK_CHANNEL &&
+    !(perms & commonConstants.botRolePermBits.LOCK_CHANNEL) &&
+    channel.permissionsFor(msg.member).has('MANAGE_ROLES'))
+    perms |= commonConstants.botRolePermBits.LOCK_CHANNEL;
+  
   if (permMask & commonConstants.botRolePermBits.MUTE &&
     !(perms & commonConstants.botRolePermBits.MUTE) &&
     (msg.member.hasPermission('MANAGE_ROLES') &&
@@ -72,7 +114,7 @@ function hasBotPermissions(msg, permMask, channel) {
     (msg.member.hasPermission('ADMINISTRATOR') &&
       msg.member.roles.highest.position > msg.guild.me.roles.highest.position || isOwner(msg)))
     perms |= commonConstants.botRolePermBits.MANAGE_BOT_FULL;
-
+  
   return perms;
 }
 

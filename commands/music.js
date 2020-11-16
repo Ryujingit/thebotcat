@@ -6,10 +6,12 @@ module.exports = [
     public: true,
     async execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
-      let guilddata;
-      if (!(guilddata = props.saved.guilds[msg.guild.id])) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+      let guilddata = props.saved.guilds[msg.guild.id];
+      if (!guilddata) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
       if (!guilddata.voice.channel) return msg.channel.send('I\'m not in a voice channel');
-      if (!(msg.member.voice.channelID == guilddata.voice.channel.id || common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg)))
+      let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.PLAY_SONG | common.constants.botRolePermBits.REMOTE_CMDS);
+      let playperms = perms & common.constants.botRolePermBits.PLAY_SONG, remoteperms = perms & common.constants.botRolePermBits.REMOTE_CMDS;
+      if (!((msg.member.voice.channelID == guilddata.voice.channel.id || remoteperms) && playperms))
         return msg.channel.send('You must be in the same voice channel as I\'m in to play a song.  Admins and mods can bypass this though.');
       let latestobj;
       try {
@@ -29,13 +31,15 @@ module.exports = [
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
-      let guilddata;
-      if (!(guilddata = props.saved.guilds[msg.guild.id])) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
-      let channel;
-      if (!(channel = guilddata.voice.channel)) return msg.channel.send('I\'m not in a voice channel');
+      let guilddata = props.saved.guilds[msg.guild.id];
+      if (!guilddata) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+      let channel = guilddata.voice.channel;
+      if (!channel) return msg.channel.send('I\'m not in a voice channel');
       if (!guilddata.voice.dispatcher) return msg.channel.send('Error: no song is playing');
+      let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.PLAY_SONG | common.constands.botRolePermBits.FORCESKIP | common.constants.botRolePermBits.REMOTE_CMDS);
+      let playperms = perms & common.constants.botRolePermBits.PLAY_SONG, fsperms = common.constants.botRolePermBits.FORCESKIP, remoteperms = perms & common.constants.botRolePermBits.REMOTE_CMDS;
       let vcmembers = channel.members.keyArray();
-      if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || vcmembers.length == 2 && vcmembers.includes(msg.author.id)))
+      if (!((msg.member.voice.channelID == guilddata.voice.channel.id || remoteperms) && (fsperms || vcmembers.length == 2 && vcmembers.includes(msg.author.id) && playperms)))
         return msg.channel.send('Only admins and mods can pause / resume / stop, or someone who is alone with me in a voice channel.');
       common.clientVCManager.pause(guilddata.voice);
       return msg.channel.send(`Paused`);
@@ -48,13 +52,15 @@ module.exports = [
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
-      let guilddata;
-      if (!(guilddata = props.saved.guilds[msg.guild.id])) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
-      let channel;
-      if (!(channel = guilddata.voice.channel)) return msg.channel.send('I\'m not in a voice channel');
+      let guilddata = props.saved.guilds[msg.guild.id];
+      if (!guilddata) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+      let channel = guilddata.voice.channel;
+      if (!channel) return msg.channel.send('I\'m not in a voice channel');
       if (!guilddata.voice.dispatcher) return msg.channel.send('Error: no song is playing');
+      let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.PLAY_SONG | common.constands.botRolePermBits.FORCESKIP | common.constants.botRolePermBits.REMOTE_CMDS);
+      let playperms = perms & common.constants.botRolePermBits.PLAY_SONG, fsperms = common.constants.botRolePermBits.FORCESKIP, remoteperms = perms & common.constants.botRolePermBits.REMOTE_CMDS;
       let vcmembers = channel.members.keyArray();
-      if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || vcmembers.length == 2 && vcmembers.includes(msg.author.id)))
+      if (!((msg.member.voice.channelID == guilddata.voice.channel.id || remoteperms) && (fsperms || vcmembers.length == 2 && vcmembers.includes(msg.author.id) && playperms)))
         return msg.channel.send('Only admins and mods can pause / resume / stop, or someone who is alone with me in a voice channel.');
       common.clientVCManager.resume(guilddata.voice);
       return msg.channel.send(`Resumed`);
@@ -67,15 +73,17 @@ module.exports = [
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
-      let guilddata;
-      if (!(guilddata = props.saved.guilds[msg.guild.id])) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
-      let channel;
-      if (!(channel = guilddata.voice.channel)) return msg.channel.send('I\'m not in a voice channel');
+      let guilddata = props.saved.guilds[msg.guild.id];
+      if (!guilddata) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+      let channel = guilddata.voice.channel;
+      if (!channel) return msg.channel.send('I\'m not in a voice channel');
       if (args.length == 0) {
         return msg.channel.send(`Playback volume is currently set to ${common.clientVCManager.getVolume(guilddata.voice)}`);
       } else {
+        let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.PLAY_SONG | common.constands.botRolePermBits.FORCESKIP | common.constants.botRolePermBits.REMOTE_CMDS);
+        let playperms = perms & common.constants.botRolePermBits.PLAY_SONG, fsperms = common.constants.botRolePermBits.FORCESKIP, remoteperms = perms & common.constants.botRolePermBits.REMOTE_CMDS;
         let vcmembers = channel.members.keyArray();
-        if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || vcmembers.length == 2 && vcmembers.includes(msg.author.id)))
+        if (!((msg.member.voice.channelID == guilddata.voice.channel.id || remoteperms) && (fsperms || vcmembers.length == 2 && vcmembers.includes(msg.author.id) && playperms)))
           return msg.channel.send('Only admins and mods can change my volume, or someone who is alone with me in a voice channel.');
         let wantedvolume = Number(args[0]);
         if (isNaN(wantedvolume) || wantedvolume == Infinity || wantedvolume == -Infinity || wantedvolume < 0 || wantedvolume > 10)
@@ -92,12 +100,14 @@ module.exports = [
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
-      let guilddata;
-      if (!(guilddata = props.saved.guilds[msg.guild.id])) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
-      let channel;
-      if (!(channel = guilddata.voice.channel)) return msg.channel.send('I\'m not in a voice channel');
+      let guilddata = props.saved.guilds[msg.guild.id];
+      if (!guilddata) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+      let channel = guilddata.voice.channel;
+      if (!channel) return msg.channel.send('I\'m not in a voice channel');
+      let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.PLAY_SONG | common.constands.botRolePermBits.FORCESKIP | common.constants.botRolePermBits.REMOTE_CMDS);
+      let playperms = perms & common.constants.botRolePermBits.PLAY_SONG, fsperms = common.constants.botRolePermBits.FORCESKIP, remoteperms = perms & common.constants.botRolePermBits.REMOTE_CMDS;
       let vcmembers = channel.members.keyArray();
-      if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || vcmembers.length == 2 && vcmembers.includes(msg.author.id)))
+      if (!((msg.member.voice.channelID == guilddata.voice.channel.id || remoteperms) && (fsperms || vcmembers.length == 2 && vcmembers.includes(msg.author.id) && playperms)))
         return msg.channel.send('Only admins and mods can change toggle loop, or someone who is alone with me in a voice channel.');
       common.clientVCManager.toggleLoop(guilddata.voice);
       return msg.channel.send(`Toggled loop to ${guilddata.voice.loop ? 'enabled' : 'disabled'}`);
@@ -110,13 +120,15 @@ module.exports = [
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
-      let guilddata;
-      if (!(guilddata = props.saved.guilds[msg.guild.id])) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
-      let channel;
-      if (!(channel = guilddata.voice.channel)) return msg.channel.send('I\'m not in a voice channel');
+      let guilddata = props.saved.guilds[msg.guild.id];
+      if (!guilddata) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+      let channel = guilddata.voice.channel;
+      if (!channel) return msg.channel.send('I\'m not in a voice channel');
       if (!guilddata.voice.dispatcher) return msg.channel.send('Error: no song is playing');
+      let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.PLAY_SONG | common.constands.botRolePermBits.FORCESKIP | common.constants.botRolePermBits.REMOTE_CMDS);
+      let playperms = perms & common.constants.botRolePermBits.PLAY_SONG, fsperms = common.constants.botRolePermBits.FORCESKIP, remoteperms = perms & common.constants.botRolePermBits.REMOTE_CMDS;
       let vcmembers = channel.members.keyArray();
-      if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || vcmembers.length == 2 && vcmembers.includes(msg.author.id)))
+      if (!((msg.member.voice.channelID == guilddata.voice.channel.id || remoteperms) && (fsperms || vcmembers.length == 2 && vcmembers.includes(msg.author.id) && playperms)))
         return msg.channel.send('Only admins and mods can forceskip, or someone who is alone with me in a voice channel.');
       common.clientVCManager.forceSkip(guilddata.voice);
       return msg.channel.send(`Skipped`);
@@ -129,13 +141,15 @@ module.exports = [
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
-      let guilddata;
-      if (!(guilddata = props.saved.guilds[msg.guild.id])) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
-      let channel;
-      if (!(channel = guilddata.voice.channel)) return msg.channel.send('I\'m not in a voice channel');
+      let guilddata = props.saved.guilds[msg.guild.id];
+      if (!guilddata) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+      let channel = guilddata.voice.channel;
+      if (!channel) return msg.channel.send('I\'m not in a voice channel');
       if (!guilddata.voice.dispatcher) return msg.channel.send('Error: no song is playing');
+      let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.PLAY_SONG | common.constands.botRolePermBits.FORCESKIP | common.constants.botRolePermBits.REMOTE_CMDS);
+      let playperms = perms & common.constants.botRolePermBits.PLAY_SONG, fsperms = common.constants.botRolePermBits.FORCESKIP, remoteperms = perms & common.constants.botRolePermBits.REMOTE_CMDS;
       let vcmembers = channel.members.keyArray();
-      if (!(common.isDeveloper(msg) || common.isAdmin(msg) || common.isMod(msg) || vcmembers.length == 2 && vcmembers.includes(msg.author.id)))
+      if (!((msg.member.voice.channelID == guilddata.voice.channel.id || remoteperms) && (fsperms || vcmembers.length == 2 && vcmembers.includes(msg.author.id) && playperms)))
         return msg.channel.send('Only admins and mods can pause / resume / stop, or someone who is alone with me in a voice channel.');
       common.clientVCManager.stopMainLoop(guilddata.voice);
       return msg.channel.send(`Stopped`);
@@ -148,8 +162,8 @@ module.exports = [
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
-      let guilddata;
-      if (!(guilddata = props.saved.guilds[msg.guild.id])) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+      let guilddata = props.saved.guilds[msg.guild.id];
+      if (!guilddata) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
       if (!guilddata.voice.channel) return msg.channel.send('I\'m not in a voice channel');
       let songslist = guilddata.voice.songslist;
       if (songslist.length == 0)
@@ -167,8 +181,8 @@ module.exports = [
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
-      let guilddata;
-      if (!(guilddata = props.saved.guilds[msg.guild.id])) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+      let guilddata = props.saved.guilds[msg.guild.id];
+      if (!guilddata) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
       if (!guilddata.voice.channel) return msg.channel.send('I\'m not in a voice channel');
       let songslist = guilddata.voice.songslist;
       if (songslist.length == 0)

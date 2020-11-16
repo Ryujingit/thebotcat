@@ -193,7 +193,10 @@ module.exports = [
                         description: `Bot-level permissions do not exist for role <@&${role2.id}>.`
                       }
                     });
-                  delete props.saved.guilds[msg.guild.id].perms[role2.id];
+                  if (role2.id != msg.guild.id)
+                    delete props.saved.guilds[msg.guild.id].perms[role2.id];
+                  else
+                    props.saved.guilds[msg.guild.id].perms[role2.id] = common.constants.botRolePermDef;
                   schedulePropsSave();
                   return msg.channel.send({
                     embed: {
