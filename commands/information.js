@@ -57,6 +57,15 @@ module.exports = [
     }
   },
   {
+    name: 'fullstatus',
+    full_string: false,
+    description: '`!fullstatus` to see thebotcat\'s full status',
+    public: true,
+    execute(msg, cmdstring, command, argstring, args) {
+      msg.channel.send(common.getBotcatFullStatusMessage());
+    }
+  },
+  {
     name: 'ping',
     full_string: false,
     description: '`!ping` checks my ping to the web and discord',
@@ -87,6 +96,17 @@ module.exports = [
       var discord = new Discord.MessageEmbed()
         .setTitle('This is Thebotcat\'s discord bot server if you wanna join click the link! https://discord.gg/NamrBZc')
         .setFooter('Server for thebotcat discord bot come along and say hi!');
+      return msg.channel.send(discord);
+    }
+  },
+  {
+    name: 'github',
+    full_string: false,
+    public: true,
+    execute(msg, cmdstring, command, argstring, args) {
+      var discord = new Discord.MessageEmbed()
+        .setTitle('This is Thebotcat\'s github repository (its completely open source)! https://github.com/Ryujingit/thebotcat')
+        .setFooter('And when he clicked "make public" he felt an evil leave his presence.');
       return msg.channel.send(discord);
     }
   },

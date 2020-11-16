@@ -42,16 +42,15 @@ function getSortedChannels(guild) {
         if (id in nonCategoryChannels) nonCategoryChannels[id].push(channel);
         else nonCategoryChannels[id] = [ channel ];
       }
-      
     }
   }
   return {
     uncategorized: unCategorizedChannels,
     categorized: categoryChannels
-      .sort((a, b) => a.rawPosition > b.rawPosition ? 1 : a.rawPosition < b.rawPosition ? -1 : 0)
+      .sort((a, b) => a.position > b.position ? 1 : a.position < b.position ? -1 : 0)
       .map(x => ({
         channel: x,
-        children: nonCategoryChannels[x.id].sort((a, b) => a.rawPosition > b.rawPosition ? 1 : a.rawPosition < b.rawPosition ? -1 : 0),
+        children: nonCategoryChannels[x.id].sort((a, b) => a.type == 'voice' && b.type != 'voice' ? 1 : a.type != 'voice' && b.type == 'voice' ? -1 : a.position > b.position ? 1 : a.position < b.position ? -1 : 0),
       })),
   }
 }

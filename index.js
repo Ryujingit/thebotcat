@@ -80,7 +80,7 @@ var badwords = [
 ];
 
 
-var version = '1.5.2-beta5';
+var version = '1.5.2-beta6';
 global.updateStatus = () => {
   let newStatus = props.feat.status.replace('{prefix}', defaultprefix).replace('{guilds}', client.guilds.cache.size);
   let currentStatus;
@@ -392,7 +392,7 @@ var tickFunc = () => {
   
   if (ticks % 10 == 0 && props.botStatusMsg && props.botStatusMsgResolve == null) {
     props.botStatusMsgResolve = props.botStatusMsg
-      .edit(common.getBotcatStatusMessage())
+      .edit(common.getBotcatFullStatusMessage())
       .then(x => props.botStatusMsgResolve = null)
       .catch(e => { console.error(e); props.botStatusMsgResolve = null; });
   }

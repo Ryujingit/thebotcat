@@ -41,6 +41,8 @@ module.exports = msg => {
       props.saved.misc.dmchannels.push(msg.channel.id);
     }
   }
+  
+  if (!msg.channel.permissionsFor(client.user.id).has('SEND_MESSAGES')) return;
 
   // argstring = the part after the workingprefix, command and args in one big string
   // command = the actual command

@@ -4,17 +4,47 @@ module.exports = [
     full_string: false,
     description: '`!avatar` displays your avatar\n`!avatar @someone` displays someone\'s avatar',
     public: true,
-    execute(msg, cmdstring, command, argstring, args) {
-      let targetMember;
-      if (!msg.mentions.members.first())
-        targetMember = msg.member;
-      else
-        targetMember = msg.mentions.members.first();
+    async execute(msg, cmdstring, command, argstring, args) {
+      let member;
+      if (args.length != 0) {
+        try {
+          member = await common.searchMember(msg.guild.members, args[0]);
+          if (!member) member = msg.member;
+        } catch (e) {
+          console.error(e);
+          member = msg.member;
+        }
+      } else {
+        member = msg.member;
+      }
       
-      let avatarEmbed = new Discord.MessageEmbed()
-        .setTitle(`Avatar for ${targetMember.user.tag}`)
-        .setImage(targetMember.user.displayAvatarURL())
-        .setColor(targetMember.displayHexColor);
+      let avatarEmbed;
+      if (member.user.avatar == null) {
+        let url = member.user.defaultAvatarURL;
+        avatarEmbed = new Discord.MessageEmbed()
+          .setTitle(`Avatar for ${member.user.tag}`)
+          .setDescription(
+            `userid: ${member.user.id}\n` +
+            `links: [default](${member.user.displayAvatarURL()}) (avatar is default)`
+            )
+          .setImage(url)
+          .setColor(member.displayHexColor);
+      } else {
+        let baseurl = `https://cdn.discordapp.com/avatars/${member.user.id}/${member.user.avatar}`;
+        avatarEmbed = new Discord.MessageEmbed()
+          .setTitle(`Avatar for ${member.user.tag}`)
+          .setDescription(
+            `userid: ${member.user.id}\n` +
+            `links: [default](${member.user.displayAvatarURL()}), ` +
+            `[normal png](${baseurl}.png), ` +
+            `[normal webp](${baseurl}.webp), ` +
+            `[big png](${baseurl}.png?size=4096), ` +
+            `[big webp](${baseurl}.webp?size=4096)`
+            )
+          .setImage(`${baseurl}.png?size=4096`)
+          .setColor(member.displayHexColor);
+      }
+      
       return msg.channel.send(avatarEmbed);
     }
   },
@@ -29,6 +59,46 @@ module.exports = [
       } else {
         return msg.channel.send('I\'m flipping a coin, and the result is...: heads!');
       }
+    }
+  },
+  {
+    name: 'roll',
+    full_string: false,
+    description: '`!roll d#|#` rolls a dice with the given number of sides',
+    public: true,
+    execute(msg, cmdstring, command, argstring, args) {
+      var sides = Math.floor(Number(args[0])) || 6;
+      return msg.channel.send(`Result of rolling a d${sides}: ${1 + Math.floor(Math.random() * sides)}`);
+    }
+  },
+  {
+    name: 'randint',
+    full_string: false,
+    description: '`!randint <min> <max>` returns a random integer between min and max (inclusive)',
+    public: true,
+    execute(msg, cmdstring, command, argstring, args) {
+      var min = Math.floor(Number(args[0])) || 0, max = Math.floor(Number(args[1])) || 1;
+      return msg.channel.send(`Random integer between ${min} and ${max}: ${min + Math.floor(Math.random() * (max - min + 1))}`);
+    }
+  },
+  {
+    name: 'randfloat',
+    full_string: false,
+    description: '`!randfloat <min> <max>` returns a random real number between min and max (inclusive lower bound)',
+    public: true,
+    execute(msg, cmdstring, command, argstring, args) {
+      var min = Number(args[0]) || 0, max = Number(args[1]) || 1;
+      return msg.channel.send(`Random real number between ${min} and ${max}: ${min + Math.random() * (max - min)}`);
+    }
+  },
+  {
+    name: 'choice',
+    full_string: false,
+    description: '`!choice <choice1> [<choice2> ...]` picks a random option from the choices given',
+    public: true,
+    execute(msg, cmdstring, command, argstring, args) {
+      var choice = Math.floor(Math.random() * args.length);
+      return msg.channel.send(`Random choice: ${args[choice]}`);
     }
   },
   {
@@ -53,10 +123,10 @@ module.exports = [
         return msg.channel.send('It\'s a tie! We had the same choice.');
       } else if (status == 1) {
         logmsg(logbegin + 'i won');
-        return msg.channel.send('I won!');
+        return msg.channel.send(`I chose ${result}, I won!`);
       } else if (status == -1) {
         logmsg(logbegin + 'they won');
-        return msg.channel.send('You won!');
+        return msg.channel.send(`I chose ${result}, you won!`);
       }
     }
   },
@@ -143,8 +213,8 @@ module.exports = [
               try {
                 user.calc_scope_running = true;
                 res = await pool.exec('mathevaluate', [msg.author.id, expr, buffer]);
-                doLoop = false; console.log('e')
-                await loopFunc; console.log('a')
+                doLoop = false;
+                await loopFunc;
               } catch (e) { throw e; }
               finally {
                 user.calc_scope_running = false;

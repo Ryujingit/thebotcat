@@ -81,7 +81,7 @@ module.exports = [
         if (i > 0 || !/<#[0-9]+>/.test(args[i])) {
           reason.push(args[i]);
         } else {
-          channel = msg.guild.channels.cache.find(x => x.id == args[i]);
+          channel = msg.guild.channels.cache.find(x => x.id == args[i].slice(2, -1));
           if (!channel) return msg.channel.send('Cannot lock channel outside of this guild.');
         }
       }
@@ -145,7 +145,7 @@ module.exports = [
         if (i > 0 || !/<#[0-9]+>/.test(args[i])) {
           reason.push(args[i]);
         } else {
-          channel = msg.guild.channels.cache.find(x => x.id == args[i]);
+          channel = msg.guild.channels.cache.find(x => x.id == args[i].slice(2, -1));
           if (!channel) return msg.channel.send('Cannot unlock channel outside of this guild.');
         }
       }

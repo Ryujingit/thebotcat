@@ -2,9 +2,11 @@
 
 var constants = require('./constants');
 
+var { recursiveReaddir } = require('./convenience');
+
 var { msecToHMS, msecToHMSs, fancyDateStringWD, fancyDateStringMD, fancyDateString } = require('./time'); 
 
-var { getBotcatUptimeMessage, getBotcatStatusMessage } = require('./status');
+var { getBotcatUptimeMessage, getBotcatStatusMessage, getBotcatFullStatusMessage } = require('./status');
 
 var { BreakError, arrayGet, sendObjThruBuffer, receiveObjThruBuffer } = require('./workerbuffer');
 
@@ -31,9 +33,9 @@ var { isId, propsSavedCreateVerifiedCopy, getEmptyGuildObject, getEmptyUserObjec
 // module.exports is the default object that a node.js module uses to export functions and such, when you do require(), you get this object
 // also an interesting way to make js cleaner is by shortening { e: e } to { e }, and the compiler still understands
 module.exports = {
-  constants,
+  constants, recursiveReaddir,
   msecToHMS, msecToHMSs, fancyDateStringWD, fancyDateStringMD, fancyDateString,
-  getBotcatUptimeMessage, getBotcatStatusMessage,
+  getBotcatUptimeMessage, getBotcatStatusMessage, getBotcatFullStatusMessage,
   arrayGet, BreakError, sendObjThruBuffer, receiveObjThruBuffer,
   isDeveloper, isConfirmDeveloper, isOwner, isAdmin, hasBotPermissions, getBotPermissions, getBotPermissionsArray, getPermissions,
   serializePermissionOverwrites,
