@@ -117,15 +117,11 @@ module.exports = [
       
       let status = common.rps(uReply, result);
       
-      let logbegin = `rock/paper/scissors requested by ${msg.author.tag}, they chose ${uReply}, i chose ${result}, `;
       if (status == 0) {
-        logmsg(logbegin + 'tie');
         return msg.channel.send('It\'s a tie! We had the same choice.');
       } else if (status == 1) {
-        logmsg(logbegin + 'i won');
         return msg.channel.send(`I chose ${result}, I won!`);
       } else if (status == -1) {
-        logmsg(logbegin + 'they won');
         return msg.channel.send(`I chose ${result}, you won!`);
       }
     }
@@ -136,7 +132,9 @@ module.exports = [
     description: '`!calc <expression>` calculates the result of a mathematical expression using math.js evaluate (<https://mathjs.org/docs/expressions/index.html> for info)\n' +
       'Note: a delete command has been added to delete a property from an object:\n' +
       '  `delete(obj, prop)` to delete `prop` from `obj` or\n' +
-      '  `delete(prop)` to delete `prop` from global scope',
+      '  `delete(prop)` to delete `prop` from global scope\n' +
+      '`!calc :view` to print out serialized JSON of your calc scope\n' +
+      '`!calc :clear` to clear your calc scope',
     public: true,
     async execute(msg, cmdstring, command, argstring, args) {
       if (!props.saved.feat.calc) return msg.channel.send('Calculation features are disabled');
@@ -145,192 +143,172 @@ module.exports = [
       let user = props.saved.users[msg.author.id];
       if (!user)
         user = props.saved.users[msg.author.id] = common.getEmptyUserObject(props.saved.guilds[msg.guild.id]);
-      let scope = user.calc_scope_working;
-      global.calccontext = scope;
-      let promise;
-      try {
-        if (doWorkers) {
-          // shared array buffer is used to access properties of scope, due to the worker-side of the code having to be synchronous
-          let buffer = new SharedArrayBuffer(8 + 65536), obj;
-          let i32arr = new Int32Array(buffer);
-          let doLoop = true;
-          let doLoopChecker = () => doLoop;
-          let loopFunc = (async () => {
-            let obj, action;
-            while (doLoop) {
-              try { action = await common.receiveObjThruBuffer(buffer, i32arr, doLoopChecker); } catch (e) { if (e instanceof common.BreakError) return; throw e; }
-              try {
-                switch (action.type) {
-                  case 'has':
-                    obj = common.arrayGet(scope, action.props);
-                    await common.sendObjThruBuffer(buffer, i32arr, action.prop in obj, doLoopChecker);
-                    break;
-                  case 'get':
-                    let parentobj = common.arrayGet(scope, action.props);
-                    if (!(action.prop in parentobj)) {
-                        await common.sendObjThruBuffer(buffer, i32arr, { object: false }, doLoopChecker);
-                    } else {
-                      obj = parentobj[action.prop];
-                      if (action.prop == 'toString' && typeof obj == 'function')
-                        await common.sendObjThruBuffer(buffer, i32arr, { val: parentobj.toString() }, doLoopChecker);
-                      else if (typeof obj != 'object' && typeof obj != 'function')
-                        await common.sendObjThruBuffer(buffer, i32arr, { val: obj }, doLoopChecker);
-                      else if (Object.getPrototypeOf(obj) == Object.prototype)
-                        await common.sendObjThruBuffer(buffer, i32arr, { object: true }, doLoopChecker);
-                      else
-                        await common.sendObjThruBuffer(buffer, i32arr, JSON.stringify(obj, math.replacer), doLoopChecker);
-                    }
-                    break;
-                  case 'set':
-                    obj = common.arrayGet(scope, action.props);
-                    obj[action.prop] = JSON.parse(action.val, math.reviver);
-                    await common.sendObjThruBuffer(buffer, i32arr, true, doLoopChecker);
-                    break;
-                  case 'delete':
-                    obj = common.arrayGet(scope, action.props);
-                    await common.sendObjThruBuffer(buffer, i32arr, delete obj[action.prop], doLoopChecker);
-                    break;
-                  case 'ownKeys':
-                    obj = common.arrayGet(scope, action.props);
-                    await common.sendObjThruBuffer(buffer, i32arr, Reflect.ownKeys(obj), doLoopChecker);
-                    break;
-                  case 'stop':
-                    doLoop = false;
-                    break;
-                }
-              } catch (e) {
-                if (e instanceof common.BreakError) {
-                  doLoop = false;
-                  Atomics.store(i32arr, 0, 0);
-                  return;
-                }
-                await common.sendObjThruBuffer(buffer, i32arr, e, doLoopChecker);
-              }
-            }
-          })();
+      
+      if (args[0] == ':view') {
+        let scope = user.calc_scope_working, text;
+        if (scope) {
           try {
-            if (!user.calc_scope_running) {
-              try {
-                user.calc_scope_running = true;
-                res = await pool.exec('mathevaluate', [msg.author.id, expr, buffer]);
-                doLoop = false;
-                await loopFunc;
-              } catch (e) { throw e; }
-              finally {
-                user.calc_scope_running = false;
-              }
-            } else {
-              res = await pool.exec('mathevaluate', [msg.author.id, expr, buffer, 5]);
-              doLoop = false;
-              await loopFunc;
-            }
-          } catch (e) {
-            if (doLoop) doLoop = false;
-            throw e;
-          }
-        } else {
-          mathVMContext.expr = expr;
-          mathVMContext.scope = scope;
-          vm.runInContext('res = math.evaluate(expr, scope)', mathVMContext, {timeout: common.isDeveloper(msg) ? 1000 : 5});
-          res = mathVMContext.res;
-          if (res === undefined) res = 'undefined';
-          else if (res === null) res = 'null';
-          else if (typeof res == 'string') res = util.inspect(res);
-          else if (Object.getPrototypeOf(res) == Object.prototype) {
-            res = math.matrix([res]).toString();
-            res = res.slice(1, res.length - 1);
-          } else res = res.toString();
-          if (res.length > 1900) res = res.slice(0, 1900) + '...';
-          if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(res.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) res = { embed: { title: 'Result', description: res } };
-          else res = `Result: ${res}`;
-        }
-        try {
-          console.log(res);
-          promise = await msg.channel.send(res);
-        } catch (e) {
-          promise = await msg.channel.send('Error: result too big to fit in discord message');
-        }
-      } catch (e) {
-        res = e.toString();
-        console.error(res);
-        if (/^Error: Script execution timed out after [0-9]+ms$/.test(res)) {
-          promise = msg.channel.send(`Error: expression timeout after ${res.slice(40, Infinity)}`);
-        } else {
-          promise = msg.channel.send(res);
-        }
-      } finally {
-        global.calccontext = null;
-      }
-      let scopeSerialized = JSON.stringify(scope, math.replacer);
-      if (scopeSerialized != user.calc_scope) {
-        user.calc_scope = scopeSerialized;
-        schedulePropsSave();
-      }
-      scopeSerialized = JSON.stringify(props.saved.users.default.calc_scope_working, math.replacer);
-      if (scopeSerialized != props.saved.users.default.calc_scope) {
-        props.saved.users.default.calc_scope = scopeSerialized;
-        schedulePropsSave();
-      }
-      return promise;
-    }
-  },
-  {
-    name: 'calc_scopeview',
-    full_string: false,
-    description: '`!calc_scopeview` returns JSON of your variable scope',
-    public: true,
-    execute(msg, cmdstring, command, argstring, args) {
-      console.debug(`calc_scopeview from ${msg.author.tag} in ${msg.guild ? msg.guild.name + ':' + msg.channel.name : 'dms'}`);
-      let user = props.saved.users[msg.author.id];
-      if (!user)
-        user = props.saved.users[msg.author.id] = common.getEmptyUserObject(props.saved.guilds[msg.guild.id]);
-      let scope = user.calc_scope_working;
-      let text;
-      if (scope) {
-        try {
-          text = user.calc_scope;
-          if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Scope', description: text } };
-          console.log(text);
-          return msg.channel.send(text);
-        } catch (e) {
-          console.error(e);
-          try {
-            text = `Scope too big to fit in a discord message, variables:\n${Reflect.ownKeys(scope).join(', ')}`
+            text = user.calc_scope;
             if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Scope', description: text } };
             console.log(text);
             return msg.channel.send(text);
           } catch (e) {
             console.error(e);
-            console.log(text = `Scope variables too big to fit in a discord message, use \`!calc_scopeclear\` to wipe`);
-            return msg.channel.send(text);
+            try {
+              text = `Scope too big to fit in a discord message, variables:\n${Reflect.ownKeys(scope).join(', ')}`
+              if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Scope Variables', description: text } };
+              console.log(text);
+              return msg.channel.send(text);
+            } catch (e) {
+              console.error(e);
+              console.log(text = `Scope variables too big to fit in a discord message, use \`!calc_scopeclear\` to wipe`);
+              return msg.channel.send(text);
+            }
           }
+        } else {
+          console.log(text = `You do not have a scope created yet, one is created when \`!calc\` is run`);
+          return msg.channel.send(text);
+        }
+      } else if (args[0] == ':clear') {
+        let text;
+        if (user.calc_scope) {
+          user.calc_scope = '{}';
+          Reflect.ownKeys(user.calc_scope_working).forEach(x => delete user.calc_scope_working[x]);
+          schedulePropsSave();
+          console.log(text = `Cleared scope successfully`);
+          return msg.channel.send(text);
+        } else {
+          console.log(text = `You do not have a scope created yet`);
+          return msg.channel.send(text);
         }
       } else {
-        console.log(text = `You do not have a scope created yet, one is created when \`!calc\` is run`);
-        return msg.channel.send(text);
-      }
-    }
-  },
-  {
-    name: 'calc_scopeclear',
-    full_string: false,
-    description: '`!calc_scopeclear` wipes your scope for the `!calc` command clean',
-    public: true,
-    execute(msg, cmdstring, command, argstring, args) {
-      console.debug(`calc_scopeclear from ${msg.author.tag} in ${msg.guild ? msg.guild.name + ':' + msg.channel.name : 'dms'}`);
-      let user = props.saved.user[msg.author.id];
-      if (!user)
-        user = props.saved.user[msg.author.id] = common.getEmptyUserObject(props.saved.guilds[msg.guild.id]);
-      let scope = props.saved.users[msg.author.id].calc_scope, text;
-      if (scope) {
-        props.saved.users[msg.author.id].calc_scope = '{}';
-        Reflect.ownKeys(props.saved.users[msg.author.id].calc_scope_working).forEach(x => delete props.saved.users[msg.author.id].calc_scope_working[x]);
-        schedulePropsSave();
-        console.log(text = `Cleared scope successfully`);
-        return msg.channel.send(text);
-      } else {
-        console.log(text = `You do not have a scope created yet`);
-        return msg.channel.send(text);
+        let scope = user.calc_scope_working;
+        global.calccontext = scope;
+        let promise;
+        try {
+          if (doWorkers) {
+            // shared array buffer is used to access properties of scope, due to the worker-side of the code having to be synchronous
+            let buffer = new SharedArrayBuffer(8 + 65536), obj;
+            let i32arr = new Int32Array(buffer);
+            let doLoop = true;
+            let doLoopChecker = () => doLoop;
+            let loopFunc = (async () => {
+              let obj, action;
+              while (doLoop) {
+                try { action = await common.receiveObjThruBuffer(buffer, i32arr, doLoopChecker); } catch (e) { if (e instanceof common.BreakError) return; throw e; }
+                try {
+                  switch (action.type) {
+                    case 'has':
+                      obj = common.arrayGet(scope, action.props);
+                      await common.sendObjThruBuffer(buffer, i32arr, action.prop in obj, doLoopChecker);
+                      break;
+                    case 'get':
+                      let parentobj = common.arrayGet(scope, action.props);
+                      if (!(action.prop in parentobj)) {
+                          await common.sendObjThruBuffer(buffer, i32arr, { object: false }, doLoopChecker);
+                      } else {
+                        obj = parentobj[action.prop];
+                        if (action.prop == 'toString' && typeof obj == 'function')
+                          await common.sendObjThruBuffer(buffer, i32arr, { val: parentobj.toString() }, doLoopChecker);
+                        else if (typeof obj != 'object' && typeof obj != 'function')
+                          await common.sendObjThruBuffer(buffer, i32arr, { val: obj }, doLoopChecker);
+                        else if (Object.getPrototypeOf(obj) == Object.prototype)
+                          await common.sendObjThruBuffer(buffer, i32arr, { object: true }, doLoopChecker);
+                        else
+                          await common.sendObjThruBuffer(buffer, i32arr, JSON.stringify(obj, math.replacer), doLoopChecker);
+                      }
+                      break;
+                    case 'set':
+                      obj = common.arrayGet(scope, action.props);
+                      obj[action.prop] = JSON.parse(action.val, math.reviver);
+                      await common.sendObjThruBuffer(buffer, i32arr, true, doLoopChecker);
+                      break;
+                    case 'delete':
+                      obj = common.arrayGet(scope, action.props);
+                      await common.sendObjThruBuffer(buffer, i32arr, delete obj[action.prop], doLoopChecker);
+                      break;
+                    case 'ownKeys':
+                      obj = common.arrayGet(scope, action.props);
+                      await common.sendObjThruBuffer(buffer, i32arr, Reflect.ownKeys(obj), doLoopChecker);
+                      break;
+                    case 'stop':
+                      doLoop = false;
+                      break;
+                  }
+                } catch (e) {
+                  if (e instanceof common.BreakError) {
+                    doLoop = false;
+                    Atomics.store(i32arr, 0, 0);
+                    return;
+                  }
+                  await common.sendObjThruBuffer(buffer, i32arr, e, doLoopChecker);
+                }
+              }
+            })();
+            try {
+              if (!user.calc_scope_running) {
+                try {
+                  user.calc_scope_running = true;
+                  res = await pool.exec('mathevaluate', [msg.author.id, expr, buffer]);
+                  doLoop = false;
+                  await loopFunc;
+                } catch (e) { throw e; }
+                finally {
+                  user.calc_scope_running = false;
+                }
+              } else {
+                res = await pool.exec('mathevaluate', [msg.author.id, expr, buffer, 5]);
+                doLoop = false;
+                await loopFunc;
+              }
+            } catch (e) {
+              if (doLoop) doLoop = false;
+              throw e;
+            }
+          } else {
+            mathVMContext.expr = expr;
+            mathVMContext.scope = scope;
+            vm.runInContext('res = math.evaluate(expr, scope)', mathVMContext, {timeout: common.isDeveloper(msg) ? 1000 : 5});
+            res = mathVMContext.res;
+            if (res === undefined) res = 'undefined';
+            else if (res === null) res = 'null';
+            else if (typeof res == 'string') res = util.inspect(res);
+            else if (Object.getPrototypeOf(res) == Object.prototype) {
+              res = math.matrix([res]).toString();
+              res = res.slice(1, res.length - 1);
+            } else res = res.toString();
+            if (res.length > 1900) res = res.slice(0, 1900) + '...';
+            if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(res.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) res = { embed: { title: 'Result', description: res } };
+            else res = `Result: ${res}`;
+          }
+          try {
+            console.log(res);
+            promise = await msg.channel.send(res);
+          } catch (e) {
+            promise = await msg.channel.send('Error: result too big to fit in discord message');
+          }
+        } catch (e) {
+          res = e.toString();
+          console.error(res);
+          if (/^Error: Script execution timed out after [0-9]+ms$/.test(res)) {
+            promise = msg.channel.send(`Error: expression timeout after ${res.slice(40, Infinity)}`);
+          } else {
+            promise = msg.channel.send(res);
+          }
+        } finally {
+          global.calccontext = null;
+        }
+        let scopeSerialized = JSON.stringify(scope, math.replacer);
+        if (scopeSerialized != user.calc_scope) {
+          user.calc_scope = scopeSerialized;
+          schedulePropsSave();
+        }
+        scopeSerialized = JSON.stringify(props.saved.users.default.calc_scope_working, math.replacer);
+        if (scopeSerialized != props.saved.users.default.calc_scope) {
+          props.saved.users.default.calc_scope = scopeSerialized;
+          schedulePropsSave();
+        }
+        return promise;
       }
     }
   },

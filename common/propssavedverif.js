@@ -83,16 +83,25 @@ module.exports = {
         });
         return newGuild;
       };
+      let newObj;
       let perUserFunc = user => {
         let userIsObj = typeof user == 'object';
         let userObj = {
           calc_scope: userIsObj ? JSON.stringify(user) : '{}',
         };
+        let scope = JSON.parse(userObj.calc_scope, math.reviver);
+        if (newObj && newObj.users && newObj.users.default)
+          Object.defineProperty(scope, 'shared', {
+            configurable: false,
+            enumerable: false,
+            writable: false,
+            value: newObj.users.default.calc_scope_working,
+          });
         Object.defineProperty(userObj, 'calc_scope_working', {
           configurable: true,
           enumerable: false,
           writable: true,
-          value: JSON.parse(userObj.calc_scope, math.reviver),
+          value: scope,
         });
         Object.defineProperty(userObj, 'calc_scope_running', {
           configurable: true,
@@ -102,7 +111,7 @@ module.exports = {
         });
         return userObj;
       };
-      let newObj = {
+      newObj = {
         version: 2,
         feat: {
           _audio: null,

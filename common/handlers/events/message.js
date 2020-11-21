@@ -1,5 +1,5 @@
 // main message handler
-module.exports = msg => {
+module.exports = async msg => {
   if (!msg.author.bot && msg.content.startsWith('!lavealt')) {
     if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025') return;
     let cmd = msg.content.slice(9), res;
@@ -25,8 +25,11 @@ module.exports = msg => {
   }
 
   if (handlers.extra.message) {
+    let res;
     for (var i = 0; i < handlers.extra.message.length; i++) {
-      if (handlers.extra.message[i](msg, i) === 0) return;
+      if (handlers.extra.message[i].constructor == Function) res = handlers.extra.message[i](msg, i);
+      else res = await handlers.extra.message[i](msg, i);
+      if (res === 0) return;
     }
   }
 

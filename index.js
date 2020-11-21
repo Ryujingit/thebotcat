@@ -80,16 +80,18 @@ var badwords = [
 ];
 
 
-var version = '1.5.2-beta7';
-global.updateStatus = () => {
-  let newStatus = props.feat.status.replace('{prefix}', defaultprefix).replace('{guilds}', client.guilds.cache.size);
+var version = '1.5.2';
+global.updateStatus = async () => {
+  let newStatus = props.feat.status ? props.feat.status.replace('{prefix}', defaultprefix).replace('{guilds}', client.guilds.cache.size) : null;
   let currentStatus;
   try {
     currentStatus = client.user.presence.activities[0].name;
   } catch (e) {}
-  if (currentStatus != newStatus) {
+  let now = new Date();
+  if (currentStatus != newStatus || !props.statusUpdatedAt || now.getTime() > props.statusUpdatedAt.getTime() + 24 * 60 * 60 * 1000) {
     try {
-      client.user.setActivity(newStatus);
+      await client.user.setActivity(newStatus);
+      props.statusUpdatedAt = now;
     } catch (e) {
       console.error(e);
     }
@@ -111,6 +113,7 @@ var props = {
   saved: null,
   savedstringify: null,
   savescheduled: false,
+  statusUpdatedAt: null,
   cCPUUsage: process.cpuUsage(),
   cCPUUsageDate: new Date(),
   pCPUUsage: null,

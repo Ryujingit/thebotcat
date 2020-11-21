@@ -218,10 +218,12 @@ module.exports = [
       if (!msg.guild.me.hasPermission('KICK_MEMBERS'))
         return msg.channel.send('Error: I do not have permission to kick members.');
       
-      if (msg.member.roles.highest.position <= member.roles.highest.position)
+      if (msg.member.id != msg.guild.ownerID &&
+        (member.id == msg.guild.ownerID || msg.member.roles.highest.position <= member.roles.highest.position))
         return msg.channel.send('You cannot kick someone equal or higher than you in the role hierarchy.');
 
-      if (msg.guild.me.roles.highest.position <= member.roles.highest.position)
+      if (msg.guild.me.id != msg.guild.ownerID &&
+        (member.id == msg.guild.ownerID || msg.guild.me.roles.highest.position <= member.roles.highest.position))
         return msg.channel.send('Error: I cannot kick someone equal or higher than me in the role hierarchy.');
 
       try {
@@ -287,10 +289,12 @@ module.exports = [
         if (!msg.guild.me.hasPermission('BAN_MEMBERS'))
           return msg.channel.send('Error: I do not have permission to ban members.');
 
-        if (msg.member.roles.highest.position <= member.roles.highest.position)
+        if (msg.member.id != msg.guild.ownerID &&
+          (member.id == msg.guild.ownerID || msg.member.roles.highest.position <= member.roles.highest.position))
           return msg.channel.send('You cannot ban someone equal or higher than you in the role hierarchy.');
 
-        if (msg.guild.me.roles.highest.position <= member.roles.highest.position)
+        if (msg.guild.me.id != msg.guild.ownerID &&
+          (member.id == msg.guild.ownerID || msg.guild.me.roles.highest.position <= member.roles.highest.position))
           return msg.channel.send('Error: I cannot ban someone equal or higher than me in the role hierarchy.');
 
         try {
