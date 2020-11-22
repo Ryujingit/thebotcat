@@ -1,14 +1,14 @@
 // converts a channel's permission overwrites into an easy to parse and store array
 function serializePermissionOverwrites(channel) {
-  return channel.permissionOverwrites.keyArray().map(x => channel.permissionOverwrites.get(x))
-  .map(x =>
-    ({
-      id: x.id,
-      type: x.type,
-      allow: x.allow.bitfield,
-      deny: x.deny.bitfield,
-    })
-  );
+  return channel.permissionOverwrites.array()
+    .map(x =>
+      ({
+        id: x.id,
+        type: x.type,
+        allow: x.allow.bitfield,
+        deny: x.deny.bitfield,
+      })
+    );
 }
 
 // takes the array returned by the above function, and applies the permission overwrites it represents

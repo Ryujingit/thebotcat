@@ -80,7 +80,7 @@ var badwords = [
 ];
 
 
-var version = '1.5.2';
+var version = '1.5.2b';
 global.updateStatus = async () => {
   let newStatus = props.feat.status ? props.feat.status.replace('{prefix}', defaultprefix).replace('{guilds}', client.guilds.cache.size) : null;
   let currentStatus;
@@ -304,7 +304,7 @@ global.handlers = common.handlers;
         console.log('New messages detected');
         messages = await channel.messages.fetch({ after: props.saved.misc.sendmsgid });
         console.log('Loaded up to 50 new messages');
-        messages = messages.keyArray().map(x => messages.get(x)).sort((a, b) => { a = a.createdTimestamp; b = b.createdTimestamp; if (a > b) { return 1; } else if (a < b) { return -1; } else { return 0; } });
+        messages = messages.array().sort((a, b) => { a = a.createdTimestamp; b = b.createdTimestamp; if (a > b) { return 1; } else if (a < b) { return -1; } else { return 0; } });
         if (messages.length == 0) {
           props.saved.misc.sendmsgid = channel.lastMessageID;
           break;

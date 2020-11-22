@@ -18,31 +18,48 @@ module.exports = [
         member = msg.member;
       }
       
-      let avatarEmbed;
+      let avatarURL = member.user.displayAvatarURL({ dynamic: true });
+      let animated = avatarURL.endsWith('gif'), avatarEmbed;
       if (member.user.avatar == null) {
         let url = member.user.defaultAvatarURL;
         avatarEmbed = new Discord.MessageEmbed()
           .setTitle(`Avatar for ${member.user.tag}`)
           .setDescription(
             `userid: ${member.user.id}\n` +
-            `links: [default](${member.user.displayAvatarURL()}) (avatar is default)`
+            `links: [default](${avatarURL}) (avatar is default)`
             )
           .setImage(url)
           .setColor(member.displayHexColor);
       } else {
         let baseurl = `https://cdn.discordapp.com/avatars/${member.user.id}/${member.user.avatar}`;
-        avatarEmbed = new Discord.MessageEmbed()
-          .setTitle(`Avatar for ${member.user.tag}`)
-          .setDescription(
-            `userid: ${member.user.id}\n` +
-            `links: [default](${member.user.displayAvatarURL()}), ` +
-            `[normal png](${baseurl}.png), ` +
-            `[normal webp](${baseurl}.webp), ` +
-            `[big png](${baseurl}.png?size=4096), ` +
-            `[big webp](${baseurl}.webp?size=4096)`
-            )
-          .setImage(`${baseurl}.png?size=4096`)
-          .setColor(member.displayHexColor);
+        if (animated)
+          avatarEmbed = new Discord.MessageEmbed()
+            .setTitle(`Avatar for ${member.user.tag}`)
+            .setDescription(
+              `userid: ${member.user.id}\n` +
+              `links: [default](${avatarURL}), ` +
+              `[normal png](${baseurl}.png), ` +
+              `[normal webp](${baseurl}.webp), ` +
+              `[normal gif](${baseurl}.gif)\n` +
+              `big links: [big png](${baseurl}.png?size=4096), ` +
+              `[big webp](${baseurl}.webp?size=4096), ` +
+              `[big gif](${baseurl}.gif?size=4096)`
+              )
+            .setImage(`${baseurl}.gif?size=4096`)
+            .setColor(member.displayHexColor);
+        else
+          avatarEmbed = new Discord.MessageEmbed()
+            .setTitle(`Avatar for ${member.user.tag}`)
+            .setDescription(
+              `userid: ${member.user.id}\n` +
+              `links: [default](${avatarURL}), ` +
+              `[normal png](${baseurl}.png), ` +
+              `[normal webp](${baseurl}.webp), ` +
+              `[big png](${baseurl}.png?size=4096), ` +
+              `[big webp](${baseurl}.webp?size=4096)`
+              )
+            .setImage(`${baseurl}.png?size=4096`)
+            .setColor(member.displayHexColor);
       }
       
       return msg.channel.send(avatarEmbed);

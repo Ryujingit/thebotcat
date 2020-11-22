@@ -6,9 +6,9 @@ module.exports = [
     async execute(msg, cmdstring, command, argstring, args) {
       if (!(common.isDeveloper(msg) || common.isConfirmDeveloper(msg))) return;
       let text = cmdstring.slice(4);
-      nonlogmsg(`say from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(text)}`);
+      nonlogmsg(`say from ${msg.author.tag} (id ${msg.author.id}) in ${common.explainChannel(msg.channel)}: ${util.inspect(text)}`);
       if (global.confirmeval && common.isConfirmDeveloper(msg)) {
-        if (!(await confirmeval(`say from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(text)}`)))
+        if (!(await confirmeval(`say from ${msg.author.tag} (id ${msg.author.id}) in ${common.explainChannel(msg.channel)}: ${util.inspect(text)}`)))
           return;
       } else if (common.isConfirmDeveloper(msg) && !common.isDeveloper(msg)) return;
       msg.delete();
@@ -22,7 +22,7 @@ module.exports = [
     async execute(msg, cmdstring, command, argstring, args) {
       if (!(common.isDeveloper(msg) || common.isConfirmDeveloper(msg))) return;
       if (global.confirmeval && common.isConfirmDeveloper(msg)) {
-        if (!(await confirmeval(`sayy from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${channel.guild?channel.guild.name+':'+channel.name:'dms'}: ${util.inspect(text)}`)))
+        if (!(await confirmeval(`sayy from ${msg.author.tag} (id ${msg.author.id}) in ${common.explainChannel(msg.channel)}: ${common.explainChannel(channel, 1)}: ${util.inspect(text)}`)))
           return;
       } else if (common.isConfirmDeveloper(msg) && !common.isDeveloper(msg)) return;
       let argr = argstring.split(' ');
@@ -30,7 +30,7 @@ module.exports = [
       let text = argr.slice(1).join(' ');
       let channel;
       if (channel = client.channels.cache.get(channelid)) {
-        nonlogmsg(`sayy from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${channel.guild?channel.guild.name+':'+channel.name:'dms'}: ${util.inspect(text)}`);
+        nonlogmsg(`sayy from ${msg.author.tag} (id ${msg.author.id}) in ${common.explainChannel(msg.channel)}: ${common.explainChannel(channel, 1)}: ${util.inspect(text)}`);
         return channel.send(text);
       }
     }
@@ -41,26 +41,8 @@ module.exports = [
     public: false,
     async execute(msg, cmdstring, command, argstring, args) {
       if (!common.isDeveloper(msg)) return;
-      if (!args[0]) return;
-      var user;
-      if (!(user = msg.mentions.users.first())) {
-        let users = msg.guild.members.cache.keyArray().map(x => msg.guild.members.cache.get(x).user);
-        if (/^[0-9]+$/.test(args[0])) {
-          let arr = users.filter(x => x.id == args[0]);
-          if (arr.length == 1) user = arr[0];
-        } else {
-          let search = args[0].toLowerCase();
-          let matches = users.filter(x => x.tag.toLowerCase().includes(search));
-          if (matches.length == 0) return;
-          if (matches.length == 1) user = matches[0];
-          else {
-            matches = matches.filter(x => x.tag.includes(args[0]));
-            if (matches.length == 0) return;
-            if (matches.length == 1) user = matches[0];
-            else return;
-          }
-        }
-      }
+      let user = await common.searchUser(args.join(' '));
+      if (!user) return msg.channel.send(`Query invalid`);
       let dmchannel = await user.createDM();
       return msg.channel.send(`DM channel for ${user.tag} is ${dmchannel.id}, use \`!sayy <#${dmchannel.id}> content\` to speak in channel`);
     }
@@ -71,7 +53,7 @@ module.exports = [
     public: false,
     execute(msg, cmdstring, command, argstring, args) {
       if (!common.isDeveloper(msg)) return;
-      let channels = client.channels.cache.keyArray().map(x => client.channels.cache.get(x)).filter(x => x.type == 'dm').map(x => `${x.id}: ${x.recipient.tag}`).join('\n');
+      let channels = client.channels.cache.array().filter(x => x.type == 'dm').map(x => `${x.id}: ${x.recipient.tag}`).join('\n');
       return msg.channel.send(`DM channels:\n${channels}`);
     }
   },
@@ -144,10 +126,10 @@ module.exports = [
       if (!(common.isDeveloper(msg) || common.isConfirmDeveloper(msg)))
         return msg.channel.send('You do not have permissions to run this command.');
       let cmd = argstring, res;
-      nonlogmsg(`evaluating from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(cmd)}`);
+      nonlogmsg(`evaluating from ${msg.author.tag} (id ${msg.author.id}) in ${common.explainChannel(msg.channel)}: ${util.inspect(cmd)}`);
       if (args.length == 2 && (args[0] == 'deez' && args[1] == 'nuts' || args[0] == 'goe' && args[1] == 'mama')) return msg.channel.send('no');
       if (global.confirmeval && common.isConfirmDeveloper(msg)) {
-        if (!(await confirmeval(`evaluating from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(cmd)}`))) {
+        if (!(await confirmeval(`evaluating from ${msg.author.tag} (id ${msg.author.id}) in ${common.explainChannel(msg.channel)}: ${util.inspect(cmd)}`))) {
           return msg.channel.send('Eval command failed');
         }
       } else if (common.isConfirmDeveloper(msg) && !common.isDeveloper(msg)) return msg.channel.send('You do not have permissions to run this command.');
@@ -176,9 +158,9 @@ module.exports = [
       if (!(common.isDeveloper(msg) || common.isConfirmDeveloper(msg)))
         return msg.channel.send('You do not have permissions to run this command.');
       let cmd = argstring, res;
-      nonlogmsg(`evaluating (output voided) from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(cmd)}`);
+      nonlogmsg(`evaluating (output voided) from ${msg.author.tag} (id ${msg.author.id}) in ${common.explainChannel(msg.channel)}: ${util.inspect(cmd)}`);
       if (global.confirmeval && common.isConfirmDeveloper(msg)) {
-        if (!(await confirmeval(`evaluating (output voided) from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(cmd)}`)))
+        if (!(await confirmeval(`evaluating (output voided) from ${msg.author.tag} (id ${msg.author.id}) in ${common.explainChannel(msg.channel)}: ${util.inspect(cmd)}`)))
           return;
       } else if (common.isConfirmDeveloper(msg) && !common.isDeveloper(msg)) return msg.channel.send('You do not have permissions to run this command.');
       try {
@@ -198,9 +180,9 @@ module.exports = [
       if (!(common.isDeveloper(msg) || common.isConfirmDeveloper(msg)))
         return msg.channel.send('You do not have permissions to run this command.');
       let cmd = argstring, res;
-      nonlogmsg(`shell exec from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(cmd)}`);
+      nonlogmsg(`shell exec from ${msg.author.tag} (id ${msg.author.id}) in ${common.explainChannel(msg.channel)}: ${util.inspect(cmd)}`);
       if (global.confirmeval && common.isConfirmDeveloper(msg)) {
-        if (!(await confirmeval(`shell exec from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(cmd)}`))) {
+        if (!(await confirmeval(`shell exec from ${msg.author.tag} (id ${msg.author.id}) in ${common.explainChannel(msg.channel)}: ${util.inspect(cmd)}`))) {
           return msg.channel.send('Eval command failed');
         }
       } else if (common.isConfirmDeveloper(msg) && !common.isDeveloper(msg)) return msg.channel.send('You do not have permissions to run this command.');

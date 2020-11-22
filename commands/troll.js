@@ -6,8 +6,8 @@ module.exports = [
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
       if (!(common.isAdmin(msg) || msg.guild.id == '717268211246301236')) return;
-      var members = msg.guild.members.cache.keyArray().map(x => msg.guild.members.cache.get(x)).filter(x => !x.user.bot);
-      var random_member = members[Math.floor(Math.random() * members.length)];
+      let members = msg.guild.members.cache.array().filter(x => !x.user.bot);
+      let random_member = members[Math.floor(Math.random() * members.length)];
       return msg.channel.send(`Random ping: <@!${random_member.user.id}>`);
     }
   },
@@ -21,7 +21,7 @@ module.exports = [
         return;
       if (args.length == 1 && args[0] == 'all') {
         console.debug(`ghostdot from ${msg.author.tag} in ${msg.guild ? msg.guild.name + ':' + msg.channel.name : 'dms'}: all`);
-        let channels = msg.guild.channels.cache.keyArray().map(x => msg.guild.channels.cache.get(x)), channel, message;
+        let channels = msg.guild.channels.cache.array(), channel, message;
         for (var i = 0; i < channels.length; i++) {
           if (channels[i] && (channels[i].type == 'text' || channels[i].type == 'news')) {
             message = await channels[i].send('ghostdot');
@@ -55,7 +55,7 @@ module.exports = [
       msg.delete();
       if (args.length == 1 && args[0] == 'all') {
         console.debug(`ghostdot_delmsg from ${msg.author.tag} in ${msg.guild ? msg.guild.name + ':' + msg.channel.name : 'dms'}: all`);
-        let channels = msg.guild.channels.cache.keyArray().map(x => msg.guild.channels.cache.get(x)), channel, message;
+        let channels = msg.guild.channels.cache.array(), channel, message;
         for (var i = 0; i < channels.length; i++) {
           if (channels[i] && (channels[i].type == 'text' || channels[i].type == 'news')) {
             message = await channels[i].send('ghostdot');

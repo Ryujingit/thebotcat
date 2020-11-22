@@ -8,7 +8,7 @@ function leftPadID(id) {
 ...
 */
 function getFancyGuilds() {
-  var guilds = client.guilds.cache.keyArray().map(x => client.guilds.cache.get(x));
+  var guilds = client.guilds.cache.array();
   var maxGuildNameLen = guilds.reduce((a, c) => Math.max(a, c.name.length), 0);
   return guilds.map(x => x.id + ' ' + x.name.padEnd(maxGuildNameLen, ' ') + ' ' + x.memberCount).join('\n');
 }
@@ -26,7 +26,7 @@ function getFancyGuilds() {
   (everything is sorted in the order that a discord client would show them)
 */
 function getSortedChannels(guild) {
-  var channels = guild.channels.cache.keyArray().map(x => guild.channels.cache.get(x));
+  var channels = guild.channels.cache.array();
   var categoryChannels = [];
   var unCategorizedChannels = [];
   var nonCategoryChannels = {};

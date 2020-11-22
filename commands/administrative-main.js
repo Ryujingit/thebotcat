@@ -171,7 +171,7 @@ module.exports = [
     execute(msg, cmdstring, command, argstring, args) {
       if (!(common.isDeveloper(msg) || common.isAdmin(msg))) return;
       console.log(`resetnickname called by ${msg.author.tag} in ${msg.guild.name}`);
-      var member_array = msg.guild.members.cache.keyArray().map(x => msg.guild.members.cache.get(x));
+      var member_array = msg.guild.members.cache.array();
       var already_reset = 0, reset_successful = 0, reset_fail = 0;
       member_array.forEach(
         async x => {

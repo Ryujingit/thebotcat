@@ -45,7 +45,7 @@ module.exports = async msg => {
     }
   }
   
-  if (!msg.channel.permissionsFor(client.user.id).has('SEND_MESSAGES')) return;
+  if (msg.channel.permissionsFor && !msg.channel.permissionsFor(client.user.id).has('SEND_MESSAGES')) return;
 
   // argstring = the part after the workingprefix, command and args in one big string
   // command = the actual command

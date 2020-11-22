@@ -8,13 +8,20 @@ var { msecToHMS, msecToHMSs, fancyDateStringWD, fancyDateStringMD, fancyDateStri
 
 var { getBotcatUptimeMessage, getBotcatStatusMessage, getBotcatFullStatusMessage } = require('./status');
 
+var explainChannel = (channel, full) => {
+  if (full)
+    return channel.guild ? `${channel.guild.name}:${channel.name}` : `dms with ${channel.recipient.tag} (id ${channel.recipient.id})`;
+  else
+    return channel.guild ? `${channel.guild.name}:${channel.name}` : `dms`;
+};
+
 var { BreakError, arrayGet, sendObjThruBuffer, receiveObjThruBuffer } = require('./workerbuffer');
 
 var { isDeveloper, isConfirmDeveloper, isOwner, isAdmin, hasBotPermissions, getBotPermissions, getBotPermissionsArray, getPermissions } = require('./isposition');
 
 var { serializePermissionOverwrites, partialDeserializePermissionOverwrites, completeDeserializePermissionOverwrites, serializedPermissionsEqual } = require('./permserialize');
 
-var { searchRoles, searchMembers, searchRole, searchMember } = require('./searchcollection');
+var { searchRoles, searchMembers, searchUsers, searchRole, searchMember, searchUser } = require('./searchcollection');
 
 var { leftPadID, getFancyGuilds, getSortedChannels, getFancyChannels } = require('./generalserialize');
 
@@ -36,12 +43,13 @@ module.exports = {
   constants, recursiveReaddir,
   msecToHMS, msecToHMSs, fancyDateStringWD, fancyDateStringMD, fancyDateString,
   getBotcatUptimeMessage, getBotcatStatusMessage, getBotcatFullStatusMessage,
+  explainChannel,
   arrayGet, BreakError, sendObjThruBuffer, receiveObjThruBuffer,
   isDeveloper, isConfirmDeveloper, isOwner, isAdmin, hasBotPermissions, getBotPermissions, getBotPermissionsArray, getPermissions,
   serializePermissionOverwrites,
   partialDeserializePermissionOverwrites, completeDeserializePermissionOverwrites,
   serializedPermissionsEqual,
-  searchRoles, searchMembers, searchRole, searchMember,
+  searchRoles, searchMembers, searchUsers, searchRole, searchMember, searchUser,
   leftPadID, getFancyGuilds, getSortedChannels, getFancyChannels,
   invokeMessageHandler,
   rps,
