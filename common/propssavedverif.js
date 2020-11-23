@@ -121,6 +121,7 @@ module.exports = {
         },
         guilds: { default: perGuildFunc(guildsIsObj ? obj.guilds.default : null) },
         users: { default: perUserFunc(typeof obj.calc_scopes == 'object' ? obj.calc_scopes.shared : null) },
+        disallowed_guilds: [],
         misc: {
           dmchannels: Array.isArray(obj.dmchannels) ? obj.dmchannels.filter(x => isId(x)) : [],
           sendmsgid: typeof obj.sendmsgid == 'string' ? obj.sendmsgid : '1',
@@ -390,6 +391,7 @@ module.exports = {
         },
         guilds: { default: perGuildFunc(guildsIsObj ? obj.guilds.default : null) },
         users: { default: perUserFunc(typeof obj.users == 'object' ? obj.users.default : null) },
+        disallowed_guilds: Array.isArray(obj.disallowed_guilds) ? obj.disallowed_guilds.filter(x => isId(x)) : [],
         misc: {
           dmchannels: typeof obj.misc == 'object' && Array.isArray(obj.misc.dmchannels) ? obj.misc.dmchannels.filter(x => typeof x == 'string') : [],
           sendmsgid: typeof obj.misc == 'object' && typeof obj.misc.sendmsgid == 'string' ? obj.misc.sendmsgid : '1',

@@ -108,6 +108,10 @@ format for props.saved:
       },
       ...
     },
+    disallowed_guilds : array [
+      string <guildid>,
+      ...
+    ],
     misc : object {
       dmchannels : array [
         string <channnelid>,

@@ -35,6 +35,8 @@ module.exports = async msg => {
 
   if (msg.author.bot) return;
 
+  if (msg.guild && props.saved.disallowed_guilds.includes(msg.guild.id)) return;
+
   if (msg.guild && specialGuilds.includes(msg.guild.id) && mutelist.includes(msg.author.id))
     msg.delete();
 

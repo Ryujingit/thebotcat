@@ -93,7 +93,7 @@ var badwords = [
 ];
 
 
-var version = '1.5.2d';
+var version = '1.5.2d.1';
 global.updateStatus = async () => {
   let newStatus = props.feat.status ? props.feat.status.replace('{prefix}', defaultprefix).replace('{guilds}', client.guilds.cache.size) : null;
   let currentStatus;
