@@ -69,7 +69,7 @@ module.exports = [
   {
     name: 'volume',
     full_string: false,
-    description: '`!volume <float>` sets the volume of thebotcat in a vc, with 1 being the normal volume',
+    description: '`!volume <float>` sets my volume in a vc, with 1 being the normal volume',
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');

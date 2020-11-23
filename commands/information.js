@@ -2,7 +2,7 @@ module.exports = [
   {
     name: 'help',
     full_string: false,
-    description: '`!help` to list commands\n`!help <command>` to print help for command',
+    description: '`!help` to list my commands\n`!help <command>` to print help for command',
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
       if (args.length == 0) {
@@ -17,14 +17,14 @@ module.exports = [
           }
         });
       } else {
-        let cmdobj = commands.filter(x => x.name == args[0])[0];
+        let cmdobj = commands.filter(x => x.name == argstring)[0];
         if (cmdobj && cmdobj.public) {
           if (cmdobj.description)
             return msg.channel.send(cmdobj.description);
           else
-            return msg.channel.send(`Command ${args[0]} has no description.`);
+            return msg.channel.send(`Command ${argstring} has no description.`);
         } else {
-          return msg.channel.send(`Command ${args[0]} does not exist.`);
+          return msg.channel.send(`Command ${argstring} does not exist.`);
         }
       }
     }
@@ -41,7 +41,7 @@ module.exports = [
   {
     name: 'uptime',
     full_string: false,
-    description: '`!uptime` to see thebotcat\'s uptime',
+    description: '`!uptime` to see my uptime',
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
       msg.channel.send(common.getBotcatUptimeMessage());
@@ -50,7 +50,7 @@ module.exports = [
   {
     name: 'status',
     full_string: false,
-    description: '`!status` to see thebotcat\'s status',
+    description: '`!status` to see my status',
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
       msg.channel.send(common.getBotcatStatusMessage());
@@ -59,7 +59,7 @@ module.exports = [
   {
     name: 'fullstatus',
     full_string: false,
-    description: '`!fullstatus` to see thebotcat\'s full status',
+    description: '`!fullstatus` to see my full status',
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
       msg.channel.send(common.getBotcatFullStatusMessage());
@@ -68,7 +68,7 @@ module.exports = [
   {
     name: 'ping',
     full_string: false,
-    description: '`!ping` checks my ping to the web and discord',
+    description: '`!ping` checks my ping in the websocket, to the web, and discord',
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
       return new Promise((resolve, reject) => {
@@ -94,7 +94,7 @@ module.exports = [
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
       var discord = new Discord.MessageEmbed()
-        .setTitle('This is Thebotcat\'s discord bot server if you wanna join click the link! https://discord.gg/NamrBZc')
+        .setTitle('This is my discord support server if you wanna join click the link! https://discord.gg/NamrBZc')
         .setFooter('Server for thebotcat discord bot come along and say hi!');
       return msg.channel.send(discord);
     }
@@ -105,8 +105,8 @@ module.exports = [
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
       var discord = new Discord.MessageEmbed()
-        .setTitle('This is Thebotcat\'s github repository (its completely open source)! https://github.com/Ryujingit/thebotcat')
-        .setFooter('And when he clicked "make public" he felt an evil leave his presence.');
+        .setTitle('This is my github repository (its completely open source)!\nhttps://github.com/Ryujingit/thebotcat')
+        .setFooter('And when they clicked "make public" they felt an evil leave their presence.');
       return msg.channel.send(discord);
     }
   },

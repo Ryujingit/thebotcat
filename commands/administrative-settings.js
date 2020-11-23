@@ -117,7 +117,7 @@ module.exports = [
               'To view the permissions for one role, run `settings roles view <@mention|name|query>`\n' +
               'To create permissions for a role, run `settings roles init <@mention|name|query>`\n' +
               'To remove permissions for a role, run `settings roles clear <@mention|name|query>`\n' +
-              'To set a specific permission for a role, run `settings roles setperm <@mention|name|query> <permission name|permission id> [<2nd permission name|permission id> ...] <\'enable\'/\'disable\'>`',
+              'To set a specific permission for a role, run `settings roles enable/disable <@mention|name|query> <permission name|permission id> [<2nd permission name|permission id> ...]`',
             );
           } else {
             switch (args[1]) {
@@ -207,7 +207,8 @@ module.exports = [
                 }
                 break;
 
-              case 'setperm':
+              case 'enable':
+              case 'disable':
                 let role3 = common.searchRoles(msg.guild.roles, args[2]);
                 if (Array.isArray(role3)) {
                   return msg.channel.send({
@@ -222,23 +223,20 @@ module.exports = [
                       }
                     });
                   let changedPerms = [];
-                  let permsToChange = args.slice(3, args.length - 1).map(perm => {
+                  let permsToChange = args.slice(3).map(perm => {
                     let nperm = Number(perm);
                     if (nperm == nperm) return Number.isSafeInteger(nperm) && nperm > 0 ? nperm : null;
                     else return common.constants.botRolePermBits[perm];
                   }).filter(x => x != null).reduce((a, c) => (changedPerms.push(common.constants.botRolePermBitsInv[c]), a + c), 0) & common.constants.botRolePermAll;
-                  switch (args[args.length - 1]) {
-                    case 'enable': props.saved.guilds[msg.guild.id].perms[role3.id] |= permsToChange; break;
-                    case 'disable': props.saved.guilds[msg.guild.id].perms[role3.id] &= ~permsToChange; break;
-                    default:
-                      return msg.channel.send('Invalid last option. Run `settings roles` to view options.');
-                      break;
-                  }
+                  if (args[1] == 'enable')
+                    props.saved.guilds[msg.guild.id].perms[role3.id] |= permsToChange;
+                  else
+                    props.saved.guilds[msg.guild.id].perms[role3.id] &= ~permsToChange;
                   schedulePropsSave();
                   return msg.channel.send({
                     embed: {
                       title: 'Permissions Updated',
-                      description: `Permissions ${changedPerms.map(x => `\'${x}\'`).join(', ')} ${args[args.length - 1] == 'enable' ? 'enabled' : 'disabled'} for role <@&${role3.id}>.`
+                      description: `Permissions ${changedPerms.map(x => `\'${x}\'`).join(', ')} ${args[1] == 'enable' ? 'enabled' : 'disabled'} for role <@&${role3.id}>.`
                     }
                   });
                 }

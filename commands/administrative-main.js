@@ -69,7 +69,7 @@ module.exports = [
     full_string: false,
     description: '`!lock` to lock this channel, preventing anyone other than moderators from talking in it\n`!lock #channel` to lock a specific channel',
     public: true,
-    execute(msg, cmdstring, command, argstring, args) {
+    async execute(msg, cmdstring, command, argstring, args) {
       if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
 
       if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.LOCK_CHANNEL))
@@ -119,10 +119,17 @@ module.exports = [
       });
 
       if (!common.serializedPermissionsEqual(perms, newperms)) {
-        props.saved.guilds[msg.guild.id].temp.stashed.channeloverrides[channel.id] = perms;
-        common.partialDeserializePermissionOverwrites(channel, newperms);
-        schedulePropsSave();
-        return msg.channel.send(`Locked channel <#${channel.id}> (id ${channel.id})`);
+        try {
+          await common.partialDeserializePermissionOverwrites(channel, newperms);
+          props.saved.guilds[msg.guild.id].temp.stashed.channeloverrides[channel.id] = perms;
+          schedulePropsSave();
+          return msg.channel.send(`Locked channel <#${channel.id}> (id ${channel.id})`);
+        } catch (e) {
+          console.error(e);
+          let estring = e.toString();
+          if (estring.startsWith('DiscordAPIError'))
+            return msg.channel.send(estring);
+        }
       } else {
         return msg.channel.send(`Channel <#${channel.id}> (id ${channel.id}) already locked or no permissions to change`);
       }
@@ -133,7 +140,7 @@ module.exports = [
     full_string: false,
     description: '`!unlock` to unlock this channel, resetting permissions to what they were before the lock\n`!unlock #channel` to unlock a specific channel',
     public: true,
-    execute(msg, cmdstring, command, argstring, args) {
+    async execute(msg, cmdstring, command, argstring, args) {
       if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
 
       if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.LOCK_CHANNEL))
@@ -155,10 +162,17 @@ module.exports = [
 
       let perms = props.saved.guilds[msg.guild.id].temp.stashed.channeloverrides[channel.id];
       if (perms) {
-        common.partialDeserializePermissionOverwrites(channel, perms);
-        delete props.saved.guilds[msg.guild.id].temp.stashed.channeloverrides[channel.id];
-        schedulePropsSave();
-        return msg.channel.send(`Unlocked channel <#${channel.id}> (id ${channel.id})`);
+        try {
+          await common.partialDeserializePermissionOverwrites(channel, perms);
+          delete props.saved.guilds[msg.guild.id].temp.stashed.channeloverrides[channel.id];
+          schedulePropsSave();
+          return msg.channel.send(`Unlocked channel <#${channel.id}> (id ${channel.id})`);
+        } catch (e) {
+          console.error(e);
+          let estring = e.toString();
+          if (estring.startsWith('DiscordAPIError'))
+            return msg.channel.send(estring);
+        }
       } else {
         return msg.channel.send(`Channel <#${channel.id}> (id ${channel.id}) not locked`);
       }
