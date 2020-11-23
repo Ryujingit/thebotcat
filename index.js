@@ -58,6 +58,19 @@ if (doWorkers) {
 //                 Ryujin                coolguy284            woosh
 var developers = ['405091324572991498', '312737536546177025', '342384766378573834'];
 var confirmdevelopers = [];
+/* format for addlbotperms:
+  addlbotperms : object {
+    <userid> : int (perms) (
+        bits:
+          0 - say
+          1 - say remote
+          2 - getting list of, getting channel for botcat's dms
+          3 - global mute and unmute (only for special guilds)
+      ),
+    ...
+  }
+*/
+var addlbotperms = {};
 
 var mutelist = [];
 
@@ -80,7 +93,7 @@ var badwords = [
 ];
 
 
-var version = '1.5.2c';
+var version = '1.5.2d';
 global.updateStatus = async () => {
   let newStatus = props.feat.status ? props.feat.status.replace('{prefix}', defaultprefix).replace('{guilds}', client.guilds.cache.size) : null;
   let currentStatus;
@@ -211,7 +224,7 @@ var nonlogmsg = function (val) {
   console.log(`[${new Date().toISOString()}] ${val}`);
 };
 
-Object.assign(global, { https, fs, util, v8, vm, cp, stream, Discord, ytdl, common, math, client, developers, confirmdevelopers, mutelist, badwords, commands, commandCategories, specialGuilds, procs, props, propsSave, schedulePropsSave, indexeval, infomsg, logmsg, nonlogmsg, addBadWord, removeBadWord, addCommand, addCommands, removeCommand, removeCommands, getCommandsCategorized });
+Object.assign(global, { https, fs, util, v8, vm, cp, stream, Discord, ytdl, common, math, client, developers, confirmdevelopers, addlbotperms, mutelist, badwords, commands, commandCategories, specialGuilds, procs, props, propsSave, schedulePropsSave, indexeval, infomsg, logmsg, nonlogmsg, addBadWord, removeBadWord, addCommand, addCommands, removeCommand, removeCommands, getCommandsCategorized });
 Object.defineProperties(global, {
   exitHandled: { configurable: true, enumerable: true, get: () => exitHandled, set: val => exitHandled = val },
   starttime: { configurable: true, enumerable: true, get: () => starttime, set: val => starttime = val },

@@ -35,7 +35,7 @@ module.exports = async msg => {
 
   if (msg.author.bot) return;
 
-  if (mutelist.includes(msg.author.id))
+  if (msg.guild && specialGuilds.includes(msg.guild.id) && mutelist.includes(msg.author.id))
     msg.delete();
 
   if (!msg.guild) {

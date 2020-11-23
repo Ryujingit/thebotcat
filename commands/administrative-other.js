@@ -4,7 +4,7 @@ module.exports = [
     full_string: false,
     public: false,
     async execute(msg, cmdstring, command, argstring, args) {
-      if (!(common.isDeveloper(msg) || common.isConfirmDeveloper(msg))) return;
+      if (!(common.isDeveloper(msg) || common.isConfirmDeveloper(msg) || addlbotperms[msg.author.id] & 1)) return;
       let text = cmdstring.slice(4);
       nonlogmsg(`say from ${msg.author.tag} (id ${msg.author.id}) in ${common.explainChannel(msg.channel)}: ${util.inspect(text)}`);
       if (global.confirmeval && common.isConfirmDeveloper(msg)) {
@@ -20,7 +20,7 @@ module.exports = [
     full_string: false,
     public: false,
     async execute(msg, cmdstring, command, argstring, args) {
-      if (!(common.isDeveloper(msg) || common.isConfirmDeveloper(msg))) return;
+      if (!(common.isDeveloper(msg) || common.isConfirmDeveloper(msg) || addlbotperms[msg.author.id] & 2)) return;
       if (global.confirmeval && common.isConfirmDeveloper(msg)) {
         if (!(await confirmeval(`sayy from ${msg.author.tag} (id ${msg.author.id}) in ${common.explainChannel(msg.channel)}: ${common.explainChannel(channel, 1)}: ${util.inspect(text)}`)))
           return;
@@ -40,7 +40,7 @@ module.exports = [
     full_string: false,
     public: false,
     async execute(msg, cmdstring, command, argstring, args) {
-      if (!common.isDeveloper(msg)) return;
+      if (!(common.isDeveloper(msg) || addlbotperms[msg.author.id] & 4)) return;
       let user = await common.searchUser(args.join(' '));
       if (!user) return msg.channel.send(`Query invalid`);
       let dmchannel = await user.createDM();
@@ -52,7 +52,7 @@ module.exports = [
     full_string: false,
     public: false,
     execute(msg, cmdstring, command, argstring, args) {
-      if (!common.isDeveloper(msg)) return;
+      if (!(common.isDeveloper(msg) || addlbotperms[msg.author.id] & 4)) return;
       let channels = client.channels.cache.array().filter(x => x.type == 'dm').map(x => `${x.id}: ${x.recipient.tag}`).join('\n');
       return msg.channel.send(`DM channels:\n${channels}`);
     }
@@ -62,7 +62,7 @@ module.exports = [
     full_string: false,
     public: false,
     execute(msg, cmdstring, command, argstring, args) {
-      if (!common.isDeveloper(msg)) return;
+      if (!(common.isDeveloper(msg) || addlbotperms[msg.author.id] & 8)) return;
       var user;
       if (!(user = msg.mentions.users.first())) return;
       if (!mutelist.includes(user.id)) {
@@ -78,7 +78,7 @@ module.exports = [
     full_string: false,
     public: false,
     execute(msg, cmdstring, command, argstring, args) {
-      if (!common.isDeveloper(msg)) return;
+      if (!(common.isDeveloper(msg) || addlbotperms[msg.author.id] & 8)) return;
       var user;
       if (!(user = msg.mentions.users.first())) return;
       let ind;
@@ -91,21 +91,48 @@ module.exports = [
     }
   },
   {
-    name: 'giveadmin',
+    name: 'givedeveloper',
     full_string: false,
     public: false,
     execute(msg, cmdstring, command, argstring, args) {
       if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025' && msg.author.id != '342384766378573834') return;
-      if (/^[0-9]+$/.test(args[0])) { developers.push(args[0]); }
-      else if (/^<@![0-9]+>$/.test(args[0])) { developers.push(args[0].slice(3, args[0].length - 1)); }
+      nonlogmsg(`givedeveloper from ${msg.author.tag} (id ${msg.author.id}) in ${common.explainChannel(msg.channel)}: ${util.inspect(argstring)}`);
+      let id;
+      if (/^[0-9]+$/.test(args[0])) id = args[0];
+      else if (/^<@!?[0-9]+>$/.test(args[0])) id = args[0].replace(/[<@!>]/g, '');
       else return;
+      developers.push(id);
       return new Promise((resolve, reject) => {
+        // make this cancel existing timeout if command is run again
         setTimeout(() => {
-          let arr = developers.filter(x => x != args[0]);
+          let arr = developers.filter(x => x != id);
           developers.splice(0, Infinity);
           developers.push(...arr);
           resolve(msg.channel.send(args.slice(2, Infinity).join(' ') || 'times up fool'));
         }, Number(args[1]) || 120000);
+      });
+    }
+  },
+  {
+    name: 'giveaddlperm',
+    full_string: false,
+    public: false,
+    execute(msg, cmdstring, command, argstring, args) {
+      if (!common.isDeveloper(msg)) return;
+      nonlogmsg(`giveaddlperm from ${msg.author.tag} (id ${msg.author.id}) in ${common.explainChannel(msg.channel)}: ${util.inspect(argstring)}`);
+      let id;
+      if (/^[0-9]+$/.test(args[0])) id = args[0];
+      else if (/^<@!?[0-9]+>$/.test(args[0])) id = args[0].replace(/[<@!>]/g, '');
+      else return;
+      let perms = Number(args[1]);
+      if (!Number.isSafeInteger(perms)) return;
+      addlbotperms[id] = perms;
+      return new Promise((resolve, reject) => {
+        // make this cancel existing timeout if command is run again
+        setTimeout(() => {
+          delete addlbotperms[id];
+          resolve(msg.channel.send(args.slice(3, Infinity).join(' ') || 'times up fool'));
+        }, Number(args[2]) || 120000);
       });
     }
   },
