@@ -51,14 +51,19 @@ module.exports = [
       if (!channel || !channel.permissionsFor(msg.member).has('VIEW_CHANNEL')) return msg.channel.send('I\'m not in a voice channel');
       let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.JOIN_VC | common.constants.botRolePermBits.LEAVE_VC | common.constants.botRolePermBits.REMOTE_CMDS);
       let joinperms = perms & common.constants.botRolePermBits.JOIN_VC, leaveperms = perms & common.constants.botRolePermBits.LEAVE_VC, remoteperms = perms & common.constants.botRolePermBits.REMOTE_CMDS;
-      if (!(joinperms && channel.members.size <= 1 && guilddata.voice.songslist.length == 0)) {
-        if (!leaveperms)
-          return msg.channel.send('You do not have permission to get me to leave the voice channel.');
-        if (msg.member.voice.channelID != channel.id && !remoteperms)
-          return msg.channel.send('You do not have permission to get me to leave channels remotely.');
+      console.log(channel.members.array().filter(x => !x.user.bot && x.user.id != msg.author.id));
+      if (joinperms || leaveperms) {
+        if (!(joinperms && channel.members.array().filter(x => !x.user.bot && x.user.id != msg.author.id).length == 0 && (guilddata.voice.songslist.length == 0 || msg.member.voice.channelID != channel.id))) {
+          if (!leaveperms)
+            return msg.channel.send('You do not have permission to get me to leave the voice channel.');
+          if (msg.member.voice.channelID != channel.id && !remoteperms)
+            return msg.channel.send('You do not have permission to get me to leave channels remotely.');
+        }
+        await common.clientVCManager.leave(guilddata.voice);
+        return msg.channel.send(`Left channel <#${channel.id}>`);
+      } else {
+        return msg.channel.send('You do not have permission to get me to leave the voice channel.');
       }
-      await common.clientVCManager.leave(guilddata.voice);
-      return msg.channel.send(`Left channel <#${channel.id}>`);
     }
   },
 ];

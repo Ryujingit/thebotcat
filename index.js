@@ -1,6 +1,6 @@
 var starttime = new Date(), loadtime, readytime;
 
-var exitHandled = false;
+var exitHandled = 0;
 
 var doWorkers = true;
 
@@ -93,7 +93,7 @@ var badwords = [
 ];
 
 
-var version = '1.5.2d.1';
+var version = '1.5.3-beta1';
 global.updateStatus = async () => {
   let newStatus = props.feat.status ? props.feat.status.replace('{prefix}', defaultprefix).replace('{guilds}', client.guilds.cache.size) : null;
   let currentStatus;
@@ -155,9 +155,21 @@ try {
 }
 
 try {
-  var specialGuilds = process.env.SPECIAL_GUILDS.split(', ');
+  var persGuildData = (() => {
+    let obj = JSON.parse(process.env.PERSISTENT_GUILDDATA);
+    if (typeof obj != 'object') return { special_guilds: [], propssaved_alias: {} };
+    return {
+      special_guilds: Array.isArray(obj.special_guilds) ? obj.special_guilds.filter(x => common.isId(x)) : [],
+      propssaved_alias: typeof obj.propssaved_alias == 'object' ? (() => {
+        let newObj = {};
+        Object.keys(obj.propssaved_alias).forEach(x => common.isId(obj.propssaved_alias[x]) ? newObj[x] = obj.propssaved_alias[x] : null);
+        return newObj;
+      })() : {},
+    };
+  })();
 } catch (e) {
-  var specialGuilds = [];
+  console.error(e);
+  var persGuildData = { special_guilds: [], propssaved_alias: {} };
 }
 
 if (fs.existsSync('props.json')) {
@@ -172,12 +184,13 @@ if (!props.saved) {
   propsSave();
 }
 
-Object.defineProperties(props.saved.guilds, {
-  'wendys': { configurable: true, enumerable: false, get: () => props.saved.guilds['711668012528304178'] },
-  'ryuhub': { configurable: true, enumerable: false, get: () => props.saved.guilds['671477379482517516'] },
-  'botcat': { configurable: true, enumerable: false, get: () => props.saved.guilds['688806155530534931'] },
-  'pensive': { configurable: true, enumerable: false, get: () => props.saved.guilds['717268211246301236'] },
-  'bluetop': { configurable: true, enumerable: false, get: () => props.saved.guilds['475143894074392580'] },
+Object.keys(persGuildData.propssaved_alias).forEach(x => {
+  let alias = persGuildData.propssaved_alias[x];
+  Object.defineProperty(props.saved.guilds, x, {
+    configurable: true,
+    enumerable: false,
+    get: () => props.saved.guilds[alias],
+  });
 });
 
 Object.defineProperty(props.saved.guilds.default, 'prefix', {
@@ -224,7 +237,7 @@ var nonlogmsg = function (val) {
   console.log(`[${new Date().toISOString()}] ${val}`);
 };
 
-Object.assign(global, { https, fs, util, v8, vm, cp, stream, Discord, ytdl, common, math, client, developers, confirmdevelopers, addlbotperms, mutelist, badwords, commands, commandCategories, specialGuilds, procs, props, propsSave, schedulePropsSave, indexeval, infomsg, logmsg, nonlogmsg, addBadWord, removeBadWord, addCommand, addCommands, removeCommand, removeCommands, getCommandsCategorized });
+Object.assign(global, { https, fs, util, v8, vm, cp, stream, Discord, ytdl, common, math, client, developers, confirmdevelopers, addlbotperms, mutelist, badwords, commands, commandCategories, persGuildData, procs, props, propsSave, schedulePropsSave, indexeval, infomsg, logmsg, nonlogmsg, addBadWord, removeBadWord, addCommand, addCommands, removeCommand, removeCommands, getCommandsCategorized });
 Object.defineProperties(global, {
   exitHandled: { configurable: true, enumerable: true, get: () => exitHandled, set: val => exitHandled = val },
   starttime: { configurable: true, enumerable: true, get: () => starttime, set: val => starttime = val },
@@ -436,12 +449,39 @@ process.on('unhandledRejection', function (reason, p) {
   console.error(reason);
 });
 
-function exitHandler() {
-  if (exitHandled) return;
-  console.log('Shutting down');
-  propsSave();
-  exitHandled = true;
-  process.exit();
+global.startRepl = function startRepl() {
+  global.replServer = require('repl').start({
+    prompt: '> ',
+    terminal: true,
+    useColors: true,
+    useGlobal: true,
+    preview: true,
+    breakEvalOnSigint: true,
+  });
+  global.replServer.on('exit', exitHandler);
+};
+
+function exitHandler(...args) {
+  if (props.feat.version == 'normal') {
+    exitHandled++;
+    switch (exitHandled - 1) {
+      case 0:
+        console.log('Are you sure you want to shut down thebotcat? Press Ctrl+C if yes.');
+        setTimeout(() => { exitHandled = 0; startRepl(); }, 5000);
+        break;
+      case 1:
+        console.log('Shutting down');
+        propsSave();
+        process.exit();
+        break;
+    }
+  } else {
+    if (exitHandled) return;
+    exitHandled++;
+    console.log('Shutting down');
+    propsSave();
+    process.exit();
+  }
 }
 
 process.on('exit', exitHandler);
@@ -461,15 +501,7 @@ if (props.feat.repl) {
   (async () => {
     while ((!loadtime || !readytime) && Date.now() < starttime.getTime() + 10000)
       await new Promise(r => setTimeout(r, 5));
-    global.replServer = require('repl').start({
-      prompt: '> ',
-      terminal: true,
-      useColors: true,
-      useGlobal: true,
-      preview: true,
-      breakEvalOnSigint: true,
-    });
-    global.replServer.on('exit', exitHandler);
+    startRepl();
   })();
 } else {
   console.log('To shut down thebotcat press Ctrl+C, which performs a shutdown that cleans up variables.  Just pressing X could lead to data loss if props.saved was modified.');

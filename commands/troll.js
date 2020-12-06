@@ -1,5 +1,51 @@
 module.exports = [
   {
+    name: '@_everyone',
+    full_string: false,
+    description: '`!@_everyone member [hidden]` pings everyone ... the manual way\n`!@_everyone roles [hidden]` to ping all roles instead',
+    public: false,
+    execute(msg, cmdstring, command, argstring, args) {
+      if (!common.isAdmin(msg)) return;
+      if (args[1]) {
+        if (args[0] == 'roles') {
+          let promises = [ msg.channel.send('@ everyone').then(x => x.edit('@everyone')) ];
+          let roles = msg.guild.roles.cache.array().map(x => `<@&${x.id}>`);
+          for (var i = 0; i < roles.length; i += 90) {
+            promises.push(msg.channel.send(roles.slice(i, i + 90).join('')).then(x => x.delete()));
+          }
+          return Promise.allSettled(promises);
+        } else if (args[0] == 'member') {
+          if (msg.guild.memberCount > 1000)
+            return msg.channel.send('Error: too many members in guild to ping all members.');
+          let promises = [ msg.channel.send('@ everyone').then(x => x.edit('@everyone')) ];
+          let members = msg.guild.members.cache.array().filter(x => !x.user.bot).map(x => `<@${x.id}>`);
+          for (var i = 0; i < members.length; i += 95) {
+            promises.push(msg.channel.send(members.slice(i, i + 95).join('')).then(x => x.delete()));
+          }
+          return Promise.allSettled(promises);
+        }
+      } else {
+        if (args[0] == 'roles') {
+          let promises = [];
+          let roles = msg.guild.roles.cache.array().map(x => `<@&${x.id}>`);
+          for (var i = 0; i < roles.length; i += 90) {
+            promises.push(msg.channel.send(roles.slice(i, i + 90).join('')));
+          }
+          return Promise.allSettled(promises);
+        } else if (args[0] == 'member') {
+          if (msg.guild.memberCount > 1000)
+            return msg.channel.send('Error: too many members in guild to ping all members.');
+          let promises = [];
+          let members = msg.guild.members.cache.array().filter(x => !x.user.bot).map(x => `<@${x.id}>`);
+          for (var i = 0; i < members.length; i += 95) {
+            promises.push(msg.channel.send(members.slice(i, i + 95).join('')));
+          }
+          return Promise.allSettled(promises);
+        }
+      }
+    }
+  },
+  {
     name: '@someone',
     full_string: false,
     description: '`!@someone` pings a random person on the server',

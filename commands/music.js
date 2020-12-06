@@ -36,7 +36,7 @@ module.exports = [
       let channel = guilddata.voice.channel;
       if (!channel) return msg.channel.send('I\'m not in a voice channel');
       if (!guilddata.voice.dispatcher) return msg.channel.send('Error: no song is playing');
-      let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.PLAY_SONG | common.constands.botRolePermBits.FORCESKIP | common.constants.botRolePermBits.REMOTE_CMDS);
+      let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.PLAY_SONG | common.constants.botRolePermBits.FORCESKIP | common.constants.botRolePermBits.REMOTE_CMDS);
       let playperms = perms & common.constants.botRolePermBits.PLAY_SONG, fsperms = common.constants.botRolePermBits.FORCESKIP, remoteperms = perms & common.constants.botRolePermBits.REMOTE_CMDS;
       let vcmembers = channel.members.keyArray();
       if (!((msg.member.voice.channelID == guilddata.voice.channel.id || remoteperms) && (fsperms || vcmembers.length == 2 && vcmembers.includes(msg.author.id) && playperms)))
@@ -57,7 +57,7 @@ module.exports = [
       let channel = guilddata.voice.channel;
       if (!channel) return msg.channel.send('I\'m not in a voice channel');
       if (!guilddata.voice.dispatcher) return msg.channel.send('Error: no song is playing');
-      let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.PLAY_SONG | common.constands.botRolePermBits.FORCESKIP | common.constants.botRolePermBits.REMOTE_CMDS);
+      let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.PLAY_SONG | common.constants.botRolePermBits.FORCESKIP | common.constants.botRolePermBits.REMOTE_CMDS);
       let playperms = perms & common.constants.botRolePermBits.PLAY_SONG, fsperms = common.constants.botRolePermBits.FORCESKIP, remoteperms = perms & common.constants.botRolePermBits.REMOTE_CMDS;
       let vcmembers = channel.members.keyArray();
       if (!((msg.member.voice.channelID == guilddata.voice.channel.id || remoteperms) && (fsperms || vcmembers.length == 2 && vcmembers.includes(msg.author.id) && playperms)))
@@ -80,7 +80,7 @@ module.exports = [
       if (args.length == 0) {
         return msg.channel.send(`Playback volume is currently set to ${common.clientVCManager.getVolume(guilddata.voice)}`);
       } else {
-        let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.PLAY_SONG | common.constands.botRolePermBits.FORCESKIP | common.constants.botRolePermBits.REMOTE_CMDS);
+        let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.PLAY_SONG | common.constants.botRolePermBits.FORCESKIP | common.constants.botRolePermBits.REMOTE_CMDS);
         let playperms = perms & common.constants.botRolePermBits.PLAY_SONG, fsperms = common.constants.botRolePermBits.FORCESKIP, remoteperms = perms & common.constants.botRolePermBits.REMOTE_CMDS;
         let vcmembers = channel.members.keyArray();
         if (!((msg.member.voice.channelID == guilddata.voice.channel.id || remoteperms) && (fsperms || vcmembers.length == 2 && vcmembers.includes(msg.author.id) && playperms)))
@@ -104,7 +104,7 @@ module.exports = [
       if (!guilddata) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
       let channel = guilddata.voice.channel;
       if (!channel) return msg.channel.send('I\'m not in a voice channel');
-      let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.PLAY_SONG | common.constands.botRolePermBits.FORCESKIP | common.constants.botRolePermBits.REMOTE_CMDS);
+      let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.PLAY_SONG | common.constants.botRolePermBits.FORCESKIP | common.constants.botRolePermBits.REMOTE_CMDS);
       let playperms = perms & common.constants.botRolePermBits.PLAY_SONG, fsperms = common.constants.botRolePermBits.FORCESKIP, remoteperms = perms & common.constants.botRolePermBits.REMOTE_CMDS;
       let vcmembers = channel.members.keyArray();
       if (!((msg.member.voice.channelID == guilddata.voice.channel.id || remoteperms) && (fsperms || vcmembers.length == 2 && vcmembers.includes(msg.author.id) && playperms)))
@@ -125,7 +125,7 @@ module.exports = [
       let channel = guilddata.voice.channel;
       if (!channel) return msg.channel.send('I\'m not in a voice channel');
       if (!guilddata.voice.dispatcher) return msg.channel.send('Error: no song is playing');
-      let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.PLAY_SONG | common.constands.botRolePermBits.FORCESKIP | common.constants.botRolePermBits.REMOTE_CMDS);
+      let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.PLAY_SONG | common.constants.botRolePermBits.FORCESKIP | common.constants.botRolePermBits.REMOTE_CMDS);
       let playperms = perms & common.constants.botRolePermBits.PLAY_SONG, fsperms = common.constants.botRolePermBits.FORCESKIP, remoteperms = perms & common.constants.botRolePermBits.REMOTE_CMDS;
       let vcmembers = channel.members.keyArray();
       if (!((msg.member.voice.channelID == guilddata.voice.channel.id || remoteperms) && (fsperms || vcmembers.length == 2 && vcmembers.includes(msg.author.id) && playperms)))
@@ -146,7 +146,7 @@ module.exports = [
       let channel = guilddata.voice.channel;
       if (!channel) return msg.channel.send('I\'m not in a voice channel');
       if (!guilddata.voice.dispatcher) return msg.channel.send('Error: no song is playing');
-      let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.PLAY_SONG | common.constands.botRolePermBits.FORCESKIP | common.constants.botRolePermBits.REMOTE_CMDS);
+      let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.PLAY_SONG | common.constants.botRolePermBits.FORCESKIP | common.constants.botRolePermBits.REMOTE_CMDS);
       let playperms = perms & common.constants.botRolePermBits.PLAY_SONG, fsperms = common.constants.botRolePermBits.FORCESKIP, remoteperms = perms & common.constants.botRolePermBits.REMOTE_CMDS;
       let vcmembers = channel.members.keyArray();
       if (!((msg.member.voice.channelID == guilddata.voice.channel.id || remoteperms) && (fsperms || vcmembers.length == 2 && vcmembers.includes(msg.author.id) && playperms)))

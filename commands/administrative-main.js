@@ -1,66 +1,34 @@
 module.exports = [
   {
-    name: 'mute',
+    name: 'purge',
     full_string: false,
-    description: '`!mute @person` to mute someone by adding the muted role to them',
+    description: '`!purge <amount>` to delete `amount` messages from the channel\n`!purge #channel <amount>` to delete `amount` latest messages from channel #channel',
     public: true,
     async execute(msg, cmdstring, command, argstring, args) {
       if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+      
+      let channel, msgs;
 
-      if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.MUTE))
-        return msg.channel.send('You do not have permission to run this command.');
-
-      if (!props.saved.guilds[msg.guild.id].mutedrole)
-        return msg.channel.send('Error: no guild muted role specified, set one with `!settings mutedrole set <@role|id|name|query>`');
-
-      let member;
-      try {
-        member = await common.searchMember(msg.guild.members, args[0]);
-        if (!member) return msg.channel.send('Could not find member.');
-      } catch (e) {
-        return msg.channel.send('Could not find member.');
-      }
-
-      let mutereason = args.slice(1).join(' ');
-
-      if (!member.roles.cache.get(props.saved.guilds[msg.guild.id].mutedrole)) {
-        await member.roles.add(props.saved.guilds[msg.guild.id].mutedrole, `[By ${msg.author.tag} (id ${msg.author.id})]${mutereason ? ' ' + mutereason : ''}`);
-        return msg.channel.send(`Muted ${member.user.tag}`);
+      if (/<#[0-9]+>/.test(args[0])) {
+        channel = msg.guild.channels.cache.find(x => x.id == args[i].slice(2, -1));
+        if (!channel) return msg.channel.send('Cannot lock channel outside of this guild.');
+        msgs = args[1] == 'all' ? -1 : Number(args[1]);
       } else {
-        return msg.channel.send(`${member.user.tag} already muted`);
+        msgs = args[0] == 'all' ? -1 : Number(args[0]);
       }
-      return promise;
-    }
-  },
-  {
-    name: 'unmute',
-    full_string: false,
-    description: '`!unmute @person` to unmute someone by removing the muted role from them',
-    public: true,
-    async execute(msg, cmdstring, command, argstring, args) {
-      if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
 
-      if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.MUTE))
+      if (!channel) channel = msg.channel;
+      
+      if (!Number.isSafeInteger(msgs)) return msg.channel.send('Invalid number of messages to delete');
+      
+      if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.DELETE_MESSAGES, channel))
         return msg.channel.send('You do not have permission to run this command.');
-
-      if (!props.saved.guilds[msg.guild.id].mutedrole)
-        return msg.channel.send('Error: no guild muted role specified, set one with `!settings mutedrole <@role|id|name|query>`');
-
-      let member;
+      
       try {
-        member = await common.searchMember(msg.guild.members, args[0]);
-        if (!member) return msg.channel.send('Could not find member.');
+        await channel.bulkDelete(msgs);
+        return msg.channel.send(`${msgs} messages purged successfully.`);
       } catch (e) {
-        return msg.channel.send('Could not find member.');
-      }
-
-      let unmutereason = args.slice(1).join(' ');
-
-      if (member.roles.cache.get(props.saved.guilds[msg.guild.id].mutedrole)) {
-        await member.roles.remove(props.saved.guilds[msg.guild.id].mutedrole, `[By ${msg.author.tag} (id ${msg.author.id})]${unmutereason ? ' ' + unmutereason : ''}`);
-        return msg.channel.send(`Unmuted ${member.user.tag}`);
-      } else {
-        return msg.channel.send(`${member.user.tag} not muted`);
+        return msg.channel.send('Error in purging messages');
       }
     }
   },
@@ -175,6 +143,71 @@ module.exports = [
         }
       } else {
         return msg.channel.send(`Channel <#${channel.id}> (id ${channel.id}) not locked`);
+      }
+    }
+  },
+  {
+    name: 'mute',
+    full_string: false,
+    description: '`!mute @person` to mute someone by adding the muted role to them',
+    public: true,
+    async execute(msg, cmdstring, command, argstring, args) {
+      if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+
+      if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.MUTE))
+        return msg.channel.send('You do not have permission to run this command.');
+
+      if (!props.saved.guilds[msg.guild.id].mutedrole)
+        return msg.channel.send('Error: no guild muted role specified, set one with `!settings mutedrole set <@role|id|name|query>`');
+
+      let member;
+      try {
+        member = await common.searchMember(msg.guild.members, args[0]);
+        if (!member) return msg.channel.send('Could not find member.');
+      } catch (e) {
+        return msg.channel.send('Could not find member.');
+      }
+
+      let mutereason = args.slice(1).join(' ');
+
+      if (!member.roles.cache.get(props.saved.guilds[msg.guild.id].mutedrole)) {
+        await member.roles.add(props.saved.guilds[msg.guild.id].mutedrole, `[By ${msg.author.tag} (id ${msg.author.id})]${mutereason ? ' ' + mutereason : ''}`);
+        return msg.channel.send(`Muted ${member.user.tag}`);
+      } else {
+        return msg.channel.send(`${member.user.tag} already muted`);
+      }
+      return promise;
+    }
+  },
+  {
+    name: 'unmute',
+    full_string: false,
+    description: '`!unmute @person` to unmute someone by removing the muted role from them',
+    public: true,
+    async execute(msg, cmdstring, command, argstring, args) {
+      if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+
+      if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.MUTE))
+        return msg.channel.send('You do not have permission to run this command.');
+
+      if (!props.saved.guilds[msg.guild.id].mutedrole)
+        return msg.channel.send('Error: no guild muted role specified, set one with `!settings mutedrole <@role|id|name|query>`');
+
+      let member;
+      try {
+        member = await common.searchMember(msg.guild.members, args[0]);
+        if (!member) return msg.channel.send('Could not find member.');
+      } catch (e) {
+        return msg.channel.send('Could not find member.');
+      }
+
+      let unmutereason = args.slice(1).join(' ');
+
+      if (member.roles.cache.get(props.saved.guilds[msg.guild.id].mutedrole)) {
+        await member.roles.remove(props.saved.guilds[msg.guild.id].mutedrole, `[By ${msg.author.tag} (id ${msg.author.id})]${unmutereason ? ' ' + unmutereason : ''}`);
+        return msg.channel.send(`Unmuted ${member.user.tag}`);
+      } else {
+        return msg.channel.send(`${member.user.tag} not muted`);
       }
     }
   },/*
@@ -372,4 +405,42 @@ module.exports = [
       }
     }
   },
+  {
+    name: 'emoterole',
+    full_string: false,
+    description: '`!emoterole add <emote|id|name> [<@role|id|name>] ...` to add roles that can use the emoji\n`!emoterole remove <emote|id|name> [<@role|id|name>] ...` to remove roles that can use the emoji\n`!emoterole set <emote|id|name> [<@role|id|name>] ...` to set that can use the emoji',
+    public: true,
+    execute(msg, cmdstring, command, argstring, args) {
+      if (!msg.member.hasPermission('MANAGE_EMOJIS'))
+        return msg.channel.send('You do not have permission to run this command.');
+      
+      let emote;
+      
+      if (/<a?:[A-Za-z]+:[0-9]+>/.test(args[1])) {
+        let end = args[1].slice(':')[2];
+        emote = msg.guild.emojis.resolve(end.slice(0, -1));
+      } else if (/[0-9]+/.test(args[1])) {
+        emote = msg.guild.emojis.resolve(args[1]);
+      } else {
+        emote = msg.guild.emojis.cache.find(x => x.name == args[1]);
+      }
+      
+      let roles = args.slice(2).map(x => common.searchRole(msg.guild.roles, x));
+      
+      switch (args[0]) {
+        case 'add':
+          emote.roles.add(roles);
+          return msg.channel.send({ embed: { title: 'Roles Added', description: `Roles ${roles.length ? roles.map(x => `<@&${x.id}>`).join(' ') : 'nothing'} added to <:${emote.name}:${emote.id}> emote` } });
+          break;
+        case 'remove':
+          emote.roles.remove(roles);
+          return msg.channel.send({ embed: { title: 'Roles Removed', description: `Roles ${roles.length ? roles.map(x => `<@&${x.id}>`).join(' ') : 'nothing'} removed from <:${emote.name}:${emote.id}> emote` } });
+          break;
+        case 'set':
+          emote.roles.set(roles);
+          return msg.channel.send({ embed: { title: 'Roles Set', description: `<:${emote.name}:${emote.id}> emote roles set to ${roles.length ? roles.map(x => `<@&${x.id}>`).join(' ') : 'nothing'}` } });
+          break;
+      }
+    }
+  }
 ];

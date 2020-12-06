@@ -16,7 +16,13 @@ function isOwner(msg) {
 
 function isAdmin(msg) {
   if (!msg.guild) return false;
-  return msg.member.hasPermission('ADMINISTRATOR');
+  try {
+    return msg.member.hasPermission('ADMINISTRATOR');
+  } catch (e) {
+    console.error(e);
+    msg.fetch();
+    return false;
+  }
 }
 
 

@@ -37,7 +37,7 @@ module.exports = async msg => {
 
   if (msg.guild && props.saved.disallowed_guilds.includes(msg.guild.id)) return;
 
-  if (msg.guild && specialGuilds.includes(msg.guild.id) && mutelist.includes(msg.author.id))
+  if (msg.guild && persGuildData.special_guilds.includes(msg.guild.id) && mutelist.includes(msg.author.id))
     msg.delete();
 
   if (!msg.guild) {
@@ -63,9 +63,15 @@ module.exports = async msg => {
     } else if (msg.content.startsWith(workingprefix)) {
       isCommand = 1;
       cmdstring = msg.content.slice(workingprefix.length).trim();
+    } else if (msg.content.startsWith('<@' + client.user.id + '>')) {
+      isCommand = 1;
+      cmdstring = msg.content.slice(client.user.id.length + 3).trim();
+    } else if (msg.content.startsWith('<@!' + client.user.id + '>')) {
+      isCommand = 1;
+      cmdstring = msg.content.slice(client.user.id.length + 4).trim();
     }
 
-    if (/^<@!?682719630967439378>$/.test(msg.content)) return msg.channel.send(`I am Thebotcat version ${version}, prefix \`${workingprefix}\``);
+    if (msg.content == '<@' + client.user.id + '>' || msg.content == '<@!' + client.user.id + '>') return msg.channel.send(`I am ${props.feat.version == 'canary' ? 'Thebotcat Canary' : 'Thebotcat'} version ${version}, prefix \`${workingprefix}\``);
 
     // this code loops through the commands array to see if the stated text matches any known command
     if (isCommand) {
@@ -77,7 +83,7 @@ module.exports = async msg => {
             props.saved.guilds[msg.guild.id] && (
               !props.saved.guilds[msg.guild.id].enabled_commands.global ||
               !props.saved.guilds[msg.guild.id].enabled_commands.categories[commands[i].category] ||
-              !(props.saved.guilds[msg.guild.id].enabled_commands.commands[command] || !commands[i].public && specialGuilds.includes(msg.guild.id)))) continue;
+              !(props.saved.guilds[msg.guild.id].enabled_commands.commands[command] || !commands[i].public && persGuildData.special_guilds.includes(msg.guild.id)))) continue;
           argstring = cmdstring.slice(command.length + 1);
           args = argstring == '' ? [] : argstring.split(' ');
           isCommand = 2 + i;
