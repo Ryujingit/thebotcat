@@ -119,7 +119,10 @@ module.exports = async msg => {
       }
     }
     if (dodelete) {
-      infomsg(msg, `user ${msg.author.tag} (id ${msg.author.id}) said ${util.inspect(msg.content)} in channel <#${msg.channel.id}> (id ${msg.channel.id})`);
+      if (msg.content.toLowerCase() != 'heck' || !persGuildData.special_guilds.includes(msg.guild.id))
+        infomsg(msg, `user ${msg.author.tag} (id ${msg.author.id}) said ${util.inspect(msg.content)} in channel <#${msg.channel.id}> (id ${msg.channel.id})`);
+      else
+        logmsg(`user ${msg.author.tag} (id ${msg.author.id}) said ${util.inspect(msg.content)} in channel <#${msg.channel.id}> (id ${msg.channel.id})`);
       if (!isCommand) {
         try {
           await msg.delete();
