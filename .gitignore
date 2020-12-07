@@ -1,6 +1,4 @@
-node_modules
 .vs
+node_modules
 .env
 props.json
-key.pem
-cert.pem

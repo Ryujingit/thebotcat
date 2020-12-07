@@ -53,6 +53,27 @@ format for props.saved:
           ...
         },
         mutedrole : string <roleid> / null,
+        basic_automod: {
+          bad_words: [
+            {
+              enabled : boolean,
+              type : number (
+                0 - entire message is the word only
+                1 - split the message by spaces, and one of those sections exactly matches the word
+                2 - word is substring in message
+                &4 - convert message and word to lowercase first
+              ),
+              ignore_admin : boolean,
+              ignored_roles : array [
+                string <roleid>,
+                ...
+              ],
+              word : string,
+              retaliation : string,
+            },
+            ...
+          ],
+        },
         events : array [
           object {
             triggers : array [],

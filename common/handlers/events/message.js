@@ -93,41 +93,37 @@ module.exports = async msg => {
     }
 
     // this is the screening for bad words part
-    let isdeveloper = common.isDeveloper(msg), isadmin = common.isAdmin(msg);
+    let isadmin = common.isAdmin(msg);
     let dodelete = false;
+    let badwords = props.saved.guilds[msg.guild.id] ? props.saved.guilds[msg.guild.id].basic_automod.bad_words : [];
     let word, content, bypass;
     for (var i = 0; i < badwords.length; i++) {
       word = badwords[i];
       if (word.enabled) {
         content = msg.content;
-        if (word.type & 8) content = content.toLowerCase();
-        bypass = isdeveloper && word.adminbypass & 1 || isadmin && word.adminbypass & 2;
+        if (word.type & 4) content = content.toLowerCase();
+        bypass = isadmin && word.ignore_admin || word.ignored_roles.some(x => msg.member.roles.cache.has(x));
         if (!bypass) {
-          switch (word.type & 7) {
-            case 0: break;
-            case 1:
+          switch (word.type & 3) {
+            case 0:
               if (content != word.word) break;
               dodelete = true; if (!isCommand || isCommand && command != 'settings') msg.reply(word.retaliation.replace(/\$\(rcontent\)/g, msg.content.length < 1800 ? util.inspect(msg.content) : `Error: message length over 1800 characters`)); break;
-            case 2:
+            case 1:
               if (!content.split(/ +/g).some(x => x == word.word)) break;
               dodelete = true; if (!isCommand || isCommand && command != 'settings') msg.reply(word.retaliation.replace(/\$\(rcontent\)/g, msg.content.length < 1800 ? util.inspect(msg.content) : `Error: message length over 1800 characters`)); break;
-            case 3:
+            case 2:
               if (!content.includes(word.word)) break;
               dodelete = true; if (!isCommand || isCommand && command != 'settings') msg.reply(word.retaliation.replace(/\$\(rcontent\)/g, msg.content.length < 1800 ? util.inspect(msg.content) : `Error: message length over 1800 characters`)); break;
-            case 4:
-              if (!word.word.test(content)) break;
-              dodelete = true; if (!isCommand || isCommand && command != 'settings') msg.reply(word.retaliation.replace(/\$\(rcontent\)/g, msg.content.length < 1800 ? util.inspect(msg.content) : `Error: message length over 1800 characters`)); break;
-            default: break;
           }
         }
       }
     }
     if (dodelete) {
-      if (!isCommand) msg.delete();
-      if (msg.content.toLowerCase() != 'heck') {
-        infomsg(msg, `user ${msg.author.tag} (id ${msg.author.id}) said ${util.inspect(msg.content)} in channel <#${msg.channel.id}> (id ${msg.channel.id})`);
-      } else {
-        logmsg(`user ${msg.author.tag} (id ${msg.author.id}) said ${util.inspect(msg.content)} in channel <#${msg.channel.id}> (id ${msg.channel.id})`);
+      infomsg(msg, `user ${msg.author.tag} (id ${msg.author.id}) said ${util.inspect(msg.content)} in channel <#${msg.channel.id}> (id ${msg.channel.id})`);
+      if (!isCommand) {
+        try {
+          await msg.delete();
+        } catch (e) {}
       }
     }
     if (isCommand >= 2)

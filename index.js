@@ -74,26 +74,8 @@ var addlbotperms = {};
 
 var mutelist = [];
 
-var badwords = [
-  /*
-    type=0: ignore
-    type=1: word by itself
-    type=2: match per word
-    type=3: match using includes
-    type=4: regex match
-    type&8: apply tolowercase
-    
-    adminbypass&1: developers
-    adminbypass&2: server admins
-    adminbypass&4: server mod roles
-  */
-  { enabled: true, type: 9, adminbypass: 0, word: 'heck', retaliation: 'Refrain from using that heck word you frick' },
-  { enabled: true, type: 11, adminbypass: 0, word: 'nigger', retaliation: 'You said the n word.  Mods can see this message and you will get perm banned. (message content $(rcontent))' },
-  { enabled: true, type: 11, adminbypass: 0, word: 'faggot', retaliation: 'You said fa***t.  Mods can see this message and you will get perm banned. (message content $(rcontent))' },
-];
 
-
-var version = '1.5.3-beta1';
+var version = '1.5.3';
 global.updateStatus = async () => {
   let newStatus = props.feat.status ? props.feat.status.replace('{prefix}', defaultprefix).replace('{guilds}', client.guilds.cache.size) : null;
   let currentStatus;
@@ -237,7 +219,7 @@ var nonlogmsg = function (val) {
   console.log(`[${new Date().toISOString()}] ${val}`);
 };
 
-Object.assign(global, { https, fs, util, v8, vm, cp, stream, Discord, ytdl, common, math, client, developers, confirmdevelopers, addlbotperms, mutelist, badwords, commands, commandCategories, persGuildData, procs, props, propsSave, schedulePropsSave, indexeval, infomsg, logmsg, nonlogmsg, addBadWord, removeBadWord, addCommand, addCommands, removeCommand, removeCommands, getCommandsCategorized });
+Object.assign(global, { https, fs, util, v8, vm, cp, stream, Discord, ytdl, common, math, client, developers, confirmdevelopers, addlbotperms, mutelist, commands, commandCategories, persGuildData, procs, props, propsSave, schedulePropsSave, indexeval, infomsg, logmsg, nonlogmsg, addBadWord, removeBadWord, addCommand, addCommands, removeCommand, removeCommands, getCommandsCategorized });
 Object.defineProperties(global, {
   exitHandled: { configurable: true, enumerable: true, get: () => exitHandled, set: val => exitHandled = val },
   starttime: { configurable: true, enumerable: true, get: () => starttime, set: val => starttime = val },

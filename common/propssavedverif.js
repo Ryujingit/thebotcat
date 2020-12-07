@@ -47,6 +47,9 @@ module.exports = {
           })(),
           overrides: {},
           mutedrole: null,
+          basic_automod: {
+            bad_words: [],
+          },
           events: [],
           temp: {
             stashed: {
@@ -316,7 +319,20 @@ module.exports = {
             });
             return overObj;
           })(),
-          mutedrole: guildIsObj && typeof guild.mutedrole == 'string' ? guild.mutedrole : null,
+          mutedrole: guildIsObj && isId(guild.mutedrole) ? guild.mutedrole : null,
+          basic_automod: {
+            bad_words: guildIsObj && typeof guild.basic_automod == 'object' && Array.isArray(guild.basic_automod.bad_words) ? guild.basic_automod.bad_words.map(x => {
+              if (typeof x != 'object' || typeof x.word != 'string' || typeof x.retaliation != 'string') return null;
+              return {
+                enabled: typeof x.enabled == 'boolean' ? x.enabled : false,
+                type: Number.isSafeInteger(x.type) && x.type >= 0 && x.type < 7 ? x.type : 0,
+                ignore_admin: typeof x.ignore_admin == 'boolean' ? x.ignore_admin : false,
+                ignored_roles: Array.isArray(x.ignored_roles) ? x.ignored_roles.filter(y => isId(y)) : [],
+                word: x.word,
+                retaliation: x.retaliation,
+              };
+            }).filter(x => x != null) : [],
+          },
           events: guildIsObj && Array.isArray(guild.events) ? guild.events : [],
           temp: {
             stashed: {
