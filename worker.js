@@ -19,8 +19,7 @@ math.import({
     if (args.length == 2) {
       return delete args[0][args[1]];
     } else if (args.length == 1) {
-      if (calccontext) return delete calccontext[args[0]];
-      else return delete args[0];
+      return delete mathVMContext.scope[args[0]];
     } else throw new Error('Invalid arguments');
   },
 }, { override: true });
@@ -133,7 +132,7 @@ function mathObjectProxy(buffer, i32arr, props) {
 }
 
 workerpool.worker({
-  mathevaluate: function (authorid, expr, buffer, timeout) {
+  mathevaluate: function (expr, buffer, timeout) {
     let i32arr = new Int32Array(buffer);
     Atomics.wait(i32arr, 0, 1, 500);
     mathVMContext.expr = expr;
@@ -148,8 +147,6 @@ workerpool.worker({
       res = res.slice(1, res.length - 1);
     } else res = res.toString();
     if (res.length > 1900) res = res.slice(0, 1900) + '...';
-    if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(res.replace(new RegExp(`<@!?${authorid}>`, 'g'), ''))) res = { embed: { title: 'Result', description: res } };
-    else res = `Result: ${res}`;
     return res;
   },
   eval: eval,

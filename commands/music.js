@@ -20,7 +20,9 @@ module.exports = [
         if (e.toString() != 'Error: invalid url') console.error(e);
         return msg.channel.send('Invalid url');
       }
-      msg.channel.send(`${latestobj.desc} added to queue`);
+      let text = `${latestobj.desc} added to queue`;
+      if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Song Added', description: text } };
+      msg.channel.send(text);
       return common.clientVCManager.startMainLoop(guilddata.voice, msg.channel);
     }
   },
@@ -166,12 +168,17 @@ module.exports = [
       if (!guilddata) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
       if (!guilddata.voice.channel) return msg.channel.send('I\'m not in a voice channel');
       let songslist = guilddata.voice.songslist;
-      if (songslist.length == 0)
+      if (songslist.length == 0) {
         return msg.channel.send('Currently playing no songs');
-      else if (songslist.length == 1)
-        return msg.channel.send(`Currently playing ${songslist[0].desc} (${guilddata.voice.dispatcher ? common.msecToHMS(guilddata.voice.dispatcher.streamTime) : '-:--.---'} / ${common.msecToHMS(songslist[0].expectedLength)})`);
-      else
-        return msg.channel.send(`Currently playing ${songslist[0].desc} (${guilddata.voice.dispatcher ? common.msecToHMS(guilddata.voice.dispatcher.streamTime) : '-:--.---'} / ${common.msecToHMS(songslist[0].expectedLength)})\nQueue:\n${songslist.slice(1).map(x => x.desc).join('\n')}`);
+      } else if (songslist.length == 1) {
+        let text = `Currently playing ${songslist[0].desc} (${guilddata.voice.dispatcher ? common.msecToHMS(guilddata.voice.dispatcher.streamTime) : '-:--.---'} / ${common.msecToHMS(songslist[0].expectedLength)})`;
+        if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Song List', description: text } };
+        return msg.channel.send(text);
+      } else {
+        let text = `Currently playing ${songslist[0].desc} (${guilddata.voice.dispatcher ? common.msecToHMS(guilddata.voice.dispatcher.streamTime) : '-:--.---'} / ${common.msecToHMS(songslist[0].expectedLength)})\nQueue:\n${songslist.slice(1).map(x => x.desc).join('\n')}`;
+        if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Song List', description: text } };
+        return msg.channel.send(text);
+      }
     }
   },
   {
@@ -185,10 +192,13 @@ module.exports = [
       if (!guilddata) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
       if (!guilddata.voice.channel) return msg.channel.send('I\'m not in a voice channel');
       let songslist = guilddata.voice.songslist;
-      if (songslist.length == 0)
+      if (songslist.length == 0) {
         return msg.channel.send('Currently playing no songs');
-      else
-        return msg.channel.send(`Currently playing ${songslist[0].desc} (${guilddata.voice.dispatcher ? common.msecToHMS(guilddata.voice.dispatcher.streamTime) : '-:--.---'} / ${common.msecToHMS(songslist[0].expectedLength)})`);
+      } else {
+        let text = `Currently playing ${songslist[0].desc} (${guilddata.voice.dispatcher ? common.msecToHMS(guilddata.voice.dispatcher.streamTime) : '-:--.---'} / ${common.msecToHMS(songslist[0].expectedLength)})`;
+        if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Current Song', description: text } };
+        return msg.channel.send(text);
+      }
     }
   },
 ];

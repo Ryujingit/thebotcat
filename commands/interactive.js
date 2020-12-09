@@ -71,11 +71,7 @@ module.exports = [
     description: '`!coinflip` returns tails or heads with 50% probability each',
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
-      if (Math.random() < 0.5) {
-        return msg.channel.send('I\'m flipping a coin, and the result is...: tails!');
-      } else {
-        return msg.channel.send('I\'m flipping a coin, and the result is...: heads!');
-      }
+      return msg.channel.send(`I\'m flipping a coin, and the result is...: ${Math.random() >= 0.5 ? 'heads' : 'tails'}!`);
     }
   },
   {
@@ -84,7 +80,7 @@ module.exports = [
     description: '`!roll d#|#` rolls a dice with the given number of sides',
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
-      var sides = Math.floor(Number(args[0])) || 6;
+      let sides = Number(args[0].replace(/[^0-9.e-]/g, '')) || 6;
       return msg.channel.send(`Result of rolling a d${sides}: ${1 + Math.floor(Math.random() * sides)}`);
     }
   },
@@ -94,7 +90,7 @@ module.exports = [
     description: '`!randint <min> <max>` returns a random integer between min and max (inclusive)',
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
-      var min = Math.floor(Number(args[0])) || 0, max = Math.floor(Number(args[1])) || 1;
+      let min = Math.floor(Number(args[0])) || 0, max = Math.floor(Number(args[1])) || 1;
       return msg.channel.send(`Random integer between ${min} and ${max}: ${min + Math.floor(Math.random() * (max - min + 1))}`);
     }
   },
@@ -104,7 +100,7 @@ module.exports = [
     description: '`!randfloat <min> <max>` returns a random real number between min and max (inclusive lower bound)',
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
-      var min = Number(args[0]) || 0, max = Number(args[1]) || 1;
+      let min = Number(args[0]) || 0, max = Number(args[1]) || 1;
       return msg.channel.send(`Random real number between ${min} and ${max}: ${min + Math.random() * (max - min)}`);
     }
   },
@@ -114,8 +110,13 @@ module.exports = [
     description: '`!choice <choice1> [<choice2> ...]` picks a random option from the choices given',
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
-      var choice = Math.floor(Math.random() * args.length);
-      return msg.channel.send(`Random choice: ${args[choice]}`);
+      let choice = Math.floor(Math.random() * args.length);
+      choice = args[choice];
+      if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(choice.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) {
+        return msg.channel.send({ embed: { title: 'Random Choice', description: choice } });
+      } else {
+        return msg.channel.send(`Random choice: ${choice}`);
+      }
     }
   },
   {
@@ -266,7 +267,9 @@ module.exports = [
               if (!user.calc_scope_running) {
                 try {
                   user.calc_scope_running = true;
-                  res = await pool.exec('mathevaluate', [msg.author.id, expr, buffer]);
+                  res = await pool.exec('mathevaluate', [expr, buffer]);
+                  if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(res.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) res = { embed: { title: 'Result', description: res } };
+                  else res = `Result: ${res}`;
                   doLoop = false;
                   await loopFunc;
                 } catch (e) { throw e; }
@@ -274,7 +277,9 @@ module.exports = [
                   user.calc_scope_running = false;
                 }
               } else {
-                res = await pool.exec('mathevaluate', [msg.author.id, expr, buffer, 5]);
+                res = await pool.exec('mathevaluate', [expr, buffer, 5]);
+                if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(res.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) res = { embed: { title: 'Result', description: res } };
+                else res = `Result: ${res}`;
                 doLoop = false;
                 await loopFunc;
               }
@@ -310,6 +315,7 @@ module.exports = [
           if (/^Error: Script execution timed out after [0-9]+ms$/.test(res)) {
             promise = msg.channel.send(`Error: expression timeout after ${res.slice(40, Infinity)}`);
           } else {
+            if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(res.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) res = { embed: { title: 'Result (Error)', description: res } };
             promise = msg.channel.send(res);
           }
         } finally {

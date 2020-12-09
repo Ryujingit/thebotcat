@@ -35,7 +35,10 @@ module.exports = [
     description: '`!version` prints the version of my code',
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
-      return msg.channel.send(`Thebotcat is version ${version}`);
+      if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(version))
+        return msg.channel.send({ embed: { title: 'Version', description: `Thebotcat is version ${version}` } });
+      else
+        return msg.channel.send(`Thebotcat is version ${version}`);
     }
   },
   {
@@ -105,7 +108,7 @@ module.exports = [
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
       var discord = new Discord.MessageEmbed()
-        .setTitle('This is my github repository (its completely open source)!\nhttps://github.com/Ryujingit/thebotcat')
+        .setTitle('This is my github repository (its completely open source)!\nhttps://github.com/thebotcat/thebotcat')
         .setFooter('And when they clicked "make public" they felt an evil leave their presence.');
       return msg.channel.send(discord);
     }

@@ -274,7 +274,9 @@ module.exports = [
         return msg.channel.send('Error: I cannot kick someone equal or higher than me in the role hierarchy.');
 
       try {
-        let kickconfirm = await msg.channel.send(`Are you sure you want to kick user ${member.user.tag} (id ${member.id})${kickreason ? ' with reason ' + util.inspect(kickreason) : ''}?`);
+        let text = `Are you sure you want to kick user ${member.user.tag} (id ${member.id})${kickreason ? ' with reason ' + util.inspect(kickreason) : ''}?`;
+        if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Confirm Kick', description: text } };
+        let kickconfirm = await msg.channel.send(text);
         let kickreacts = kickconfirm.awaitReactions((react, user) => (react.emoji.name == '✅' || react.emoji.name == '❌') && user.id == msg.author.id, { time: 60000, max: 1 });
         await kickconfirm.react('✅');
         await kickconfirm.react('❌');
@@ -317,7 +319,9 @@ module.exports = [
           return msg.channel.send('Error: I do not have permission to ban members.');
 
         try {
-          let banconfirm = await msg.channel.send(`Are you sure you want to ban unknown user${banreason ? ' with reason ' + util.inspect(banreason) : ''}?`);
+          let text = `Are you sure you want to ban unknown user${banreason ? ' with reason ' + util.inspect(banreason) : ''}?`;
+          if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Confirm Ban', description: text } };
+          let banconfirm = await msg.channel.send(text);
           let banreacts = banconfirm.awaitReactions((react, user) => (react.emoji.name == '✅' || react.emoji.name == '❌') && user.id == msg.author.id, { time: 60000, max: 1 });
           await banconfirm.react('✅');
           await banconfirm.react('❌');
@@ -345,7 +349,9 @@ module.exports = [
           return msg.channel.send('Error: I cannot ban someone equal or higher than me in the role hierarchy.');
 
         try {
-          let banconfirm = await msg.channel.send(`Are you sure you want to ban user ${member.user.tag} (id ${member.id})${banreason ? ' with reason ' + util.inspect(banreason) : ''}?`);
+          let text = `Are you sure you want to ban user ${member.user.tag} (id ${member.id})${banreason ? ' with reason ' + util.inspect(banreason) : ''}?`;
+          if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Confirm Ban', description: text } };
+          let banconfirm = await msg.channel.send(text);
           let banreacts = banconfirm.awaitReactions((react, user) => (react.emoji.name == '✅' || react.emoji.name == '❌') && user.id == msg.author.id, { time: 60000, max: 1 });
           await banconfirm.react('✅');
           await banconfirm.react('❌');
@@ -391,7 +397,9 @@ module.exports = [
         return msg.channel.send('Error: I do not have permission to unban members.');
 
       try {
-        let unbanconfirm = await msg.channel.send(`Are you sure you want to unban user ${baninfo.user.tag} (id ${baninfo.user.id})${unbanreason ? ' with reason ' + util.inspect(unbanreason) : ''}?`);
+        let text = `Are you sure you want to unban user ${baninfo.user.tag} (id ${baninfo.user.id})${unbanreason ? ' with reason ' + util.inspect(unbanreason) : ''}?`;
+        if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Confirm Unban', description: text } };
+        let unbanconfirm = await msg.channel.send(text);
         let unbanreacts = unbanconfirm.awaitReactions((react, user) => (react.emoji.name == '✅' || react.emoji.name == '❌') && user.id == msg.author.id, { time: 60000, max: 1 });
         await unbanconfirm.react('✅');
         await unbanconfirm.react('❌');
