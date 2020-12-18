@@ -32,7 +32,10 @@ function hasBotPermissions(msg, permMask, channel) {
 
   if (!msg.guild) return 0;
 
-  if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+  if (!props.saved.guilds[msg.guild.id]) {
+    props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+    schedulePropsSave();
+  }
 
   if (!channel) channel = msg.channel;
 

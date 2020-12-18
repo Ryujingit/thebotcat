@@ -159,8 +159,10 @@ module.exports = [
       let expr = argstring, res;
       console.debug(`calculating from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(expr)}`);
       let user = props.saved.users[msg.author.id];
-      if (!user)
+      if (!user) {
         user = props.saved.users[msg.author.id] = common.getEmptyUserObject(props.saved.guilds[msg.guild.id]);
+        schedulePropsSave();
+      }
       
       if (args[0] == ':view') {
         let scope = user.calc_scope_working, text;

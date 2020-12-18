@@ -5,7 +5,10 @@ module.exports = [
     description: '`!purge <amount>` to delete `amount` messages from the channel\n`!purge #channel <amount>` to delete `amount` latest messages from channel #channel',
     public: true,
     async execute(msg, cmdstring, command, argstring, args) {
-      if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+      if (!props.saved.guilds[msg.guild.id]) {
+        props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+        schedulePropsSave();
+      }
       
       let channel, msgs;
 
@@ -38,7 +41,10 @@ module.exports = [
     description: '`!lock` to lock this channel, preventing anyone other than moderators from talking in it\n`!lock #channel` to lock a specific channel',
     public: true,
     async execute(msg, cmdstring, command, argstring, args) {
-      if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+      if (!props.saved.guilds[msg.guild.id]) {
+        props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+        schedulePropsSave();
+      }
 
       if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.LOCK_CHANNEL))
         return msg.channel.send('You do not have permission to run this command.');
@@ -109,7 +115,10 @@ module.exports = [
     description: '`!unlock` to unlock this channel, resetting permissions to what they were before the lock\n`!unlock #channel` to unlock a specific channel',
     public: true,
     async execute(msg, cmdstring, command, argstring, args) {
-      if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+      if (!props.saved.guilds[msg.guild.id]) {
+        props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+        schedulePropsSave();
+      }
 
       if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.LOCK_CHANNEL))
         return msg.channel.send('You do not have permission to run this command.');
@@ -152,7 +161,10 @@ module.exports = [
     description: '`!mute @person` to mute someone by adding the muted role to them',
     public: true,
     async execute(msg, cmdstring, command, argstring, args) {
-      if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+      if (!props.saved.guilds[msg.guild.id]) {
+        props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+        schedulePropsSave();
+      }
 
       if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.MUTE))
         return msg.channel.send('You do not have permission to run this command.');
@@ -185,7 +197,10 @@ module.exports = [
     description: '`!unmute @person` to unmute someone by removing the muted role from them',
     public: true,
     async execute(msg, cmdstring, command, argstring, args) {
-      if (!props.saved.guilds[msg.guild.id]) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+      if (!props.saved.guilds[msg.guild.id]) {
+        props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+        schedulePropsSave();
+      }
 
       if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.MUTE))
         return msg.channel.send('You do not have permission to run this command.');

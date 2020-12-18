@@ -7,7 +7,10 @@ module.exports = [
     async execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 1)) return msg.channel.send('Join/leave features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
-      if (!guilddata) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+      if (!guilddata) {
+        props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+        schedulePropsSave();
+      }
       let channel;
       if (args.length == 0) {
         if (!msg.member.voice.channelID) return msg.channel.send('You are not in a voice channel.');
@@ -46,7 +49,10 @@ module.exports = [
     async execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 1)) return msg.channel.send('Join/leave features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
-      if (!guilddata) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+      if (!guilddata) {
+        props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+        schedulePropsSave();
+      }
       let channel = guilddata.voice.channel;
       if (!channel || !channel.permissionsFor(msg.member).has('VIEW_CHANNEL')) return msg.channel.send('I\'m not in a voice channel');
       let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.JOIN_VC | common.constants.botRolePermBits.LEAVE_VC | common.constants.botRolePermBits.REMOTE_CMDS);

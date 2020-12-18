@@ -75,7 +75,7 @@ var addlbotperms = {};
 var mutelist = [];
 
 
-var version = '1.5.3b.3';
+var version = '1.5.4';
 global.updateStatus = async () => {
   let newStatus = props.feat.status ? props.feat.status.replace('{prefix}', defaultprefix).replace('{guilds}', client.guilds.cache.size) : null;
   let currentStatus;
@@ -390,6 +390,7 @@ client.on('disconnect', () => {
 
 // botcat tick function called every 60 seconds
 var ticks = 0;
+var tickFuncs = [];
 var tickFunc = () => {
   updateStatus();
   
@@ -408,6 +409,10 @@ var tickFunc = () => {
       .catch(e => { console.error(e); props.botStatusMsgResolve = null; });
   }
   
+  for (var i = 0; i < tickFuncs.length; i++) {
+    tickFuncs[i]();
+  }
+  
   ticks++;
 };
 var tickInt = setInterval(() => tickFunc(), 60000);
@@ -415,6 +420,7 @@ var tickTimTemp = setTimeout(() => tickFunc(), 5000);
 
 Object.defineProperties(global, {
   ticks: { configurable: true, enumerable: true, get: () => ticks, set: val => ticks = val },
+  tickFuncs: { configurable: true, enumerable: true, get: () => tickFuncs, set: val => tickFuncs = val },
   tickFunc: { configurable: true, enumerable: true, get: () => tickFunc, set: val => tickFunc = val },
   tickInt: { configurable: true, enumerable: true, get: () => tickInt, set: val => tickInt = val },
   tickTimTemp: { configurable: true, enumerable: true, get: () => tickTimTemp, set: val => tickTimTemp = val },

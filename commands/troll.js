@@ -2,7 +2,7 @@ module.exports = [
   {
     name: '@_everyone',
     full_string: false,
-    description: '`!@_everyone member [hidden]` pings everyone ... the manual way\n`!@_everyone roles [hidden]` to ping all roles instead',
+    description: '`!@_everyone members [hidden]` pings everyone ... the manual way\n`!@_everyone roles [hidden]` to ping all roles instead',
     public: false,
     execute(msg, cmdstring, command, argstring, args) {
       if (!common.isAdmin(msg)) return;
@@ -14,7 +14,7 @@ module.exports = [
             promises.push(msg.channel.send(roles.slice(i, i + 90).join('')).then(x => x.delete()));
           }
           return Promise.allSettled(promises);
-        } else if (args[0] == 'member') {
+        } else if (args[0] == 'members') {
           if (msg.guild.memberCount > 1000)
             return msg.channel.send('Error: too many members in guild to ping all members.');
           let promises = [ msg.channel.send('@ everyone').then(x => x.edit('@everyone')) ];
@@ -32,7 +32,7 @@ module.exports = [
             promises.push(msg.channel.send(roles.slice(i, i + 90).join('')));
           }
           return Promise.allSettled(promises);
-        } else if (args[0] == 'member') {
+        } else if (args[0] == 'members') {
           if (msg.guild.memberCount > 1000)
             return msg.channel.send('Error: too many members in guild to ping all members.');
           let promises = [];

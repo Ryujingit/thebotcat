@@ -7,7 +7,10 @@ module.exports = [
     async execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
-      if (!guilddata) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+      if (!guilddata) {
+        props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+        schedulePropsSave();
+      }
       if (!guilddata.voice.channel) return msg.channel.send('I\'m not in a voice channel');
       let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.PLAY_SONG | common.constants.botRolePermBits.REMOTE_CMDS);
       let playperms = perms & common.constants.botRolePermBits.PLAY_SONG, remoteperms = perms & common.constants.botRolePermBits.REMOTE_CMDS;
@@ -34,7 +37,10 @@ module.exports = [
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
-      if (!guilddata) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+      if (!guilddata) {
+        props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+        schedulePropsSave();
+      }
       let channel = guilddata.voice.channel;
       if (!channel) return msg.channel.send('I\'m not in a voice channel');
       if (!guilddata.voice.dispatcher) return msg.channel.send('Error: no song is playing');
@@ -55,7 +61,10 @@ module.exports = [
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
-      if (!guilddata) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+      if (!guilddata) {
+        props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+        schedulePropsSave();
+      }
       let channel = guilddata.voice.channel;
       if (!channel) return msg.channel.send('I\'m not in a voice channel');
       if (!guilddata.voice.dispatcher) return msg.channel.send('Error: no song is playing');
@@ -76,7 +85,10 @@ module.exports = [
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
-      if (!guilddata) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+      if (!guilddata) {
+        props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+        schedulePropsSave();
+      }
       let channel = guilddata.voice.channel;
       if (!channel) return msg.channel.send('I\'m not in a voice channel');
       if (args.length == 0) {
@@ -103,7 +115,10 @@ module.exports = [
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
-      if (!guilddata) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+      if (!guilddata) {
+        props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+        schedulePropsSave();
+      }
       let channel = guilddata.voice.channel;
       if (!channel) return msg.channel.send('I\'m not in a voice channel');
       let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.PLAY_SONG | common.constants.botRolePermBits.FORCESKIP | common.constants.botRolePermBits.REMOTE_CMDS);
@@ -123,7 +138,10 @@ module.exports = [
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
-      if (!guilddata) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+      if (!guilddata) {
+        props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+        schedulePropsSave();
+      }
       let channel = guilddata.voice.channel;
       if (!channel) return msg.channel.send('I\'m not in a voice channel');
       if (!guilddata.voice.dispatcher) return msg.channel.send('Error: no song is playing');
@@ -144,7 +162,10 @@ module.exports = [
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
-      if (!guilddata) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+      if (!guilddata) {
+        props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+        schedulePropsSave();
+      }
       let channel = guilddata.voice.channel;
       if (!channel) return msg.channel.send('I\'m not in a voice channel');
       if (!guilddata.voice.dispatcher) return msg.channel.send('Error: no song is playing');
@@ -165,7 +186,10 @@ module.exports = [
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
-      if (!guilddata) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+      if (!guilddata) {
+        props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+        schedulePropsSave();
+      }
       if (!guilddata.voice.channel) return msg.channel.send('I\'m not in a voice channel');
       let songslist = guilddata.voice.songslist;
       if (songslist.length == 0) {
@@ -189,7 +213,10 @@ module.exports = [
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
-      if (!guilddata) props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+      if (!guilddata) {
+        props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+        schedulePropsSave();
+      }
       if (!guilddata.voice.channel) return msg.channel.send('I\'m not in a voice channel');
       let songslist = guilddata.voice.songslist;
       if (songslist.length == 0) {

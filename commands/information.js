@@ -94,6 +94,7 @@ module.exports = [
   {
     name: 'discord',
     full_string: false,
+    description: '`!discord` for a link to my Discord Server',
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
       var discord = new Discord.MessageEmbed()
@@ -105,12 +106,41 @@ module.exports = [
   {
     name: 'github',
     full_string: false,
+    description: '`!github` for a link to my GitHub repo',
     public: true,
     execute(msg, cmdstring, command, argstring, args) {
       var discord = new Discord.MessageEmbed()
         .setTitle('This is my github repository (its completely open source)!\nhttps://github.com/thebotcat/thebotcat')
-        .setFooter('And when they clicked "make public" they felt an evil leave their presence.');
+        .setFooter('Star our GitHub repo! (If you like the code of course)\n\nAnd when they clicked "make public" they felt an evil leave their presence.');
       return msg.channel.send(discord);
+    }
+  },
+  {
+    name: 'invite',
+    full_string: false,
+    description: '`!invite` for my invite link',
+    public: true,
+    execute(msg, cmdstring, command, argstring, args) {
+      var discord = new Discord.MessageEmbed()
+        .setTitle('My invite link, to add me to any server!\nhttps://discord.com/api/oauth2/authorize?client_id=682719630967439378&permissions=1379265775&scope=bot');
+      return msg.channel.send(discord);
+    }
+  },
+  {
+    name: 'firstmsg',
+    full_string: false,
+    description: '`!firstmsg` for a link to the first message in this channel\n`!firstmsg #channel` for a link to the first message in #channel',
+    public: true,
+    async execute(msg, cmdstring, command, argstring, args) {
+      let channel;
+      if (args.length == 0) {
+        channel = msg.channel;
+      } else if (/<#[0-9]+>/.test(args[0])) {
+        channel = msg.guild.channels.cache.get(args[0].slice(2, -1));
+        if (!channel || !channel.permissionsFor(msg.member).has('VIEW_CHANNEL')) channel = msg.channel;
+      }
+      let firstMsg = (await channel.messages.fetch({ after: 0, limit: 1 })).array()[0];
+      return msg.channel.send(`First message in this channel: https://discord.com/channels/${msg.guild.id}/${msg.channel.id}/${firstMsg.id}`);
     }
   },
 ];

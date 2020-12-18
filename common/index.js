@@ -15,6 +15,21 @@ var explainChannel = (channel, full) => {
     return channel.guild ? `${channel.guild.name}:${channel.name}` : `dms`;
 };
 
+var stringToBoolean = str => {
+  switch (str) {
+    case 'true':
+    case 'yes':
+      return true;
+    
+    case 'false':
+    case 'no':
+      return false;
+    
+    default:
+      return null;
+  }
+};
+
 var { BreakError, arrayGet, sendObjThruBuffer, receiveObjThruBuffer } = require('./workerbuffer');
 
 var { isDeveloper, isConfirmDeveloper, isOwner, isAdmin, hasBotPermissions, getBotPermissions, getBotPermissionsArray, getPermissions } = require('./isposition');
@@ -43,7 +58,7 @@ module.exports = {
   constants, recursiveReaddir,
   msecToHMS, msecToHMSs, fancyDateStringWD, fancyDateStringMD, fancyDateString,
   getBotcatUptimeMessage, getBotcatStatusMessage, getBotcatFullStatusMessage,
-  explainChannel,
+  explainChannel, stringToBoolean,
   arrayGet, BreakError, sendObjThruBuffer, receiveObjThruBuffer,
   isDeveloper, isConfirmDeveloper, isOwner, isAdmin, hasBotPermissions, getBotPermissions, getBotPermissionsArray, getPermissions,
   serializePermissionOverwrites,

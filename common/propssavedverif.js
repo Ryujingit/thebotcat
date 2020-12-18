@@ -492,6 +492,9 @@ module.exports = {
       perms: isId(id) ? { [id]: commonConstants.botRolePermDef } : {},
       overrides: {},
       mutedrole: null,
+      basic_automod: {
+        bad_words: [],
+      },
       events: [],
       temp: {
         stashed: {
