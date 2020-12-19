@@ -1,8 +1,8 @@
 module.exports = [
   {
-    name: 'supressembeds',
+    name: 'suppressembeds',
     full_string: false,
-    description: '`!supressembeds <\'suppress\'/\'unsuppress\'> [#channel] <messageid>` to supress or unsupress embeds on a message',
+    description: '`!suppressembeds <\'suppress\'/\'unsuppress\'> [#channel] <messageid>` to suppress or unsuppress embeds on a message',
     public: true,
     async execute(msg, cmdstring, command, argstring, args) {
       let suppress, channel, msgid;
@@ -10,7 +10,7 @@ module.exports = [
       switch (args[0]) {
         case 'suppress': suppress = true; break;
         case 'unsuppress': suppress = false; break;
-        default: return msg.channel.send('Options are \'supress\' and \'unsupress\''); break;
+        default: return msg.channel.send('Options are \'suppress\' and \'unsuppress\''); break;
       }
       
       if (/<#[0-9]+>/.test(args[1])) {
@@ -30,7 +30,7 @@ module.exports = [
         } catch (e) {
           return msg.channel.send('Error in fetching message');
         }
-        if (msg.author.id == targetMsg.author.id || !common.hasBotPermissions(msg, common.constants.botRolePermBits.DELETE_MESSAGES, channel))
+        if (msg.author.id == targetMsg.author.id || common.hasBotPermissions(msg, common.constants.botRolePermBits.DELETE_MESSAGES, channel))
           targetMsg.suppressEmbeds(suppress);
         else
           return msg.channel.send('You do not have permission to suppress other member\'s embeds.');
