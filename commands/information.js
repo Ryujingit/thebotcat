@@ -127,6 +127,72 @@ module.exports = [
     }
   },
   {
+    name: 'avatar',
+    full_string: false,
+    description: '`!avatar` displays your avatar\n`!avatar @someone` displays someone\'s avatar',
+    public: true,
+    async execute(msg, cmdstring, command, argstring, args) {
+      let member;
+      if (args.length != 0) {
+        try {
+          member = await common.searchMember(msg.guild.members, args[0]);
+          if (!member) member = msg.member;
+        } catch (e) {
+          console.error(e);
+          member = msg.member;
+        }
+      } else {
+        member = msg.member;
+      }
+      
+      let avatarURL = member.user.displayAvatarURL({ dynamic: true });
+      let animated = avatarURL.endsWith('gif'), avatarEmbed;
+      if (member.user.avatar == null) {
+        let url = member.user.defaultAvatarURL;
+        avatarEmbed = new Discord.MessageEmbed()
+          .setTitle(`Avatar for ${member.user.tag}`)
+          .setDescription(
+            `userid: ${member.user.id}\n` +
+            `links: [default](${avatarURL}) (avatar is default)`
+            )
+          .setImage(url)
+          .setColor(member.displayHexColor);
+      } else {
+        let baseurl = `https://cdn.discordapp.com/avatars/${member.user.id}/${member.user.avatar}`;
+        if (animated)
+          avatarEmbed = new Discord.MessageEmbed()
+            .setTitle(`Avatar for ${member.user.tag}`)
+            .setDescription(
+              `userid: ${member.user.id}\n` +
+              `links: [default](${avatarURL}), ` +
+              `[normal png](${baseurl}.png), ` +
+              `[normal webp](${baseurl}.webp), ` +
+              `[normal gif](${baseurl}.gif)\n` +
+              `big links: [big png](${baseurl}.png?size=4096), ` +
+              `[big webp](${baseurl}.webp?size=4096), ` +
+              `[big gif](${baseurl}.gif?size=4096)`
+              )
+            .setImage(`${baseurl}.gif?size=4096`)
+            .setColor(member.displayHexColor);
+        else
+          avatarEmbed = new Discord.MessageEmbed()
+            .setTitle(`Avatar for ${member.user.tag}`)
+            .setDescription(
+              `userid: ${member.user.id}\n` +
+              `links: [default](${avatarURL}), ` +
+              `[normal png](${baseurl}.png), ` +
+              `[normal webp](${baseurl}.webp), ` +
+              `[big png](${baseurl}.png?size=4096), ` +
+              `[big webp](${baseurl}.webp?size=4096)`
+              )
+            .setImage(`${baseurl}.png?size=4096`)
+            .setColor(member.displayHexColor);
+      }
+      
+      return msg.channel.send(avatarEmbed);
+    }
+  },
+  {
     name: 'firstmsg',
     full_string: false,
     description: '`!firstmsg` for a link to the first message in this channel\n`!firstmsg #channel` for a link to the first message in #channel',
@@ -139,8 +205,25 @@ module.exports = [
         channel = msg.guild.channels.cache.get(args[0].slice(2, -1));
         if (!channel || !channel.permissionsFor(msg.member).has('VIEW_CHANNEL')) channel = msg.channel;
       }
-      let firstMsg = (await channel.messages.fetch({ after: 0, limit: 1 })).array()[0];
-      return msg.channel.send(`First message in this channel: https://discord.com/channels/${msg.guild.id}/${msg.channel.id}/${firstMsg.id}`);
+      let msgs = (await channel.messages.fetch({ after: 0, limit: 1 })).array();
+      if (msgs.length == 1)
+        return msg.channel.send(`First message in <#${channel.id}>: https://discord.com/channels/${msg.guild.id}/${msg.channel.id}/${msgs[0].id}`);
+      else
+        return msg.channel.send(`<#${channel.id}> has no messages`);
+    }
+  },
+  {
+    name: 'dateid',
+    full_string: false,
+    description: '`!dateid <id>` to get the UTC date/time of an ID in discord',
+    public: true,
+    execute(msg, cmdstring, command, argstring, args) {
+      try {
+        let id = BigInt(args[0]);
+        return msg.channel.send(`Date: ${new Date(new Date('2015-01-01T00:00:00.000Z').getTime() + Number(id >> 22n)).toISOString()}`);
+      } catch (e) {
+        return msg.channel.send('Invalid ID');
+      }
     }
   },
 ];

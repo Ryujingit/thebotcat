@@ -39,6 +39,7 @@ format for props.saved:
                 13 - ban
                 14 - change prefix, logchannel
                 15 - complete manage bot
+                16 - slowmode and bitrate
             ),
           ...
         },

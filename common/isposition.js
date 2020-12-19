@@ -124,6 +124,11 @@ function hasBotPermissions(msg, permMask, channel) {
       msg.member.roles.highest.position > msg.guild.me.roles.highest.position || isOwner(msg)))
     perms |= commonConstants.botRolePermBits.MANAGE_BOT_FULL;
   
+  if (permMask & commonConstants.botRolePermBits.SLOWMODE &&
+    !(perms & commonConstants.botRolePermBits.SLOWMODE) &&
+    channel.permissionsFor(msg.member).has('MANAGE_CHANNELS'))
+    perms |= commonConstants.botRolePermBits.SLOWMODE;
+  
   return perms;
 }
 

@@ -1,8 +1,133 @@
 module.exports = [
   {
+    name: 'supressembeds',
+    full_string: false,
+    description: '`!supressembeds <\'suppress\'/\'unsuppress\'> [#channel] <messageid>` to supress or unsupress embeds on a message',
+    public: true,
+    async execute(msg, cmdstring, command, argstring, args) {
+      let suppress, channel, msgid;
+      
+      switch (args[0]) {
+        case 'suppress': suppress = true; break;
+        case 'unsuppress': suppress = false; break;
+        default: return msg.channel.send('Options are \'supress\' and \'unsupress\''); break;
+      }
+      
+      if (/<#[0-9]+>/.test(args[1])) {
+        channel = msg.guild.channels.cache.find(x => x.id == args[1].slice(2, -1));
+        if (!channel || !channel.permissionsFor(msg.member).has('VIEW_CHANNEL')) return msg.channel.send('Cannot set slowmode in channel outside of this guild.');
+        msgid = args[2];
+      } else {
+        msgid = args[1];
+      }
+
+      if (!channel) channel = msg.channel;
+      
+      if (channel.type == 'text' || channel.type == 'announcement') {
+        let targetMsg;
+        try {
+          targetMsg = await channel.messages.fetch(msgid);
+        } catch (e) {
+          return msg.channel.send('Error in fetching message');
+        }
+        if (msg.author.id == targetMsg.author.id || !common.hasBotPermissions(msg, common.constants.botRolePermBits.DELETE_MESSAGES, channel))
+          targetMsg.suppressEmbeds(suppress);
+        else
+          return msg.channel.send('You do not have permission to suppress other member\'s embeds.');
+        return msg.channel.send(`Embeds in message ${msgid} in <#${channel.id}> ${suppress ? 'supressed' : 'unsupressed'}.`);
+      } else {
+        return msg.channel.send(`Channel <#${channel.id}> not a text channel.`);
+      }
+    }
+  },
+  {
+    name: 'slowmode',
+    full_string: false,
+    description: '`!slowmode [#channel] <seconds>` to set the slowmode in a text channel to a certain value',
+    public: true,
+    async execute(msg, cmdstring, command, argstring, args) {
+      let channel, seconds;
+
+      if (/<#[0-9]+>/.test(args[0])) {
+        channel = msg.guild.channels.cache.find(x => x.id == args[0].slice(2, -1));
+        if (!channel || !channel.permissionsFor(msg.member).has('VIEW_CHANNEL')) return msg.channel.send('Cannot set slowmode in channel outside of this guild.');
+        seconds = Math.floor(Number(args[1]));
+      } else {
+        seconds = Math.floor(Number(args[0]));
+      }
+
+      if (!channel) channel = msg.channel;
+      
+      if (!Number.isSafeInteger(seconds) || seconds < 0) return msg.channel.send('Invalid seconds for slowmode.');
+      
+      if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.SLOWMODE, channel))
+        return msg.channel.send('You do not have permission to run this command.');
+      
+      if (channel.type == 'text' || channel.type == 'announcement') {
+        try {
+          await channel.setRateLimitPerUser(seconds);
+          return msg.channel.send(`Slowmode in channel <#${channel.id}> set to ${seconds} seconds.`);
+        } catch (e) {
+          let estring = e.toString();
+          if (estring.startsWith('DiscordAPIError: Invalid Form Body\nrate_limit_per_user: int value should be less than or equal to ')) {
+            return msg.channel.send(`Slowmode must be less than or equal to ${estring.slice(98).replace(/[^0-9]+/g, '')}.`);
+          } else {
+            console.error(e);
+            return msg.channel.send('Error.');
+          }
+        }
+      } else {
+        return msg.channel.send(`Channel <#${channel.id}> not a text channel.`);
+      }
+    }
+  },
+  {
+    name: 'bitrate',
+    full_string: false,
+    description: '`!bitrate [#channel] <bytespersec>` to set the bitrate (bps not kbps) in a voice channel to a certain value',
+    public: true,
+    async execute(msg, cmdstring, command, argstring, args) {
+      let channel, bitrate;
+
+      if (/<#[0-9]+>/.test(args[0])) {
+        channel = msg.guild.channels.cache.find(x => x.id == args[0].slice(2, -1));
+        if (!channel || !channel.permissionsFor(msg.member).has('VIEW_CHANNEL')) return msg.channel.send('Cannot set bitrate of channel outside of this guild.');
+        bitrate = Math.floor(Number(args[1]));
+      } else {
+        bitrate = Math.floor(Number(args[0]));
+      }
+
+      if (!channel) channel = msg.channel;
+      
+      if (!Number.isSafeInteger(bitrate) || bitrate < 0) return msg.channel.send('Invalid bitrate');
+      
+      if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.SLOWMODE, channel))
+        return msg.channel.send('You do not have permission to run this command.');
+      
+      if (channel.type == 'voice') {
+        try {
+          await channel.setBitrate(bitrate);
+          return msg.channel.send(`Channel <#${channel.id}> bitrate set to ${bitrate}`);
+        } catch (e) {
+          let estring = e.toString();
+          if (estring.startsWith('DiscordAPIError: Invalid Form Body\nbitrate: int value should be greater than or equal to ')) {
+            return msg.channel.send(`Bitrate must be greater than or equal to ${estring.slice(89).replace(/[^0-9]+/g, '')}.`);
+          } else if (estring.startsWith('DiscordAPIError: Invalid Form Body\nbitrate: int value should be less than or equal to ')) {
+            return msg.channel.send(`Bitrate must be less than or equal to ${estring.slice(86).replace(/[^0-9]+/g, '')}.`);
+          } else {
+            console.error(e);
+            return msg.channel.send('Error.');
+          }
+        }
+      } else {
+        return msg.channel.send(`Channel <#${channel.id}> not a voice channel`);
+      }
+    }
+  },
+  {
     name: 'purge',
     full_string: false,
-    description: '`!purge <amount>` to delete `amount` messages from the channel\n`!purge #channel <amount>` to delete `amount` latest messages from channel #channel',
+    description: '`!purge [#channel] <amount>` to delete `amount` messages from the channel',
     public: true,
     async execute(msg, cmdstring, command, argstring, args) {
       if (!props.saved.guilds[msg.guild.id]) {
@@ -13,8 +138,8 @@ module.exports = [
       let channel, msgs;
 
       if (/<#[0-9]+>/.test(args[0])) {
-        channel = msg.guild.channels.cache.find(x => x.id == args[i].slice(2, -1));
-        if (!channel) return msg.channel.send('Cannot lock channel outside of this guild.');
+        channel = msg.guild.channels.cache.find(x => x.id == args[0].slice(2, -1));
+        if (!channel || !channel.permissionsFor(msg.member).has('VIEW_CHANNEL')) return msg.channel.send('Cannot purge messages in channel outside of this guild.');
         msgs = args[1] == 'all' ? -1 : Number(args[1]);
       } else {
         msgs = args[0] == 'all' ? -1 : Number(args[0]);
@@ -38,7 +163,7 @@ module.exports = [
   {
     name: 'lock',
     full_string: false,
-    description: '`!lock` to lock this channel, preventing anyone other than moderators from talking in it\n`!lock #channel` to lock a specific channel',
+    description: '`!lock [#channel]` to lock the channel, preventing anyone other than moderators from talking in it',
     public: true,
     async execute(msg, cmdstring, command, argstring, args) {
       if (!props.saved.guilds[msg.guild.id]) {
@@ -56,7 +181,7 @@ module.exports = [
           reason.push(args[i]);
         } else {
           channel = msg.guild.channels.cache.find(x => x.id == args[i].slice(2, -1));
-          if (!channel) return msg.channel.send('Cannot lock channel outside of this guild.');
+          if (!channel || !channel.permissionsFor(msg.member).has('VIEW_CHANNEL')) return msg.channel.send('Cannot lock channel outside of this guild.');
         }
       }
 
@@ -97,7 +222,7 @@ module.exports = [
           await common.partialDeserializePermissionOverwrites(channel, newperms);
           props.saved.guilds[msg.guild.id].temp.stashed.channeloverrides[channel.id] = perms;
           schedulePropsSave();
-          return msg.channel.send(`Locked channel <#${channel.id}> (id ${channel.id})`);
+          return msg.channel.send(`Locked channel <#${channel.id}> (id ${channel.id}).`);
         } catch (e) {
           console.error(e);
           let estring = e.toString();
@@ -105,14 +230,14 @@ module.exports = [
             return msg.channel.send(estring);
         }
       } else {
-        return msg.channel.send(`Channel <#${channel.id}> (id ${channel.id}) already locked or no permissions to change`);
+        return msg.channel.send(`Channel <#${channel.id}> (id ${channel.id}) already locked or no permissions to change.`);
       }
     }
   },
   {
     name: 'unlock',
     full_string: false,
-    description: '`!unlock` to unlock this channel, resetting permissions to what they were before the lock\n`!unlock #channel` to unlock a specific channel',
+    description: '`!unlock [#channel]` to unlock the channel, resetting permissions to what they were before the lock',
     public: true,
     async execute(msg, cmdstring, command, argstring, args) {
       if (!props.saved.guilds[msg.guild.id]) {
@@ -130,7 +255,7 @@ module.exports = [
           reason.push(args[i]);
         } else {
           channel = msg.guild.channels.cache.find(x => x.id == args[i].slice(2, -1));
-          if (!channel) return msg.channel.send('Cannot unlock channel outside of this guild.');
+          if (!channel || !channel.permissionsFor(msg.member).has('VIEW_CHANNEL')) return msg.channel.send('Cannot unlock channel outside of this guild.');
         }
       }
 
@@ -143,7 +268,7 @@ module.exports = [
           await common.partialDeserializePermissionOverwrites(channel, perms);
           delete props.saved.guilds[msg.guild.id].temp.stashed.channeloverrides[channel.id];
           schedulePropsSave();
-          return msg.channel.send(`Unlocked channel <#${channel.id}> (id ${channel.id})`);
+          return msg.channel.send(`Unlocked channel <#${channel.id}> (id ${channel.id}).`);
         } catch (e) {
           console.error(e);
           let estring = e.toString();
@@ -151,7 +276,7 @@ module.exports = [
             return msg.channel.send(estring);
         }
       } else {
-        return msg.channel.send(`Channel <#${channel.id}> (id ${channel.id}) not locked`);
+        return msg.channel.send(`Channel <#${channel.id}> (id ${channel.id}) not locked.`);
       }
     }
   },
@@ -184,9 +309,9 @@ module.exports = [
 
       if (!member.roles.cache.get(props.saved.guilds[msg.guild.id].mutedrole)) {
         await member.roles.add(props.saved.guilds[msg.guild.id].mutedrole, `[By ${msg.author.tag} (id ${msg.author.id})]${mutereason ? ' ' + mutereason : ''}`);
-        return msg.channel.send(`Muted ${member.user.tag}`);
+        return msg.channel.send(`Muted ${member.user.tag}.`);
       } else {
-        return msg.channel.send(`${member.user.tag} already muted`);
+        return msg.channel.send(`${member.user.tag} already muted.`);
       }
       return promise;
     }
@@ -220,9 +345,9 @@ module.exports = [
 
       if (member.roles.cache.get(props.saved.guilds[msg.guild.id].mutedrole)) {
         await member.roles.remove(props.saved.guilds[msg.guild.id].mutedrole, `[By ${msg.author.tag} (id ${msg.author.id})]${unmutereason ? ' ' + unmutereason : ''}`);
-        return msg.channel.send(`Unmuted ${member.user.tag}`);
+        return msg.channel.send(`Unmuted ${member.user.tag}.`);
       } else {
-        return msg.channel.send(`${member.user.tag} not muted`);
+        return msg.channel.send(`${member.user.tag} not muted.`);
       }
     }
   },/*

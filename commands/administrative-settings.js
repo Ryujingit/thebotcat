@@ -342,8 +342,8 @@ module.exports = [
               'This command configures which commands are enabled.\n\n' +
               'To view whether commands are enabled globally, run `settings enabledcmds view global`.\n' +
               'To view whether a particular command or category is enabled, run `settings enabledcmds view <\'category\'/\'command\'> <command/category>`.\n' +
-              'To turn on or off whether commands are enabled globally, run `settings enabledcmds <\'enable\'/\'disable\'> global`.\n' +
-              'To turn on or off whether a particular command or category, run `settings enabledcmds <\'enable\'/\'disable\'> <\'category\'/\'command\'> <command/category>`.\n' +
+              'To turn on or off commands globally, run `settings enabledcmds <\'enable\'/\'disable\'> global`.\n' +
+              'To turn on or off a particular command or category, run `settings enabledcmds <\'enable\'/\'disable\'> <\'category\'/\'command\'> <command/category>`.\n' +
               'To enable or disable everything, run `settings enabledcmds <\'enable\'/\'disable\'> all`.',
             );
           } else {
