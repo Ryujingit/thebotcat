@@ -10,12 +10,12 @@ module.exports = [
       switch (args[0]) {
         case 'suppress': suppress = true; break;
         case 'unsuppress': suppress = false; break;
-        default: return msg.channel.send('Options are \'suppress\' and \'unsuppress\''); break;
+        default: return msg.channel.send('Options are \'suppress\' and \'unsuppress\'').then(x => setTimeout(() => x.delete(), 5000)); break;
       }
       
       if (/<#[0-9]+>/.test(args[1])) {
         channel = msg.guild.channels.cache.find(x => x.id == args[1].slice(2, -1));
-        if (!channel || !channel.permissionsFor(msg.member).has('VIEW_CHANNEL')) return msg.channel.send('Cannot set slowmode in channel outside of this guild.');
+        if (!channel || !channel.permissionsFor(msg.member).has('VIEW_CHANNEL')) return msg.channel.send('Cannot set slowmode in channel outside of this guild.').then(x => setTimeout(() => x.delete(), 5000));
         msgid = args[2];
       } else {
         msgid = args[1];
@@ -28,15 +28,15 @@ module.exports = [
         try {
           targetMsg = await channel.messages.fetch(msgid);
         } catch (e) {
-          return msg.channel.send('Error in fetching message');
+          return msg.channel.send('Error in fetching message').then(x => setTimeout(() => x.delete(), 5000));
         }
         if (msg.author.id == targetMsg.author.id || common.hasBotPermissions(msg, common.constants.botRolePermBits.DELETE_MESSAGES, channel))
           targetMsg.suppressEmbeds(suppress);
         else
-          return msg.channel.send('You do not have permission to suppress other member\'s embeds.');
-        return msg.channel.send(`Embeds in message ${msgid} in <#${channel.id}> ${suppress ? 'supressed' : 'unsupressed'}.`);
+          return msg.channel.send('You do not have permission to suppress other member\'s embeds.').then(x => setTimeout(() => x.delete(), 5000));
+        return msg.channel.send(`Embeds in message ${msgid} in <#${channel.id}> ${suppress ? 'suppressed' : 'unsuppressed'}.`).then(x => setTimeout(() => x.delete(), 5000));
       } else {
-        return msg.channel.send(`Channel <#${channel.id}> not a text channel.`);
+        return msg.channel.send(`Channel <#${channel.id}> not a text channel.`).then(x => setTimeout(() => x.delete(), 5000));
       }
     }
   },
