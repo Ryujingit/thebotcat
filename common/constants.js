@@ -6,7 +6,7 @@ module.exports = {
     'AUDIO_QUALITY_MEDIUM': 2,
     'AUDIO_QUALITY_HIGH': 3,
   },
-
+  
   botRolePermBits: {
     NORMAL:          1 << 0,
     BYPASS_LOCK:     1 << 1,

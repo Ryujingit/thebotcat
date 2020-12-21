@@ -29,20 +29,20 @@ function isAdmin(msg) {
 function hasBotPermissions(msg, permMask, channel) {
   if (typeof perms == 'string') perms = commonConstants.botRolePermBits[perms];
   else if (Array.isArray(perms)) perms = perms.map(x => commonConstants.botRolePermBits[x]).reduce((a, c) => a + c, 0);
-
+  
   if (!msg.guild) return 0;
-
+  
   if (!props.saved.guilds[msg.guild.id]) {
     props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
     schedulePropsSave();
   }
-
+  
   if (!channel) channel = msg.channel;
-
+  
   let permGuildIDs = Object.keys(props.saved.guilds[msg.guild.id].perms);
   
   var perms = msg.member.roles.cache.array().map(x => x.id).filter(x => permGuildIDs.includes(x)).reduce((a, c) => a | props.saved.guilds[msg.guild.id].perms[c] & permMask, 0) & commonConstants.botRolePermAll;
-
+  
   if (permMask & commonConstants.botRolePermBits.NORMAL &&
     !(perms & commonConstants.botRolePermBits.NORMAL) &&
     (msg.member.hasPermission('ADMINISTRATOR') &&
@@ -101,23 +101,23 @@ function hasBotPermissions(msg, permMask, channel) {
       (props.saved.guilds[msg.guild.id].mutedrole == null ||
         msg.member.roles.highest.position > msg.guild.roles.cache.get(props.saved.guilds[msg.guild.id].mutedrole).position) || isOwner(msg)))
     perms |= commonConstants.botRolePermBits.MUTE;
-
+  
   if (permMask & commonConstants.botRolePermBits.KICK &&
     !(perms & commonConstants.botRolePermBits.KICK) &&
     msg.member.hasPermission('KICK_MEMBERS'))
     perms |= commonConstants.botRolePermBits.KICK;
-
+  
   if (permMask & commonConstants.botRolePermBits.BAN &&
     !(perms & commonConstants.botRolePermBits.BAN) &&
     msg.member.hasPermission('BAN_MEMBERS'))
     perms |= commonConstants.botRolePermBits.BAN;
-
+  
   if (permMask & commonConstants.botRolePermBits.MANAGE_BOT &&
     !(perms & commonConstants.botRolePermBits.MANAGE_BOT) &&
     (msg.member.hasPermission('ADMINISTRATOR') &&
       msg.member.roles.highest.position > msg.guild.me.roles.highest.position || isOwner(msg)))
     perms |= commonConstants.botRolePermBits.MANAGE_BOT;
-
+  
   if (permMask & commonConstants.botRolePermBits.MANAGE_BOT_FULL &&
     !(perms & commonConstants.botRolePermBits.MANAGE_BOT_FULL) &&
     (msg.member.hasPermission('ADMINISTRATOR') &&

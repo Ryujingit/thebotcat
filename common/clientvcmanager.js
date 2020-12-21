@@ -12,7 +12,7 @@ var clientVCManager = {
       loop: null,
     };
   },
-
+  
   // all of these functions have self explanatory names, and the first parameter of each function is the guild's voice state object
   join: async function join(voice, channel) {
     if (voice.channel) clientVCManager.leave(voice);
@@ -26,7 +26,7 @@ var clientVCManager = {
     voice.volume = 1;
     voice.loop = false;
   },
-
+  
   leave: function leave(voice) {
     try { if (voice.connection) voice.connection.disconnect(); } catch (e) {}
     voice.channel = null;
@@ -37,32 +37,32 @@ var clientVCManager = {
     voice.volume = null;
     voice.loop = null;
   },
-
+  
   getVolume: function getVolume(voice) {
     return voice.volume;
   },
-
+  
   setVolume: function setVolume(voice, wantedvolume) {
     if (voice.dispatcher) voice.dispatcher.setVolume(wantedvolume);
     voice.volume = wantedvolume;
   },
-
+  
   getLoop: function getLoop(voice) {
     return voice.loop;
   },
-
+  
   toggleLoop: function toggleLoop(voice) {
     voice.loop = !voice.loop;
   },
-
+  
   pause: function pause(voice) {
     voice.dispatcher.pause();
   },
-
+  
   resume: function pause(voice) {
     voice.dispatcher.resume();
   },
-
+  
   addSong: async function addSong(voice, url) {
     if (!/^https?:\/\/(?:www.)?youtube.com\/[A-Za-z0-9?&=\-_%.]+$/.test(url)) throw new Error('invalid url');
     let latestObj = {
@@ -76,11 +76,11 @@ var clientVCManager = {
     await new Promise(resolve => latestObj.resolve = resolve);
     return latestObj;
   },
-
+  
   forceSkip: function (voice) {
     if (voice.mainloop) voice.mainloop = 2;
   },
-
+  
   startMainLoop: async function startMainLoop(voice, msgchannel) {
     if (voice.mainloop) return;
     voice.mainloop = 1;
@@ -115,7 +115,7 @@ var clientVCManager = {
     }
     voice.mainloop = 0;
   },
-
+  
   stopMainLoop: function stopMainLoop(voice) {
     if (voice.mainloop == 0) return;
     voice.mainloop = 3;

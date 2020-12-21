@@ -14,20 +14,20 @@ module.exports = [
       let silenced = !guilddata.enabled_commands.global ||
         !guilddata.enabled_commands.categories.Administrative ||
         !guilddata.enabled_commands.commands.settings;
-
+      
       let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.MANAGE_BOT | common.constants.botRolePermBits.MANAGE_BOT_FULL);
-
+      
       let basicperms = perms & common.constants.botRolePermBits.MANAGE_BOT, fullperms = perms & common.constants.botRolePermBits.MANAGE_BOT_FULL;
-
+      
       if (!basicperms) return silenced ? null : msg.channel.send('You do not have permission to run this command.');
-
+      
       if (args.length == 0) {
         if (fullperms)
           return msg.channel.send(`List of settings:\nprefix, badwords, logchannel, mutedrole, roles, enabledcmds`);
         else
           return msg.channel.send(`List of settings:\nprefix, badwords`);
       }
-
+      
       switch (args[0]) {
         case 'prefix':
           if (args.length == 1) {
@@ -38,7 +38,7 @@ module.exports = [
             return msg.channel.send(`Server prefix set to: \`${guilddata.prefix}\``);
           }
           break;
-
+        
         case 'badwords':
           if (args.length == 1) {
             return msg.channel.send(
@@ -117,7 +117,7 @@ module.exports = [
             }
           }
           break;
-
+        
         case 'logchannel':
           if (!fullperms) return silenced ? null : msg.channel.send('You do not have permission to run this command.');
           if (args.length == 1) {
@@ -156,7 +156,7 @@ module.exports = [
             }
           }
           break;
-
+        
         case 'mutedrole':
           if (!fullperms) return silenced ? null : msg.channel.send('You do not have permission to run this command.');
           if (args.length == 1) {
@@ -192,7 +192,7 @@ module.exports = [
             }
           }
           break;
-
+        
         case 'roles':
           if (!fullperms) return silenced ? null : msg.channel.send('You do not have permission to run this command.');
           if (args.length == 1) {
@@ -238,7 +238,7 @@ module.exports = [
                   }
                 }
                 break;
-
+              
               case 'init':
                 let role = common.searchRoles(msg.guild.roles, args.slice(2).join(' '));
                 if (Array.isArray(role)) {
@@ -263,7 +263,7 @@ module.exports = [
                   });
                 }
                 break;
-
+              
               case 'clear':
                 let role2 = common.searchRoles(msg.guild.roles, args.slice(2).join(' '));
                 if (Array.isArray(role2)) {
@@ -291,7 +291,7 @@ module.exports = [
                   });
                 }
                 break;
-
+              
               case 'enable':
               case 'disable':
                 let role3 = common.searchRoles(msg.guild.roles, args[2]);
@@ -326,14 +326,14 @@ module.exports = [
                   });
                 }
                 break;
-
+              
               default:
                 return msg.channel.send('Invalid option. Run `settings roles` to view options.');
                 break;
             }
           }
           break;
-
+        
         case 'enabledcmds':
           if (!fullperms) return silenced ? null : msg.channel.send('You do not have permission to run this command.');
           if (args.length == 1) {
@@ -352,7 +352,7 @@ module.exports = [
                   case 'global':
                     return msg.channel.send(`Commands are globally ${guilddata.enabled_commands.global ? 'enabled' : 'disabled'}.`);
                     break;
-
+                  
                   case 'category':
                     let category = guilddata.enabled_commands.categories[args.slice(3).join(' ')];
                     if (category != null) {
@@ -361,7 +361,7 @@ module.exports = [
                       return msg.channel.send(`The category '${ args.slice(3).join(' ')}' does not exist.`);
                     }
                     break;
-
+                  
                   case 'command':
                     let command = guilddata.enabled_commands.commands[args.slice(3).join(' ')];
                     if (command != null) {
@@ -370,13 +370,13 @@ module.exports = [
                       return msg.channel.send(`The command '${args.slice(3).join(' ')}' does not exist.`);
                     }
                     break;
-
+                  
                   default:
                     return msg.channel.send('Invalid option. Run `settings enabledcmds` to view options.');
                     break;
                 }
                 break;
-
+              
               case 'enable':
               case 'disable':
                 switch (args[2]) {
@@ -385,7 +385,7 @@ module.exports = [
                     schedulePropsSave();
                     return msg.channel.send(`Global commands have been successfully ${args[1] == 'enable' ? 'enabled' : 'disabled'}.`);
                     break;
-
+                  
                   case 'category':
                     let category = guilddata.enabled_commands.categories[args.slice(3).join(' ')];
                     if (category != null) {
@@ -396,7 +396,7 @@ module.exports = [
                       return msg.channel.send(`The category '${args.slice(3).join(' ')}' does not exist.`);
                     }
                     break;
-
+                  
                   case 'command':
                     let command = guilddata.enabled_commands.commands[args.slice(3).join(' ')];
                     if (command != null) {
@@ -407,7 +407,7 @@ module.exports = [
                       return msg.channel.send(`The command '${args.slice(3).join(' ')}' does not exist.`);
                     }
                     break;
-
+                  
                   case 'all':
                     let val = args[1] == 'enable';
                     guilddata.enabled_commands.global = val;
@@ -420,7 +420,7 @@ module.exports = [
                     break;
                 }
                 break;
-
+              
               default:
                 return msg.channel.send('Invalid option. Run `settings enabledcmds` to view options.');
                 break;

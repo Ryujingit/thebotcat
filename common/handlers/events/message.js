@@ -23,7 +23,7 @@ module.exports = async msg => {
     }
     return;
   }
-
+  
   if (handlers.extra.message) {
     let res;
     for (var i = 0; i < handlers.extra.message.length; i++) {
@@ -32,14 +32,14 @@ module.exports = async msg => {
       if (res === 0) return;
     }
   }
-
+  
   if (msg.author.bot) return;
-
+  
   if (msg.guild && props.saved.disallowed_guilds.includes(msg.guild.id)) return;
-
+  
   if (msg.guild && persGuildData.special_guilds.includes(msg.guild.id) && mutelist.includes(msg.author.id))
     msg.delete();
-
+  
   if (!msg.guild) {
     if (props.feat.savedms && !props.saved.misc.dmchannels.includes(msg.channel.id)) {
       props.saved.misc.dmchannels.push(msg.channel.id);

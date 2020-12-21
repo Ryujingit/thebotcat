@@ -19,7 +19,7 @@ module.exports = [
       } else {
         msgid = args[1];
       }
-
+      
       if (!channel) channel = msg.channel;
       
       if (channel.type == 'text' || channel.type == 'announcement') {
@@ -45,7 +45,7 @@ module.exports = [
     flags: 6,
     async execute(msg, cmdstring, command, argstring, args) {
       let channel, seconds;
-
+      
       if (/<#[0-9]+>/.test(args[0])) {
         channel = msg.guild.channels.cache.find(x => x.id == args[0].slice(2, -1));
         if (!channel || !channel.permissionsFor(msg.member).has('VIEW_CHANNEL')) return msg.channel.send('Cannot set slowmode in channel outside of this guild.');
@@ -53,7 +53,7 @@ module.exports = [
       } else {
         seconds = Math.floor(Number(args[0]));
       }
-
+      
       if (!channel) channel = msg.channel;
       
       if (!Number.isSafeInteger(seconds) || seconds < 0) return msg.channel.send('Invalid seconds for slowmode.');
@@ -85,7 +85,7 @@ module.exports = [
     flags: 6,
     async execute(msg, cmdstring, command, argstring, args) {
       let channel, bitrate;
-
+      
       if (/<#[0-9]+>/.test(args[0])) {
         channel = msg.guild.channels.cache.find(x => x.id == args[0].slice(2, -1));
         if (!channel || !channel.permissionsFor(msg.member).has('VIEW_CHANNEL')) return msg.channel.send('Cannot set bitrate of channel outside of this guild.');
@@ -93,7 +93,7 @@ module.exports = [
       } else {
         bitrate = Math.floor(Number(args[0]));
       }
-
+      
       if (!channel) channel = msg.channel;
       
       if (!Number.isSafeInteger(bitrate) || bitrate < 0) return msg.channel.send('Invalid bitrate');
@@ -132,7 +132,7 @@ module.exports = [
       }
       
       let channel, msgs;
-
+      
       if (/<#[0-9]+>/.test(args[0])) {
         channel = msg.guild.channels.cache.find(x => x.id == args[0].slice(2, -1));
         if (!channel || !channel.permissionsFor(msg.member).has('VIEW_CHANNEL')) return msg.channel.send('Cannot purge messages in channel outside of this guild.');
@@ -140,7 +140,7 @@ module.exports = [
       } else {
         msgs = args[0] == 'all' ? -1 : Number(args[0]);
       }
-
+      
       if (!channel) channel = msg.channel;
       
       if (!Number.isSafeInteger(msgs)) return msg.channel.send('Invalid number of messages to delete');
@@ -165,12 +165,12 @@ module.exports = [
         props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
         schedulePropsSave();
       }
-
+      
       if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.LOCK_CHANNEL))
         return msg.channel.send('You do not have permission to run this command.');
-
+      
       let channel, reason = [];
-
+      
       for (var i = 0; i < args.length; i++) {
         if (i > 0 || !/<#[0-9]+>/.test(args[i])) {
           reason.push(args[i]);
@@ -179,10 +179,10 @@ module.exports = [
           if (!channel || !channel.permissionsFor(msg.member).has('VIEW_CHANNEL')) return msg.channel.send('Cannot lock channel outside of this guild.');
         }
       }
-
+      
       reason = reason.join(' ');
       if (!channel) channel = msg.channel;
-
+      
       let perms = common.serializePermissionOverwrites(channel);
       let newperms = perms.map(x => Object.assign({}, x));
       if (newperms.filter(x => x.id == msg.guild.id).length == 0) {
@@ -211,7 +211,7 @@ module.exports = [
             deny: 0,
           });
       });
-
+      
       if (!common.serializedPermissionsEqual(perms, newperms)) {
         try {
           await common.partialDeserializePermissionOverwrites(channel, newperms);
@@ -238,12 +238,12 @@ module.exports = [
         props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
         schedulePropsSave();
       }
-
+      
       if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.LOCK_CHANNEL))
         return msg.channel.send('You do not have permission to run this command.');
-
+      
       let channel, reason = [];
-
+      
       for (var i = 0; i < args.length; i++) {
         if (i > 0 || !/<#[0-9]+>/.test(args[i])) {
           reason.push(args[i]);
@@ -252,10 +252,10 @@ module.exports = [
           if (!channel || !channel.permissionsFor(msg.member).has('VIEW_CHANNEL')) return msg.channel.send('Cannot unlock channel outside of this guild.');
         }
       }
-
+      
       reason = reason.join(' ');
       if (!channel) channel = msg.channel;
-
+      
       let perms = props.saved.guilds[msg.guild.id].temp.stashed.channeloverrides[channel.id];
       if (perms) {
         try {
@@ -283,13 +283,13 @@ module.exports = [
         props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
         schedulePropsSave();
       }
-
+      
       if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.MUTE))
         return msg.channel.send('You do not have permission to run this command.');
-
+      
       if (!props.saved.guilds[msg.guild.id].mutedrole)
         return msg.channel.send('Error: no guild muted role specified, set one with `!settings mutedrole set <@role|id|name|query>`');
-
+      
       let member;
       try {
         member = await common.searchMember(msg.guild.members, args[0]);
@@ -297,9 +297,9 @@ module.exports = [
       } catch (e) {
         return msg.channel.send('Could not find member.');
       }
-
+      
       let mutereason = args.slice(1).join(' ');
-
+      
       if (!member.roles.cache.get(props.saved.guilds[msg.guild.id].mutedrole)) {
         await member.roles.add(props.saved.guilds[msg.guild.id].mutedrole, `[By ${msg.author.tag} (id ${msg.author.id})]${mutereason ? ' ' + mutereason : ''}`);
         return msg.channel.send(`Muted ${member.user.tag}.`);
@@ -318,13 +318,13 @@ module.exports = [
         props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
         schedulePropsSave();
       }
-
+      
       if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.MUTE))
         return msg.channel.send('You do not have permission to run this command.');
-
+      
       if (!props.saved.guilds[msg.guild.id].mutedrole)
         return msg.channel.send('Error: no guild muted role specified, set one with `!settings mutedrole <@role|id|name|query>`');
-
+      
       let member;
       try {
         member = await common.searchMember(msg.guild.members, args[0]);
@@ -332,9 +332,9 @@ module.exports = [
       } catch (e) {
         return msg.channel.send('Could not find member.');
       }
-
+      
       let unmutereason = args.slice(1).join(' ');
-
+      
       if (member.roles.cache.get(props.saved.guilds[msg.guild.id].mutedrole)) {
         await member.roles.remove(props.saved.guilds[msg.guild.id].mutedrole, `[By ${msg.author.tag} (id ${msg.author.id})]${unmutereason ? ' ' + unmutereason : ''}`);
         return msg.channel.send(`Unmuted ${member.user.tag}.`);
@@ -380,7 +380,7 @@ module.exports = [
     async execute(msg, cmdstring, command, argstring, args) {
       if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.KICK))
         return msg.channel.send('You do not have permission to run this command.');
-
+      
       let member;
       try {
         member = await common.searchMember(msg.guild.members, args[0]);
@@ -391,18 +391,18 @@ module.exports = [
       }
       
       let kickreason = args.slice(1).join(' ');
-
+      
       if (!msg.guild.me.hasPermission('KICK_MEMBERS'))
         return msg.channel.send('Error: I do not have permission to kick members.');
       
       if (msg.member.id != msg.guild.ownerID &&
         (member.id == msg.guild.ownerID || msg.member.roles.highest.position <= member.roles.highest.position))
         return msg.channel.send('You cannot kick someone equal or higher than you in the role hierarchy.');
-
+      
       if (msg.guild.me.id != msg.guild.ownerID &&
         (member.id == msg.guild.ownerID || msg.guild.me.roles.highest.position <= member.roles.highest.position))
         return msg.channel.send('Error: I cannot kick someone equal or higher than me in the role hierarchy.');
-
+      
       try {
         let text = `Are you sure you want to kick user ${member.user.tag} (id ${member.id})${kickreason ? ' with reason ' + util.inspect(kickreason) : ''}?`;
         if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Confirm Kick', description: text } };
@@ -428,7 +428,7 @@ module.exports = [
     async execute(msg, cmdstring, command, argstring, args) {
       if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.BAN))
         return msg.channel.send('You do not have permission to run this command.');
-
+      
       let member, nomember;
       try {
         member = await common.searchMember(msg.guild.members, args[0]);
@@ -440,13 +440,13 @@ module.exports = [
         if (/[0-9]+/.test(args[0])) nomember = true;
         else return msg.channel.send('Could not find member.');
       }
-
+      
       if (nomember) {
         let banreason = args.slice(1).join(' ');
-
+        
         if (!msg.guild.me.hasPermission('BAN_MEMBERS'))
           return msg.channel.send('Error: I do not have permission to ban members.');
-
+        
         try {
           let text = `Are you sure you want to ban unknown user${banreason ? ' with reason ' + util.inspect(banreason) : ''}?`;
           if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Confirm Ban', description: text } };
@@ -465,18 +465,18 @@ module.exports = [
         }
       } else {
         let banreason = args.slice(1).join(' ');
-
+        
         if (!msg.guild.me.hasPermission('BAN_MEMBERS'))
           return msg.channel.send('Error: I do not have permission to ban members.');
-
+        
         if (msg.member.id != msg.guild.ownerID &&
           (member.id == msg.guild.ownerID || msg.member.roles.highest.position <= member.roles.highest.position))
           return msg.channel.send('You cannot ban someone equal or higher than you in the role hierarchy.');
-
+        
         if (msg.guild.me.id != msg.guild.ownerID &&
           (member.id == msg.guild.ownerID || msg.guild.me.roles.highest.position <= member.roles.highest.position))
           return msg.channel.send('Error: I cannot ban someone equal or higher than me in the role hierarchy.');
-
+        
         try {
           let text = `Are you sure you want to ban user ${member.user.tag} (id ${member.id})${banreason ? ' with reason ' + util.inspect(banreason) : ''}?`;
           if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Confirm Ban', description: text } };
@@ -503,14 +503,14 @@ module.exports = [
     async execute(msg, cmdstring, command, argstring, args) {
       if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.BAN))
         return msg.channel.send('You do not have permission to run this command.');
-
+      
       let memberid;
       if (args[0]) {
         if (/<@!?[0-9]+>|[0-9]+/.test(args[0]))
           memberid = args[0].replace(/[<@!>]/g, '');
       }
       if (!memberid) return;
-
+      
       let baninfo;
       try {
         baninfo = await msg.guild.fetchBan(memberid);
@@ -518,12 +518,12 @@ module.exports = [
       } catch (e) {
         return msg.channel.send('User not banned or nonexistent.');
       }
-
+      
       let unbanreason = args.slice(1).join(' ');
-
+      
       if (!msg.guild.me.hasPermission('BAN_MEMBERS'))
         return msg.channel.send('Error: I do not have permission to unban members.');
-
+      
       try {
         let text = `Are you sure you want to unban user ${baninfo.user.tag} (id ${baninfo.user.id})${unbanreason ? ' with reason ' + util.inspect(unbanreason) : ''}?`;
         if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Confirm Unban', description: text } };

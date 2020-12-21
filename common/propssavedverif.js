@@ -7,7 +7,7 @@ function isId(val) {
 
 module.exports = {
   isId,
-
+  
   propsSavedCreateVerifiedCopy: function propsSavedCreateVerifiedCopy(obj) {
     if (typeof obj != 'object') obj = {};
     if (!Number.isSafeInteger(obj.version) || obj.version == 1) {
@@ -469,7 +469,7 @@ module.exports = {
       return newObj;
     }
   },
-
+  
   getEmptyGuildObject: id => {
     return {
       prefix: defaultprefix,
