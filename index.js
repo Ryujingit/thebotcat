@@ -75,7 +75,7 @@ var addlbotperms = {};
 var mutelist = [];
 
 
-var version = '1.5.5b';
+var version = '1.5.6';
 global.updateStatus = async () => {
   let newStatus = props.feat.status ? props.feat.status.replace('{prefix}', defaultprefix).replace('{guilds}', client.guilds.cache.size) : null;
   let currentStatus;
@@ -265,12 +265,18 @@ function removeCommands(cmds) {
   }
 }
 function getCommandsCategorized(guilddata) {
-  let commandsList = commands.filter(x =>
-    x.public && !(x.name != 'settings' &&
-      guilddata && (
-        !guilddata.enabled_commands.global ||
+  let commandsList;
+  if (guilddata == null) {
+    commandsList = commands.filter(x => x.flags & 2);
+  } else if (!guilddata) {
+    commandsList = commands.filter(x => (x.flags & 10) == 10);
+  } else {
+    commandsList = commands.filter(x =>
+      x.flags & 2 && !(x.name != 'settings' &&
+        (!guilddata.enabled_commands.global ||
         !guilddata.enabled_commands.categories[x.category] ||
         !guilddata.enabled_commands.commands[x.name])));
+  }
   let commandsCategorized = { Uncategorized: [] };
   commandsList.forEach(x =>
     x.category ?

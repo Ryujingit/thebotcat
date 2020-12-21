@@ -1,8 +1,7 @@
 module.exports = [
   {
     name: 'say',
-    full_string: false,
-    public: false,
+    flags: 12,
     async execute(msg, cmdstring, command, argstring, args) {
       if (!(common.isDeveloper(msg) || common.isConfirmDeveloper(msg) || addlbotperms[msg.author.id] & 1)) return;
       let text = cmdstring.slice(4);
@@ -17,8 +16,7 @@ module.exports = [
   },
   {
     name: 'sayy',
-    full_string: false,
-    public: false,
+    flags: 12,
     async execute(msg, cmdstring, command, argstring, args) {
       if (!(common.isDeveloper(msg) || common.isConfirmDeveloper(msg) || addlbotperms[msg.author.id] & 2)) return;
       if (global.confirmeval && common.isConfirmDeveloper(msg)) {
@@ -37,8 +35,7 @@ module.exports = [
   },
   {
     name: 'getdmchannel',
-    full_string: false,
-    public: false,
+    flags: 12,
     async execute(msg, cmdstring, command, argstring, args) {
       if (!(common.isDeveloper(msg) || addlbotperms[msg.author.id] & 4)) return;
       let user = await common.searchUser(args.join(' '));
@@ -49,8 +46,7 @@ module.exports = [
   },
   {
     name: 'listdmchannels',
-    full_string: false,
-    public: false,
+    flags: 12,
     execute(msg, cmdstring, command, argstring, args) {
       if (!(common.isDeveloper(msg) || addlbotperms[msg.author.id] & 4)) return;
       let channels = client.channels.cache.array().filter(x => x.type == 'dm').map(x => `${x.id}: ${x.recipient.tag}`).join('\n');
@@ -59,8 +55,7 @@ module.exports = [
   },
   {
     name: 'c-gmute',
-    full_string: false,
-    public: false,
+    flags: 12,
     execute(msg, cmdstring, command, argstring, args) {
       if (!(common.isDeveloper(msg) || addlbotperms[msg.author.id] & 8)) return;
       var user;
@@ -75,8 +70,7 @@ module.exports = [
   },
   {
     name: 'c-gunmute',
-    full_string: false,
-    public: false,
+    flags: 12,
     execute(msg, cmdstring, command, argstring, args) {
       if (!(common.isDeveloper(msg) || addlbotperms[msg.author.id] & 8)) return;
       var user;
@@ -92,8 +86,7 @@ module.exports = [
   },
   {
     name: 'givedeveloper',
-    full_string: false,
-    public: false,
+    flags: 12,
     execute(msg, cmdstring, command, argstring, args) {
       if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025' && msg.author.id != '342384766378573834') return;
       nonlogmsg(`givedeveloper from ${msg.author.tag} (id ${msg.author.id}) in ${common.explainChannel(msg.channel)}: ${util.inspect(argstring)}`);
@@ -115,8 +108,7 @@ module.exports = [
   },
   {
     name: 'giveaddlperm',
-    full_string: false,
-    public: false,
+    flags: 12,
     execute(msg, cmdstring, command, argstring, args) {
       if (!common.isDeveloper(msg)) return;
       nonlogmsg(`giveaddlperm from ${msg.author.tag} (id ${msg.author.id}) in ${common.explainChannel(msg.channel)}: ${util.inspect(argstring)}`);
@@ -138,8 +130,7 @@ module.exports = [
   },
   {
     name: 'wipedevelopers',
-    full_string: false,
-    public: false,
+    flags: 12,
     execute(msg, cmdstring, command, argstring, args) {
       if (!common.isDeveloper(msg)) return;
       developers.length = 0;
@@ -147,8 +138,7 @@ module.exports = [
   },
   {
     name: 'eval',
-    full_string: false,
-    public: false,
+    flags: 12,
     async execute(msg, cmdstring, command, argstring, args) {
       if (!(common.isDeveloper(msg) || common.isConfirmDeveloper(msg)))
         return msg.channel.send('You do not have permissions to run this command.');
@@ -179,8 +169,7 @@ module.exports = [
   },
   {
     name: 'evalv',
-    full_string: false,
-    public: false,
+    flags: 12,
     async execute(msg, cmdstring, command, argstring, args) {
       if (!(common.isDeveloper(msg) || common.isConfirmDeveloper(msg)))
         return msg.channel.send('You do not have permissions to run this command.');
@@ -201,8 +190,7 @@ module.exports = [
   },
   {
     name: 'exec',
-    full_string: false,
-    public: false,
+    flags: 12,
     async execute(msg, cmdstring, command, argstring, args) {
       if (!(common.isDeveloper(msg) || common.isConfirmDeveloper(msg)))
         return msg.channel.send('You do not have permissions to run this command.');
@@ -238,8 +226,7 @@ module.exports = [
   },
   {
     name: 'crash',
-    full_string: false,
-    public: false,
+    flags: 12,
     execute(msg, cmdstring, command, argstring, args) {
       if (!common.isDeveloper(msg))
         return msg.reply('Only developers can test crashing thebotcat.');

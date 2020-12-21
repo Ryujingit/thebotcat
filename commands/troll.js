@@ -1,9 +1,8 @@
 module.exports = [
   {
     name: '@_everyone',
-    full_string: false,
     description: '`!@_everyone members [hidden]` pings everyone ... the manual way\n`!@_everyone roles [hidden]` to ping all roles instead',
-    public: false,
+    flags: 4,
     execute(msg, cmdstring, command, argstring, args) {
       if (!common.isAdmin(msg)) return;
       if (args[1]) {
@@ -47,9 +46,8 @@ module.exports = [
   },
   {
     name: '@someone',
-    full_string: false,
     description: '`!@someone` pings a random person on the server',
-    public: true,
+    flags: 6,
     execute(msg, cmdstring, command, argstring, args) {
       if (!(common.isAdmin(msg) || msg.guild.id == '717268211246301236')) return;
       let members = msg.guild.members.cache.array().filter(x => !x.user.bot);
@@ -59,9 +57,8 @@ module.exports = [
   },
   {
     name: 'ghostdot',
-    full_string: false,
     description: '`!ghostdot` to send a message then delete it in this channel\n`!ghostdot #channel1 [#channel2 ...]` to send a message and delete it in a certain channel or channels\n`!ghostdot all` to send a message then immediately delete it in every channel in a guild',
-    public: true,
+    flags: 6,
     async execute(msg, cmdstring, command, argstring, args) {
       if (!(common.isDeveloper(msg) || common.isOwner(msg) || common.isAdmin(msg)))
         return;
@@ -92,9 +89,8 @@ module.exports = [
   },
   {
     name: 'ghostdot_delmsg',
-    full_string: false,
     description: '`!ghostdot_delmsg` to send a message then delete it in this channel\n`!ghostdot_delmsg #channel1 [#channel2 ...]` to send a message and delete it in a certain channel or channels\n`!ghostdot_delmsg all` to send a message then immediately delete it in every channel in a guild',
-    public: false,
+    flags: 4,
     async execute(msg, cmdstring, command, argstring, args) {
       if (!(common.isDeveloper(msg) || common.isOwner(msg) || common.isAdmin(msg)))
         return msg.delete();

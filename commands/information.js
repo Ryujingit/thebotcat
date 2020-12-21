@@ -1,12 +1,11 @@
 module.exports = [
   {
     name: 'help',
-    full_string: false,
     description: '`!help` to list my commands\n`!help <command>` to print help for command',
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
-      if (args.length == 0) {
-        let [commandsList, commandsCategorized] = getCommandsCategorized(props.saved.guilds[msg.guild.id]);
+      if (args.length == 0 || args[0] == 'all') {
+        let [commandsList, commandsCategorized] = getCommandsCategorized(args[0] == 'all' ? null : msg.guild ? props.saved.guilds[msg.guild.id] : false);
         return msg.channel.send({
           embed: {
             title: `Commands (${commandsList.length})`,
@@ -18,7 +17,7 @@ module.exports = [
         });
       } else {
         let cmdobj = commands.filter(x => x.name == argstring)[0];
-        if (cmdobj && cmdobj.public) {
+        if (cmdobj && cmdobj.flags & 2) {
           if (cmdobj.description)
             return msg.channel.send(cmdobj.description);
           else
@@ -31,9 +30,8 @@ module.exports = [
   },
   {
     name: 'version',
-    full_string: false,
     description: '`!version` prints the version of my code',
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(version))
         return msg.channel.send({ embed: { title: 'Version', description: `Thebotcat is version ${version}` } });
@@ -43,36 +41,32 @@ module.exports = [
   },
   {
     name: 'uptime',
-    full_string: false,
     description: '`!uptime` to see my uptime',
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       msg.channel.send(common.getBotcatUptimeMessage());
     }
   },
   {
     name: 'status',
-    full_string: false,
     description: '`!status` to see my status',
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       msg.channel.send(common.getBotcatStatusMessage());
     }
   },
   {
     name: 'fullstatus',
-    full_string: false,
     description: '`!fullstatus` to see my full status',
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       msg.channel.send(common.getBotcatFullStatusMessage());
     }
   },
   {
     name: 'ping',
-    full_string: false,
     description: '`!ping` checks my ping in the websocket, to the web, and discord',
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       return new Promise((resolve, reject) => {
         msg.channel.send('Checking Ping').then(m => {
@@ -93,9 +87,8 @@ module.exports = [
   },
   {
     name: 'discord',
-    full_string: false,
     description: '`!discord` for a link to my Discord Server',
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       var discord = new Discord.MessageEmbed()
         .setTitle('This is my discord support server if you wanna join click the link! https://discord.gg/NamrBZc')
@@ -105,9 +98,8 @@ module.exports = [
   },
   {
     name: 'github',
-    full_string: false,
     description: '`!github` for a link to my GitHub repo',
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       var discord = new Discord.MessageEmbed()
         .setTitle('This is my github repository (its completely open source)!\nhttps://github.com/thebotcat/thebotcat')
@@ -117,9 +109,8 @@ module.exports = [
   },
   {
     name: 'invite',
-    full_string: false,
     description: '`!invite` for my invite link',
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       var discord = new Discord.MessageEmbed()
         .setTitle('My invite link, to add me to any server!\nhttps://discord.com/api/oauth2/authorize?client_id=682719630967439378&permissions=1379265775&scope=bot');
@@ -128,9 +119,8 @@ module.exports = [
   },
   {
     name: 'avatar',
-    full_string: false,
     description: '`!avatar` displays your avatar\n`!avatar @someone` displays someone\'s avatar',
-    public: true,
+    flags: 14,
     async execute(msg, cmdstring, command, argstring, args) {
       let member;
       if (args.length != 0) {
@@ -194,9 +184,8 @@ module.exports = [
   },
   {
     name: 'firstmsg',
-    full_string: false,
     description: '`!firstmsg` for a link to the first message in this channel\n`!firstmsg #channel` for a link to the first message in #channel',
-    public: true,
+    flags: 14,
     async execute(msg, cmdstring, command, argstring, args) {
       let channel;
       if (args.length == 0) {
@@ -214,9 +203,8 @@ module.exports = [
   },
   {
     name: 'dateid',
-    full_string: false,
     description: '`!dateid <id>` to get the UTC date/time of an ID in discord',
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       try {
         let id = BigInt(args[0]);

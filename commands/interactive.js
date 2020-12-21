@@ -1,18 +1,16 @@
 module.exports = [
   {
     name: 'coinflip',
-    full_string: false,
     description: '`!coinflip` returns tails or heads with 50% probability each',
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       return msg.channel.send(`I\'m flipping a coin, and the result is...: ${Math.random() >= 0.5 ? 'heads' : 'tails'}!`);
     }
   },
   {
     name: 'roll',
-    full_string: false,
     description: '`!roll d#|#` rolls a dice with the given number of sides',
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       let sides = Number(args[0].replace(/[^0-9.e-]/g, '')) || 6;
       return msg.channel.send(`Result of rolling a d${sides}: ${1 + Math.floor(Math.random() * sides)}`);
@@ -20,9 +18,8 @@ module.exports = [
   },
   {
     name: 'randint',
-    full_string: false,
     description: '`!randint <min> <max>` returns a random integer between min and max (inclusive)',
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       let min = Math.floor(Number(args[0])) || 0, max = Math.floor(Number(args[1])) || 1;
       return msg.channel.send(`Random integer between ${min} and ${max}: ${min + Math.floor(Math.random() * (max - min + 1))}`);
@@ -30,9 +27,8 @@ module.exports = [
   },
   {
     name: 'randfloat',
-    full_string: false,
     description: '`!randfloat <min> <max>` returns a random real number between min and max (inclusive lower bound)',
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       let min = Number(args[0]) || 0, max = Number(args[1]) || 1;
       return msg.channel.send(`Random real number between ${min} and ${max}: ${min + Math.random() * (max - min)}`);
@@ -40,9 +36,8 @@ module.exports = [
   },
   {
     name: 'choice',
-    full_string: false,
     description: '`!choice <choice1> [<choice2> ...]` picks a random option from the choices given',
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       let choice = Math.floor(Math.random() * args.length);
       choice = args[choice];
@@ -55,9 +50,8 @@ module.exports = [
   },
   {
     name: 'rps',
-    full_string: false,
     description: '`!rps rock|paper|scissors` plays a game of rock paper scissors with me, where I pick one randomly',
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       let replies = ['rock', 'paper', 'scissors'];
       
@@ -80,14 +74,13 @@ module.exports = [
   },
   {
     name: 'calc',
-    full_string: false,
     description: '`!calc <expression>` calculates the result of a mathematical expression using math.js evaluate (<https://mathjs.org/docs/expressions/index.html> for info)\n' +
       'Note: a delete command has been added to delete a property from an object:\n' +
       '  `delete(obj, prop)` to delete `prop` from `obj` or\n' +
       '  `delete(prop)` to delete `prop` from global scope\n' +
       '`!calc :view` to print out serialized JSON of your calc scope\n' +
       '`!calc :clear` to clear your calc scope',
-    public: true,
+    flags: 14,
     async execute(msg, cmdstring, command, argstring, args) {
       if (!props.saved.feat.calc) return msg.channel.send('Calculation features are disabled');
       let expr = argstring, res;
@@ -273,8 +266,7 @@ module.exports = [
   },
   {
     name: 'echoargs',
-    full_string: false,
-    public: false,
+    flags: 12,
     execute(msg, cmdstring, command, argstring, args) {
       return msg.channel.send(cmdstring.split('').map(x => ((x == '<') ? ('\\' + x) : x)).join(''));
     }

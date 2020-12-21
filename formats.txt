@@ -1,3 +1,5 @@
+command flags property: &1=full string, &2=public, &4=servers, &8=dms
+
 format for props.saved:
   props.saved : object {
     feat : object {
@@ -56,7 +58,7 @@ format for props.saved:
         mutedrole : string <roleid> / null,
         basic_automod: {
           bad_words: [
-            {
+            object {
               enabled : boolean,
               type : number (
                 0 - entire message is the word only
@@ -77,8 +79,45 @@ format for props.saved:
         },
         events : array [
           object {
-            triggers : array [],
-            actions : array [],
+            triggers : array [
+              (
+                object {
+                  type : 'sent_message_match',
+                  msg_type : <guild.basic_automod.bad_words[x].type>,
+                  allowed_roles : array [
+                    string <roleid>,
+                    ...
+                  ],
+                  ignored_roles : array [
+                    string <roleid>,
+                    ...
+                  ],
+                },
+              )
+              ...
+            ],
+            actions : array [
+              (
+                object {
+                  type : 'send_message',
+                  content : string,
+                  embed : object {
+                    title : string / null,
+                    description : string / null,
+                    fields : array [
+                      object {
+                        name : string,
+                        value : string,
+                        inline : boolean,
+                      },
+                      ...
+                    ],
+                    footer : string / null,
+                  },
+                },
+              )
+              ...
+            ],
           },
           ...
         ],

@@ -1,9 +1,8 @@
 module.exports = [
   {
     name: 'join',
-    full_string: false,
     description: '`!join` for me to join the voice channel you are in\n`!join #channel` for me to join a voice channel',
-    public: true,
+    flags: 6,
     async execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 1)) return msg.channel.send('Join/leave features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
@@ -43,9 +42,8 @@ module.exports = [
   },
   {
     name: 'leave',
-    full_string: false,
     description: '`!leave` for me to leave the voice channel I am in',
-    public: true,
+    flags: 6,
     async execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 1)) return msg.channel.send('Join/leave features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];

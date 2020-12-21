@@ -1,9 +1,8 @@
 module.exports = [
   {
     name: 'play',
-    full_string: false,
     description: '`!play <url>` to play the audio of a youtube url, like every other music bot in existence',
-    public: true,
+    flags: 6,
     async execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
@@ -31,9 +30,8 @@ module.exports = [
   },
   {
     name: 'pause',
-    full_string: false,
     description: '`!pause` pauses the currently playing song',
-    public: true,
+    flags: 6,
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
@@ -55,9 +53,8 @@ module.exports = [
   },
   {
     name: 'resume',
-    full_string: false,
     description: '`!resume` resumes the currently paused song',
-    public: true,
+    flags: 6,
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
@@ -79,9 +76,8 @@ module.exports = [
   },
   {
     name: 'volume',
-    full_string: false,
     description: '`!volume <float>` sets my volume in a vc, with 1 being the normal volume',
-    public: true,
+    flags: 6,
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
@@ -109,9 +105,8 @@ module.exports = [
   },
   {
     name: 'loop',
-    full_string: false,
     description: '`!loop` toggles whether the currently playing song will loop',
-    public: true,
+    flags: 6,
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
@@ -132,9 +127,8 @@ module.exports = [
   },
   {
     name: 'forceskip',
-    full_string: false,
     description: '`!forceskip` skips the currently playing song',
-    public: true,
+    flags: 6,
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
@@ -156,9 +150,8 @@ module.exports = [
   },
   {
     name: 'stop',
-    full_string: false,
     description: '`!stop` clears the song list and stops playing',
-    public: true,
+    flags: 6,
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
@@ -180,9 +173,8 @@ module.exports = [
   },
   {
     name: 'songslist',
-    full_string: false,
     description: '`!songslist` to list the currently playing song and the next songs',
-    public: true,
+    flags: 6,
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
@@ -207,9 +199,8 @@ module.exports = [
   },
   {
     name: 'currentsong',
-    full_string: false,
     description: '`!currentsong` to list the currently playing song',
-    public: true,
+    flags: 6,
     execute(msg, cmdstring, command, argstring, args) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];

@@ -26,7 +26,7 @@ module.exports = {
             })(),
             commands: (() => {
               let cmdObj = {};
-              commands.forEach(x => x.public ? cmdObj[x.name] = true : null);
+              commands.forEach(x => x.flags & 2 ? cmdObj[x.name] = true : null);
               return cmdObj;
             })(),
           },
@@ -243,7 +243,7 @@ module.exports = {
                 let ecco = guildIsObj && typeof guild.enabled_commands == 'object' && typeof guild.enabled_commands.commands == 'object';
                 let cmdObj = {};
                 commands.forEach(x => {
-                  if (!x.public) return;
+                  if (!(x.flags & 2)) return;
                   if (x.name == 'leave') {
                     Object.defineProperty(cmdObj, '_' + x.name, {
                       configurable: true,
@@ -482,7 +482,7 @@ module.exports = {
         })(),
         commands: (() => {
           let cmdObj = {};
-          commands.forEach(x => x.public ? cmdObj[x.name] = true : null);
+          commands.forEach(x => x.flags & 2 ? cmdObj[x.name] = true : null);
           return cmdObj;
         })(),
       },

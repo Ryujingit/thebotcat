@@ -1,9 +1,8 @@
 module.exports = [
   {
     name: 'suppressembeds',
-    full_string: false,
     description: '`!suppressembeds <\'suppress\'/\'unsuppress\'> [#channel] <messageid>` to suppress or unsuppress embeds on a message',
-    public: true,
+    flags: 14,
     async execute(msg, cmdstring, command, argstring, args) {
       let suppress, channel, msgid;
       
@@ -42,9 +41,8 @@ module.exports = [
   },
   {
     name: 'slowmode',
-    full_string: false,
     description: '`!slowmode [#channel] <seconds>` to set the slowmode in a text channel to a certain value',
-    public: true,
+    flags: 6,
     async execute(msg, cmdstring, command, argstring, args) {
       let channel, seconds;
 
@@ -83,9 +81,8 @@ module.exports = [
   },
   {
     name: 'bitrate',
-    full_string: false,
     description: '`!bitrate [#channel] <bytespersec>` to set the bitrate (bps not kbps) in a voice channel to a certain value',
-    public: true,
+    flags: 6,
     async execute(msg, cmdstring, command, argstring, args) {
       let channel, bitrate;
 
@@ -126,9 +123,8 @@ module.exports = [
   },
   {
     name: 'purge',
-    full_string: false,
     description: '`!purge [#channel] <amount>` to delete `amount` messages from the channel',
-    public: true,
+    flags: 14,
     async execute(msg, cmdstring, command, argstring, args) {
       if (!props.saved.guilds[msg.guild.id]) {
         props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
@@ -162,9 +158,8 @@ module.exports = [
   },
   {
     name: 'lock',
-    full_string: false,
     description: '`!lock [#channel]` to lock the channel, preventing anyone other than moderators from talking in it',
-    public: true,
+    flags: 6,
     async execute(msg, cmdstring, command, argstring, args) {
       if (!props.saved.guilds[msg.guild.id]) {
         props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
@@ -236,9 +231,8 @@ module.exports = [
   },
   {
     name: 'unlock',
-    full_string: false,
     description: '`!unlock [#channel]` to unlock the channel, resetting permissions to what they were before the lock',
-    public: true,
+    flags: 6,
     async execute(msg, cmdstring, command, argstring, args) {
       if (!props.saved.guilds[msg.guild.id]) {
         props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
@@ -282,9 +276,8 @@ module.exports = [
   },
   {
     name: 'mute',
-    full_string: false,
     description: '`!mute @person` to mute someone by adding the muted role to them',
-    public: true,
+    flags: 6,
     async execute(msg, cmdstring, command, argstring, args) {
       if (!props.saved.guilds[msg.guild.id]) {
         props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
@@ -318,9 +311,8 @@ module.exports = [
   },
   {
     name: 'unmute',
-    full_string: false,
     description: '`!unmute @person` to unmute someone by removing the muted role from them',
-    public: true,
+    flags: 6,
     async execute(msg, cmdstring, command, argstring, args) {
       if (!props.saved.guilds[msg.guild.id]) {
         props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
@@ -353,8 +345,7 @@ module.exports = [
   },/*
   {
     name: 'resetnicknames',
-    full_string: false,
-    public: true,
+    flags: 6,
     execute(msg, cmdstring, command, argstring, args) {
       if (!(common.isDeveloper(msg) || common.isAdmin(msg))) return;
       console.log(`resetnickname called by ${msg.author.tag} in ${msg.guild.name}`);
@@ -384,9 +375,8 @@ module.exports = [
   },*/
   {
     name: 'kick',
-    full_string: false,
     description: '`!kick @person` to kick someone from this guild',
-    public: true,
+    flags: 6,
     async execute(msg, cmdstring, command, argstring, args) {
       if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.KICK))
         return msg.channel.send('You do not have permission to run this command.');
@@ -433,9 +423,8 @@ module.exports = [
   },
   {
     name: 'ban',
-    full_string: false,
     description: '`!ban @person` to ban someone from this guild',
-    public: true,
+    flags: 6,
     async execute(msg, cmdstring, command, argstring, args) {
       if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.BAN))
         return msg.channel.send('You do not have permission to run this command.');
@@ -509,9 +498,8 @@ module.exports = [
   },
   {
     name: 'unban',
-    full_string: false,
     description: '`!unban @person` to unban someone from this guild',
-    public: true,
+    flags: 6,
     async execute(msg, cmdstring, command, argstring, args) {
       if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.BAN))
         return msg.channel.send('You do not have permission to run this command.');
@@ -555,9 +543,8 @@ module.exports = [
   },
   {
     name: 'emoterole',
-    full_string: false,
     description: '`!emoterole add <emote|id|name> [<@role|id|name>] ...` to add roles that can use the emoji\n`!emoterole remove <emote|id|name> [<@role|id|name>] ...` to remove roles that can use the emoji\n`!emoterole set <emote|id|name> [<@role|id|name>] ...` to set that can use the emoji',
-    public: true,
+    flags: 6,
     execute(msg, cmdstring, command, argstring, args) {
       if (!msg.member.hasPermission('MANAGE_EMOJIS'))
         return msg.channel.send('You do not have permission to run this command.');

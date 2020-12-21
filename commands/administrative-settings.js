@@ -1,9 +1,8 @@
 module.exports = [
   {
     name: 'settings',
-    full_string: false,
     description: '`!settings` to see available settings\n`!settings <setting>` for help on a specific setting',
-    public: true,
+    flags: 6,
     execute(msg, cmdstring, command, argstring, args) {
       if (!props.saved.guilds[msg.guild.id]) {
         props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);

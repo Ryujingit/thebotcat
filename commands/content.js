@@ -1,88 +1,77 @@
 module.exports = [
   {
     name: 'hey',
-    full_string: true,
-    public: true,
+    flags: 15,
     execute(msg, cmdstring, command, argstring, args) {
       return msg.reply('wassup boi');
     }
   },
   {
     name: 'who am i',
-    full_string: true,
-    public: true,
+    flags: 15,
     execute(msg, cmdstring, command, argstring, args) {
       return msg.reply('well you are you i suppose or maybe you are nothing....');
     }
   },
   {
     name: 'temmie',
-    full_string: true,
-    public: true,
+    flags: 15,
     execute(msg, cmdstring, command, argstring, args) {
       return msg.reply('Do Yo U wA nNa HA vE a B aD TEM?');
     }
   },
   {
     name: 'vsco',
-    full_string: true,
-    public: true,
+    flags: 15,
     execute(msg, cmdstring, command, argstring, args) {
       return msg.reply('And i oop sksk and i oop sksks pls save the turtles');
     }
   },
   {
     name: 'bot',
-    full_string: true,
-    public: true,
+    flags: 15,
     execute(msg, cmdstring, command, argstring, args) {
       return msg.reply('Hello im Thebotcat i was made using Javascript pls no bully me im swag');
     }
   },
   {
     name: 'pls money',
-    full_string: true,
-    public: true,
+    flags: 15,
     execute(msg, cmdstring, command, argstring, args) {
       return msg.reply('oh sorry dude i dont have any change on me');
     }
   },
   {
     name: 'unretard',
-    full_string: true,
-    public: true,
+    flags: 15,
     execute(msg, cmdstring, command, argstring, args) {
       return msg.reply('Sorry But i am unable to do that.');
     }
   },
   {
     name: 'techku',
-    full_string: true,
-    public: true,
+    flags: 15,
     execute(msg, cmdstring, command, argstring, args) {
       return msg.reply('what are you doing here bitch lil bitch ass little bitch smh head bitch go away bitch what you say bitch smh my head smh smh bitch bitch bitch bitch boi stupid little bitch ass bitch bitch bitch boi little bitch');
     }
   },
   {
     name: 'goe mama',
-    full_string: true,
-    public: true,
+    flags: 15,
     execute(msg, cmdstring, command, argstring, args) {
       return msg.channel.send('goe mama fat!');
     }
   },
   {
     name: 'pp',
-    full_string: true,
-    public: true,
+    flags: 15,
     execute(msg, cmdstring, command, argstring, args) {
       return msg.reply('fuck you');
     }
   },
   {
     name: 'lamo',
-    full_string: false,
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       if (!args[0]) {
         return msg.channel.send('lamomamoemao');
@@ -103,8 +92,7 @@ module.exports = [
   },
   {
     name: 'shut',
-    full_string: true,
-    public: true,
+    flags: 15,
     execute(msg, cmdstring, command, argstring, args) {
       var shut = new Discord.MessageEmbed() .setImage('https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse2.mm.bing.net%2Fth%3Fid%3DOIP.xJlsa-JHMknJieoqdOqJXgHaHD%26pid%3DApi&f=1')
         .setTitle('shut')
@@ -114,8 +102,7 @@ module.exports = [
   },
   {
     name: 'joke',
-    full_string: false,
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       if (!args[0]) args[0] = Math.floor(Math.random() * 3 + 1);
       if (args[0] == '1') {
@@ -129,8 +116,7 @@ module.exports = [
   },
   {
     name: 'fun fact',
-    full_string: false,
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       if (!args[0]) args[0] = Math.floor(Math.random() * 4 + 1);
       if (args[0] == '1') {
@@ -146,8 +132,7 @@ module.exports = [
   },
   {
     name: 'pun',
-    full_string: false,
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       if (!args[0]) args[0] = Math.floor(Math.random() * 6 + 1);
       if (args[0] == '1') {
@@ -167,8 +152,7 @@ module.exports = [
   },
   {
     name: 'meme',
-    full_string: false,
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       if (!args[0]) args[0] = Math.floor(Math.random() * 10 + 1);
       if (args[0] == '1') {
@@ -206,8 +190,7 @@ module.exports = [
   },
   {
     name: 'trump',
-    full_string: false,
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       if (!args[0]) args[0] = Math.floor(Math.random() * 10 + 1);
       if (args[0] == '1') {
@@ -265,8 +248,7 @@ module.exports = [
   },
   {
     name: 'corona meme',
-    full_string: false,
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       if (!args[0]) args[0] = Math.floor(Math.random() * 5 + 1);
       if (args[0] == '1') {
@@ -299,8 +281,7 @@ module.exports = [
   },
   {
     name: 'wholesome',
-    full_string: false,
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       if (!args[0]) args[0] = Math.floor(Math.random() * 12 + 1);
       if (args[0] == '1') {
@@ -348,8 +329,7 @@ module.exports = [
   },
   {
     name: 'bonk',
-    full_string: false,
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       if (!args[0]) args[0] = Math.floor(Math.random() * 5 + 1);
       if (args[0] == '1') {
@@ -372,8 +352,7 @@ module.exports = [
   },
   {
     name: 'cute animal',
-    full_string: false,
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       if (!args[0]) args[0] = Math.floor(Math.random() * 10 + 1);
       if (args[0] == '1') {
@@ -411,8 +390,7 @@ module.exports = [
   },
   {
     name: 'doggo',
-    full_string: false,
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       if (!args[0]) args[0] = Math.floor(Math.random() * 7 + 1);
       if (args[0] == '1') {
@@ -455,8 +433,7 @@ module.exports = [
   },
   {
     name: 'uwu',
-    full_string: false,
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       if (!args[0]) args[0] = Math.floor(Math.random() * 2 + 1);
       if (args[0] == '1') {
@@ -474,8 +451,7 @@ module.exports = [
   },
   {
     name: 'surreal',
-    full_string: false,
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       if (!args[0]) args[0] = Math.floor(Math.random() * 2 + 1);
       if (args[0] == '1') {
@@ -489,8 +465,7 @@ module.exports = [
   },
   {
     name: 'minecraft',
-    full_string: false,
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       if (!args[0]) args[0] = Math.floor(Math.random() * 2 + 1);
       if (args[0] == '1') {
@@ -504,8 +479,7 @@ module.exports = [
   },
   {
     name: 'fortnite',
-    full_string: false,
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       var fortnite = new Discord.MessageEmbed() .setImage('https://media.tenor.com/images/98aa4ee2eb9834fbc140e792f9a55472/tenor.gif');
       return msg.channel.send(fortnite);
@@ -513,8 +487,7 @@ module.exports = [
   },
   {
     name: 'gamer',
-    full_string: false,
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       var gamer = new Discord.MessageEmbed() .setImage('https://media.giphy.com/media/g0KiswZX0Hg0hUBvUr/giphy.gif');
       return msg.channel.send(gamer);
@@ -522,8 +495,7 @@ module.exports = [
   },
   {
     name: 'true gamer',
-    full_string: true,
-    public: true,
+    flags: 15,
     execute(msg, cmdstring, command, argstring, args) {
       var truegamer = new Discord.MessageEmbed() .setImage('https://cdn.discordapp.com/attachments/534491966982062110/685510900609974322/ESbpeIcXsAERN9-.jpg')
         .setTitle('Now this is what a True gamer looks like')
@@ -533,8 +505,7 @@ module.exports = [
   },
   {
     name: 'segue',
-    full_string: true,
-    public: false,
+    flags: 13,
     execute(msg, cmdstring, command, argstring, args) {
       if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025') return msg.channel.send('segue?');
       msg.channel.send('segue?');
@@ -547,8 +518,7 @@ module.exports = [
   },
   {
     name: 'hack',
-    full_string: false,
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       if (!args[0] || args[0].toLowerCase() == 'thebotcat') {
         return msg.reply('dont hack me plz');
@@ -561,8 +531,7 @@ module.exports = [
   },
   {
     name: 'me lon',
-    full_string: false,
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       if (!args[0]) args[0] = Math.floor(Math.random() * 2 + 1);
       if (args[0] == '1') {
@@ -578,8 +547,7 @@ module.exports = [
   },
   {
     name: 'mulan',
-    full_string: false,
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) {
       // https://tenor.com/view/mulan-face-palm-gif-8266780
       var mulan = new Discord.MessageEmbed() .setImage('https://media1.tenor.com/images/bda352877609bc1d662a4684ce5d82f1/tenor.gif?itemid=8266780');
@@ -588,8 +556,7 @@ module.exports = [
   },
   {
     name: 'poggers fish',
-    full_string: false,
-    public: true,
+    flags: 14,
     execute(msg, cmdstring, command, argstring, args) { 
       if (!args[0]) args[0] = Math.floor(Math.random() * 2 + 1);
       if (args[0] == '1') {
@@ -605,8 +572,7 @@ module.exports = [
   },
   {
     name: 'big boi',
-    full_string: true,
-    public: true,
+    flags: 15,
     execute(msg, cmdstring, command, argstring, args) {
       var bigboi = new Discord.MessageEmbed() .setImage('https://cdn.discordapp.com/attachments/681900183063494715/684825699588112394/eeeeee.png')
         .setTitle('he is chonky')
@@ -616,8 +582,7 @@ module.exports = [
   },
   {
     name: 'hug',
-    full_string: false,
-    public: true,
+    flags: 15,
     execute(msg, cmdstring, command, argstring, args) {
       var hug = new Discord.MessageEmbed() .setImage('https://media.giphy.com/media/f4HpCDvF84oh2/giphy.gif')
         .setTitle('Heres a hug')
@@ -627,8 +592,7 @@ module.exports = [
   },
   {
     name: 'bruh',
-    full_string: false,
-    public: true,
+    flags: 15,
     execute(msg, cmdstring, command, argstring, args) {
       var bruh = new Discord.MessageEmbed() .setImage('https://cdn.discordapp.com/attachments/681482685751099579/681482802822512689/image0.jpg')
         .setTitle('i still question why this exists....')

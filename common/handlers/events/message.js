@@ -41,57 +41,65 @@ module.exports = async msg => {
     msg.delete();
 
   if (!msg.guild) {
-    logmsg(`dm from ${msg.author.tag} (channel ${msg.channel.id}) with contents ${util.inspect(msg.content)}`);
     if (props.feat.savedms && !props.saved.misc.dmchannels.includes(msg.channel.id)) {
       props.saved.misc.dmchannels.push(msg.channel.id);
     }
   }
   
   if (msg.channel.permissionsFor && !msg.channel.permissionsFor(client.user.id).has('SEND_MESSAGES')) return;
-
+  
+  if (msg.content == '<@' + client.user.id + '>' || msg.content == '<@!' + client.user.id + '>') return msg.channel.send(`I am ${props.feat.version == 'canary' ? 'Thebotcat Canary' : 'Thebotcat'} version ${version}, prefix \`${workingprefix}\``);
+  
   // argstring = the part after the workingprefix, command and args in one big string
   // command = the actual command
   // args = array of arguments
   var isCommand = 0, cmdstring, command, argstring, args;
+  let guilddata = props.saved.guilds[msg.guild ? msg.guild.id : 'default'];
+  let workingprefix = guilddata ? guilddata.prefix : props.saved.guilds.default.prefix;
+  
+  if (msg.content.startsWith(universalprefix)) {
+    isCommand = 1;
+    cmdstring = msg.content.slice(universalprefix.length).trim();
+  } else if (msg.content.startsWith(workingprefix)) {
+    isCommand = 1;
+    cmdstring = msg.content.slice(workingprefix.length).trim();
+  } else if (msg.content.startsWith('<@' + client.user.id + '>')) {
+    isCommand = 1;
+    cmdstring = msg.content.slice(client.user.id.length + 3).trim();
+  } else if (msg.content.startsWith('<@!' + client.user.id + '>')) {
+    isCommand = 1;
+    cmdstring = msg.content.slice(client.user.id.length + 4).trim();
+  }
+  
+  if (!msg.guild) {
+    if (isCommand)
+      nonlogmsg(`dm from ${msg.author.tag} (channel ${msg.channel.id}) with contents ${util.inspect(msg.content)}`);
+    else
+      logmsg(`dm from ${msg.author.tag} (channel ${msg.channel.id}) with contents ${util.inspect(msg.content)}`);
+  }
+  
+  // this code loops through the commands array to see if the stated text matches any known command
+  if (isCommand) {
+    for (var i = 0; i < commands.length; i++) {
+      command = commands[i].name;
+      if (!(msg.guild && commands[i].flags & 4 || !msg.guild && commands[i].flags & 8)) continue;
+      if (!(commands[i].flags & 1 && command == cmdstring || !(commands[i].flags & 1) && cmdstring.startsWith(command))) continue;
+      if (cmdstring[command.length] != ' ' && cmdstring[command.length] != '\n' && cmdstring.length > command.length) continue;
+      if (msg.guild && (
+        commands[i].flags & 2 && (command != 'settings' &&
+          props.saved.guilds[msg.guild.id] && (
+            !props.saved.guilds[msg.guild.id].enabled_commands.global ||
+            !props.saved.guilds[msg.guild.id].enabled_commands.categories[commands[i].category] ||
+            !props.saved.guilds[msg.guild.id].enabled_commands.commands[command])) ||
+        !(commands[i].flags & 2) && !persGuildData.special_guilds.includes(msg.guild.id))) continue;
+      argstring = cmdstring.slice(command.length + 1);
+      args = argstring == '' ? [] : argstring.split(' ');
+      isCommand = 2 + i;
+      break;
+    }
+  }
+  
   if (msg.guild) {
-    let guilddata = props.saved.guilds[msg.guild ? msg.guild.id : 'default'];
-    let workingprefix = guilddata ? guilddata.prefix : props.saved.guilds.default.prefix;
-
-    if (msg.content.startsWith(universalprefix)) {
-      isCommand = 1;
-      cmdstring = msg.content.slice(universalprefix.length).trim();
-    } else if (msg.content.startsWith(workingprefix)) {
-      isCommand = 1;
-      cmdstring = msg.content.slice(workingprefix.length).trim();
-    } else if (msg.content.startsWith('<@' + client.user.id + '>')) {
-      isCommand = 1;
-      cmdstring = msg.content.slice(client.user.id.length + 3).trim();
-    } else if (msg.content.startsWith('<@!' + client.user.id + '>')) {
-      isCommand = 1;
-      cmdstring = msg.content.slice(client.user.id.length + 4).trim();
-    }
-
-    if (msg.content == '<@' + client.user.id + '>' || msg.content == '<@!' + client.user.id + '>') return msg.channel.send(`I am ${props.feat.version == 'canary' ? 'Thebotcat Canary' : 'Thebotcat'} version ${version}, prefix \`${workingprefix}\``);
-
-    // this code loops through the commands array to see if the stated text matches any known command
-    if (isCommand) {
-      for (var i = 0; i < commands.length; i++) {
-        if (commands[i].full_string && commands[i].name == cmdstring || !commands[i].full_string && cmdstring.startsWith(commands[i].name)) {
-          command = commands[i].name;
-          if (cmdstring[command.length] != ' ' && cmdstring[command.length] != '\n' && cmdstring.length > command.length) continue;
-          if (command != 'settings' &&
-            props.saved.guilds[msg.guild.id] && (
-              !props.saved.guilds[msg.guild.id].enabled_commands.global ||
-              !props.saved.guilds[msg.guild.id].enabled_commands.categories[commands[i].category] ||
-              !(props.saved.guilds[msg.guild.id].enabled_commands.commands[command] || !commands[i].public && persGuildData.special_guilds.includes(msg.guild.id)))) continue;
-          argstring = cmdstring.slice(command.length + 1);
-          args = argstring == '' ? [] : argstring.split(' ');
-          isCommand = 2 + i;
-          break;
-        }
-      }
-    }
-
     // this is the screening for bad words part
     let isadmin = common.isAdmin(msg);
     let dodelete = false;
@@ -123,13 +131,14 @@ module.exports = async msg => {
         infomsg(msg, `user ${msg.author.tag} (id ${msg.author.id}) said ${util.inspect(msg.content)} in channel <#${msg.channel.id}> (id ${msg.channel.id})`);
       else
         logmsg(`user ${msg.author.tag} (id ${msg.author.id}) said ${util.inspect(msg.content)} in channel <#${msg.channel.id}> (id ${msg.channel.id})`);
-      if (!isCommand) {
+      if (isCommand < 2) {
         try {
           await msg.delete();
         } catch (e) {}
       }
     }
-    if (isCommand >= 2)
-      return commands[isCommand - 2].execute(msg, cmdstring, command, argstring, args);
   }
+  
+  if (isCommand >= 2)
+    return commands[isCommand - 2].execute(msg, cmdstring, command, argstring, args);
 };
