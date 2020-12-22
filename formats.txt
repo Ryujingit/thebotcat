@@ -1,5 +1,38 @@
 command flags property: &1=full string, &2=public, &4=servers, &8=dms
 
+format for content_commands.json:
+  content_commands : object {
+    <command_name> : (
+      object {
+        type : string <'text_reply'/'text_send'>,
+        content : string,
+      }
+      object {
+        type : string <'text_reply_multi'>,
+        contents : array [ string, ... ],
+      }
+      object {
+        type : string <'image'>,
+        title : string,
+        desc : string,
+        image : string,
+        footer : string,
+      }
+      object {
+        type : string <'image_multi'>,
+        embeds : array [
+          object {
+            title : string,
+            desc : string,
+            image : string,
+            footer : string,
+          },
+          ...
+        ],
+      }
+    ),
+  }
+
 format for props.saved:
   props.saved : object {
     feat : object {

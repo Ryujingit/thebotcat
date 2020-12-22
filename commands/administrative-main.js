@@ -2,7 +2,7 @@ module.exports = [
   {
     name: 'suppressembeds',
     description: '`!suppressembeds <\'suppress\'/\'unsuppress\'> [#channel] <messageid>` to suppress or unsuppress embeds on a message',
-    flags: 14,
+    flags: 6,
     async execute(msg, cmdstring, command, argstring, args) {
       let suppress, channel, msgid;
       

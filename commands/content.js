@@ -1,74 +1,109 @@
-module.exports = [
-  {
-    name: 'hey',
-    flags: 15,
-    execute(msg, cmdstring, command, argstring, args) {
-      return msg.reply('wassup boi');
+/* fs.writeFileSync('ctnt.json', (() => {
+  /* Discord = {
+    MessageEmbed: class MessageEmbed {
+      setImage(v) { this.url = v; return this; }
+      setTitle(v) { this.title = v; return this; }
+      setDescription(v) { this.description = v; return this; }
+      setFooter(v) { this.footer = v; return this; }
     }
-  },
-  {
-    name: 'who am i',
-    flags: 15,
-    execute(msg, cmdstring, command, argstring, args) {
-      return msg.reply('well you are you i suppose or maybe you are nothing....');
+  };
+   * /
+  let content_types = {
+    "hey": "text_reply", "who am i": "text_reply", "temmie": "text_reply", "vsco": "text_reply", "bot": "text_reply", "pls money": "text_reply", "unretard": "text_reply", "techku": "text_reply", "goe mama": "text", "pp": "text_reply",
+    "shut": "image", "joke": "text_multi_reply", "fun fact": "text_multi_reply", "pun": "text_multi_reply",
+    "meme": "image_multi", "trump": "image_multi", "corona meme": "image_multi", "wholesome": "image_multi", "bonk": "image_multi", "cute animal": "image_multi", "doggo": "image_multi", "uwu": "image_multi", "surreal": "image_multi", "minecraft": "image_multi", "fortnite": "image", "gamer": "image", "true gamer": "image", "me lon": "image_multi", "mulan": "image", "poggers fish": "image_multi", "big boi": "image", "hug": "image", "bruh": "image"
+  };
+  return '{\n' + commands.map(x => {
+    let type = content_types[x.name];
+    if (!type) {
+      console.log(`no command type for ${x.name}`);
+      return `  ${JSON.stringify(x.name)}: null,`;
     }
-  },
-  {
-    name: 'temmie',
-    flags: 15,
-    execute(msg, cmdstring, command, argstring, args) {
-      return msg.reply('Do Yo U wA nNa HA vE a B aD TEM?');
+    switch (type) {
+      case 'text': {
+        let text;
+        x.execute({ channel: { send: v => text = v } });
+        return `  ${JSON.stringify(x.name)}: { "type": ${JSON.stringify(type)}, "content": ${JSON.stringify(text)} },`;
+      } break;
+      case 'text_reply': {
+        let text;
+        x.execute({ reply: v => text = v });
+        return `  ${JSON.stringify(x.name)}: { "type": ${JSON.stringify(type)}, "content": ${JSON.stringify(text)} },`;
+      } break;
+      case 'text_multi_reply': {
+        let amount = Number(/(?<=Math.random\(\) \* )[0-9]+/.exec(x.execute.toString()));
+        let texts = [];
+        for (let i = 0; i < amount; i++)
+          x.execute({ reply: v => texts.push(v) }, 0, 0, 0, [i + 1 + '']);
+        return `  ${JSON.stringify(x.name)}: {\n    "type": ${JSON.stringify(type)},\n    "contents": ${JSON.stringify(texts, null, 2).split('\n').map(x => '    ' + x).join('\n').trim()}\n  },`;
+      } break;
+      case 'image': {
+        let embed;
+        x.execute({ channel: { send: v => embed = v } });
+        return `  ${JSON.stringify(x.name)}: {\n    "type": ${JSON.stringify(type)}${embed.title ? `,\n    "title": ${JSON.stringify(embed.title)}` : ''}${embed.description ? `, "desc": ${JSON.stringify(embed.description)}` : ''}${embed.url ? `,\n    "image": ${JSON.stringify(embed.url)}` : ''}${embed.footer ? `,\n    "footer": ${JSON.stringify(embed.footer)}` : ''}\n  },`;
+      } break;
+      case 'image_multi': {
+        let amount = Number(/(?<=Math.random\(\) \* )[0-9]+/.exec(x.execute.toString()));
+        let embeds = [];
+        for (let i = 0; i < amount; i++)
+          x.execute({ channel: { send: v => embeds.push(v) } }, 0, 0, 0, [i + 1 + '']);
+        return `  ${JSON.stringify(x.name)}: {\n    "type": ${JSON.stringify(type)},\n    "embeds": ${JSON.stringify(embeds.map(x => ({ title: x.title, desc: x.description, image: x.url, footer: x.footer })), null, 2).split('\n').map(x => '    ' + x).join('\n').trim()}\n  },`;
+      } break;
     }
-  },
-  {
-    name: 'vsco',
-    flags: 15,
-    execute(msg, cmdstring, command, argstring, args) {
-      return msg.reply('And i oop sksk and i oop sksks pls save the turtles');
-    }
-  },
-  {
-    name: 'bot',
-    flags: 15,
-    execute(msg, cmdstring, command, argstring, args) {
-      return msg.reply('Hello im Thebotcat i was made using Javascript pls no bully me im swag');
-    }
-  },
-  {
-    name: 'pls money',
-    flags: 15,
-    execute(msg, cmdstring, command, argstring, args) {
-      return msg.reply('oh sorry dude i dont have any change on me');
-    }
-  },
-  {
-    name: 'unretard',
-    flags: 15,
-    execute(msg, cmdstring, command, argstring, args) {
-      return msg.reply('Sorry But i am unable to do that.');
-    }
-  },
-  {
-    name: 'techku',
-    flags: 15,
-    execute(msg, cmdstring, command, argstring, args) {
-      return msg.reply('what are you doing here bitch lil bitch ass little bitch smh head bitch go away bitch what you say bitch smh my head smh smh bitch bitch bitch bitch boi stupid little bitch ass bitch bitch bitch boi little bitch');
-    }
-  },
-  {
-    name: 'goe mama',
-    flags: 15,
-    execute(msg, cmdstring, command, argstring, args) {
-      return msg.channel.send('goe mama fat!');
-    }
-  },
-  {
-    name: 'pp',
-    flags: 15,
-    execute(msg, cmdstring, command, argstring, args) {
-      return msg.reply('fuck you');
-    }
-  },
+  }).join('\n') + '\n}';
+})()); */
+
+try {
+  var commands = JSON.parse(fs.readFileSync(require.resolve('./content_commands.json')));
+} catch (e) {
+  console.error(e);
+  var commands = {};
+}
+
+function contentCommand(obj, msg, cmdstring, command, argstring, args) {
+  switch (obj.type) {
+    case 'text': return msg.channel.send(obj.content);
+    case 'text_reply': return msg.reply(obj.content);
+    case 'text_multi_reply':
+      if (args.length == 0) {
+        return msg.reply(obj.contents[Math.floor(Math.random() * obj.contents.length)]);
+      } else if (args[0] == 'count') {
+        return msg.channel.send(`The command has ${obj.contents.length} entries.`);
+      } else {
+        let num = Number(args[0]);
+        if (!Number.isSafeInteger(num)) return msg.channel.send('Invalid command entry number.');
+        if (num < 1) return msg.channel.send('Entry number must be greater than or equal to 1.');
+        if (num > obj.contents.length) return msg.channel.send(`Entry number greater than number of items. (${obj.contents.length})`);
+        return msg.reply(obj.contents[num - 1]);
+      }
+    case 'image':
+      return msg.channel.send({ embed: { title: obj.title, description: obj.desc, image: { url: obj.image }, footer: { text: obj.footer } } });
+    case 'image_multi':
+      if (args.length == 0) {
+        let embed = obj.embeds[Math.floor(Math.random() * obj.embeds.length)];
+        return msg.channel.send({ embed: { title: embed.title, description: embed.desc, image: { url: embed.image }, footer: { text: embed.footer } } });
+      } else if (args[0] == 'count') {
+        return msg.channel.send(`The command has ${obj.embeds.length} entries.`);
+      } else {
+        let num = Number(args[0]);
+        if (!Number.isSafeInteger(num)) return msg.channel.send('Invalid command entry number.');
+        if (num < 1) return msg.channel.send('Entry number must be greater than or equal to 1.');
+        if (num > obj.embeds.length) return msg.channel.send(`Entry number greater than number of items. (${obj.embeds.length})`);
+        let embed = obj.embeds[num - 1];
+        return msg.channel.send({ embed: { title: embed.title, description: embed.desc, image: { url: embed.image }, footer: { text: embed.footer } } });
+      }
+  }
+}
+
+module.exports = exports = [];
+
+Object.keys(commands).forEach(x => exports.push({
+  name: x,
+  flags: 14,
+  execute: contentCommand.bind(null, commands[x]),
+}));
+
+exports.push(
   {
     name: 'lamo',
     flags: 14,
@@ -88,419 +123,6 @@ module.exports = [
         if (text[text.length - 1] != 'o') text += 'o';
         return msg.channel.send(`lamo${text}`);
       }
-    }
-  },
-  {
-    name: 'shut',
-    flags: 15,
-    execute(msg, cmdstring, command, argstring, args) {
-      var shut = new Discord.MessageEmbed() .setImage('https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse2.mm.bing.net%2Fth%3Fid%3DOIP.xJlsa-JHMknJieoqdOqJXgHaHD%26pid%3DApi&f=1')
-        .setTitle('shut')
-        .setDescription('The actual fuck up');
-      return msg.channel.send(shut);
-    }
-  },
-  {
-    name: 'joke',
-    flags: 14,
-    execute(msg, cmdstring, command, argstring, args) {
-      if (!args[0]) args[0] = Math.floor(Math.random() * 3 + 1);
-      if (args[0] == '1') {
-        return msg.reply('what do you call the security at a samsung store? GUARDIANS OF THE GALAXY he he he he');
-      } else if (args[0] == '2') {
-        return msg.reply('Why are there no migit accountants? BECAUSE THEY ALL COME UP SHORT he he he');
-      } else if (args[0] == '3') {
-        return msg.reply('what do you call a fat pumpkin A PLUMPKIN he he he');
-      }
-    }
-  },
-  {
-    name: 'fun fact',
-    flags: 14,
-    execute(msg, cmdstring, command, argstring, args) {
-      if (!args[0]) args[0] = Math.floor(Math.random() * 4 + 1);
-      if (args[0] == '1') {
-        return msg.reply('Did you know that Mars used to have an ocean?');
-      } else if (args[0] == '2') {
-        return msg.reply('did you know some cacti can go 2 years without water?');
-      } else if (args[0] == '3') {
-        return msg.reply('Did you know that Atacama Desert is the driest desert in the world?');
-      } else if (args[0] == '4') {
-        return msg.reply('What is a vampires favourite drink? B POSITIVE he he he');
-      }
-    }
-  },
-  {
-    name: 'pun',
-    flags: 14,
-    execute(msg, cmdstring, command, argstring, args) {
-      if (!args[0]) args[0] = Math.floor(Math.random() * 6 + 1);
-      if (args[0] == '1') {
-        return msg.reply('The first computer dates back to Adam and Eve. It was an Apple with limited memory, just one byte. And then everything crashed.');
-      } else if (args[0] == '2') {
-        return msg.reply('The future, the present and the past walked into a bar. Things got a little tense.');
-      } else if (args[0] == '3') {
-        return msg.reply('I wasnt originally going to get a brain transplant but then I changed my mind.');
-      } else if (args[0] == '4') {
-        return msg.reply('Im reading a book about anti gravity. Its impossible to put down.');
-      } else if (args[0] == '5') {
-        return msg.reply('How did I escape Iraq? Iran.');
-      } else if (args[0] == '6') {
-        return msg.reply('Dont spell part backwards. Its a trap.');
-      }
-    }
-  },
-  {
-    name: 'meme',
-    flags: 14,
-    execute(msg, cmdstring, command, argstring, args) {
-      if (!args[0]) args[0] = Math.floor(Math.random() * 10 + 1);
-      if (args[0] == '1') {
-        var meme = new Discord.MessageEmbed() .setImage('https://i.redd.it/eigm3xcqb4021.jpg'); 
-        return msg.channel.send(meme);
-      } else if (args[0] == '2') {
-        var meme = new Discord.MessageEmbed() .setImage('https://i.redd.it/4k77d475ssr11.jpg'); 
-        return msg.channel.send(meme);
-      } else if (args[0] == '3') {
-        var meme = new Discord.MessageEmbed() .setImage('https://i.imgflip.com/19k1e4.jpg'); 
-        return msg.channel.send(meme);
-      } else if (args[0] == '4') {
-        var meme = new Discord.MessageEmbed() .setImage('http://www.dumpaday.com/wp-content/uploads/2017/10/mom-meme-13.jpg'); 
-        return msg.channel.send(meme);
-      } else if (args[0] == '5') {
-        var meme = new Discord.MessageEmbed() .setImage('http://www.dumpaday.com/wp-content/uploads/2019/06/z-funny-19.jpg'); 
-        return msg.channel.send(meme);
-      } else if (args[0] == '6') {
-        var meme = new Discord.MessageEmbed() .setImage('https://i.pinimg.com/736x/c7/e0/4a/c7e04a34e0615b1002971ca2c33c39bf--funny-harry-potter-memes-harry-potter-images.jpg'); 
-        return msg.channel.send(meme);
-      } else if (args[0] == '7') {
-        var meme = new Discord.MessageEmbed() .setImage('https://4.bp.blogspot.com/-3e8gdP1uJV0/Vvqhh83m_9I/AAAAAAAACPA/kWZhRVb1Mr8XRe6l-DfQgndG5spqbT9wQ/s1600/cat%2Bplumbing%2Bmemes.jpg'); 
-        return msg.channel.send(meme);
-      } else if (args[0] == '8') {
-        var meme = new Discord.MessageEmbed() .setImage('https://www.quirkybyte.com/wp-content/uploads/2017/03/2-65.jpg'); 
-        return msg.channel.send(meme);
-      } else if (args[0] == '9') {
-        var meme = new Discord.MessageEmbed() .setImage('http://ruinmyweek.com/wp-content/uploads/2016/04/the-best-funny-pictures-of-shy-shark-meme-05.png'); 
-        return msg.channel.send(meme);
-      } else if (args[0] == '10') {
-        var meme = new Discord.MessageEmbed() .setImage('http://images.complex.com/complex/image/upload/c_fill,g_center,w_1200/fl_lossy,pg_1,q_auto/ngfeuqkthhvjcge7wzpy.jpg'); 
-        return msg.channel.send(meme);
-      }
-    }
-  },
-  {
-    name: 'trump',
-    flags: 14,
-    execute(msg, cmdstring, command, argstring, args) {
-      if (!args[0]) args[0] = Math.floor(Math.random() * 10 + 1);
-      if (args[0] == '1') {
-        var trump = new Discord.MessageEmbed() .setImage('http://worldwideinterweb.com/wp-content/uploads/2016/03/best-meme-of-the-day.jpg')
-          .setTitle('Trump memes coming right up!')
-          .setFooter('here are them sweet trump memes!');
-        return msg.channel.send(trump);
-      } else if (args[0] == '2') {
-        var trump = new Discord.MessageEmbed() .setImage('http://cbsnews2.cbsistatic.com/hub/i/r/2017/02/10/7496e849-650a-4e21-b0a1-9e64c74080b3/resize/620x465/f9d411c7cb55df6929c55f912e24c5aa/screen-shot-2017-02-10-at-1-56-08-pm.png')
-          .setTitle('Trump memes coming right up!')
-          .setFooter('here are them sweet trump memes!');
-        return msg.channel.send(trump);
-      } else if (args[0] == '3') {
-        var trump = new Discord.MessageEmbed() .setImage('http://cbsnews3.cbsistatic.com/hub/i/r/2017/02/10/4bac0e53-46a2-4592-881d-39664d6762f1/resize/620x465/51dea4928ab5ef9d3cda4fdd5c1d50ea/screen-shot-2017-02-10-at-2-34-14-pm.png')
-          .setTitle('Trump memes coming right up!')
-          .setFooter('here are them sweet trump memes!');
-        return msg.channel.send(trump);
-      } else if (args[0] == '4') {
-        var trump = new Discord.MessageEmbed() .setImage('http://www.dumpaday.com/wp-content/uploads/2016/12/Funny-Donald-Trump-Meme.jpg')
-          .setTitle('Trump memes coming right up!')
-          .setFooter('here are them sweet trump memes!');
-        return msg.channel.send(trump);
-      } else if (args[0] == '5') {
-        var trump = new Discord.MessageEmbed() .setImage('https://www.essence.com/wp-content/uploads/2016/11/1478865384/Trump%20Memes-1.jpg')
-          .setTitle('Trump memes coming right up!')
-          .setFooter('here are them sweet trump memes!');
-        return msg.channel.send(trump);
-      } else if (args[0] == '6') {
-        var trump = new Discord.MessageEmbed() .setImage('https://cdn.newsapi.com.au/image/v1/7da0efab913deec4b4f79623951063e5')
-          .setTitle('Trump memes coming right up!')
-          .setFooter('here are them sweet trump memes!');
-        return msg.channel.send(trump);
-      } else if (args[0] == '7') {
-        var trump = new Discord.MessageEmbed() .setImage('https://acidcow.com/pics/20160621/trump_mems_12.jpg')
-          .setTitle('Trump memes coming right up!')
-          .setFooter('here are them sweet trump memes!');
-        return msg.channel.send(trump);
-      } else if (args[0] == '8') {
-        var trump = new Discord.MessageEmbed() .setImage('https://i.imgflip.com/xyf64.jpg')
-          .setTitle('Trump memes coming right up!')
-          .setFooter('here are them sweet trump memes!');
-        return msg.channel.send(trump);
-      } else if (args[0] == '9') {
-        var trump = new Discord.MessageEmbed() .setImage('http://s15858.pcdn.co/wp-content/uploads/2015/12/13-donald-trump-meme-save-water-gatorade-electrolytes1.jpg')
-          .setTitle('Sweet orange boi!')
-          .setFooter('trump is a orange');
-        return msg.channel.send(trump);
-      } else if (args[0] == '10') {
-        var trump = new Discord.MessageEmbed() .setImage('http://www.dumpaday.com/wp-content/uploads/2016/11/Donald-Trump-Wins-funny-memes-17.jpg')
-          .setTitle('Are we sure?')
-          .setFooter('Are we really sure?');
-        return msg.channel.send(trump);
-      }
-    }
-  },
-  {
-    name: 'corona meme',
-    flags: 14,
-    execute(msg, cmdstring, command, argstring, args) {
-      if (!args[0]) args[0] = Math.floor(Math.random() * 5 + 1);
-      if (args[0] == '1') {
-        var coronameme = new Discord.MessageEmbed() .setImage('https://cdn.discordapp.com/attachments/534487318992650269/688491541299200081/Image26.jpg')
-          .setTitle('when Corona appears') 
-          .setFooter('So true though');
-        return msg.channel.send(coronameme);
-      } else if (args[0] == '2') {
-        var coronameme = new Discord.MessageEmbed() .setImage('https://cdn.discordapp.com/attachments/656611956370964480/689198617134760064/b4b610c.jpg')
-          .setTitle('This is true') 
-          .setFooter('So true though');
-        return msg.channel.send(coronameme);
-      } else if (args[0] == '3') {
-        var coronameme = new Discord.MessageEmbed() .setImage('https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fthefunnybeaver.com%2Fwp-content%2Fuploads%2F2020%2F01%2Fcorona-virus-meme-9.jpg&f=1&nofb=1')
-          .setTitle('i know this is not funny but it is')
-          .setFooter('im sorry');
-        return msg.channel.send(coronameme);
-      } else if (args[0] == '4') {
-        var coronameme = new Discord.MessageEmbed() .setImage('https://cdn.discordapp.com/attachments/534491966982062110/690671501594066984/wk79jxegwrn41.png')
-          .setTitle('This is what happens')
-          .setFooter('Big oof');
-        return msg.channel.send(coronameme);
-      } else if (args[0] == '5') {
-        var coronameme = new Discord.MessageEmbed() .setImage('https://cdn.discordapp.com/attachments/510163477462253577/691478243332718652/image0.jpg')
-          .setTitle('This is what happens When The government asks this to all workers')
-          .setFooter('Corona memes are the best');
-        return msg.channel.send(coronameme);
-      }
-    }
-  },
-  {
-    name: 'wholesome',
-    flags: 14,
-    execute(msg, cmdstring, command, argstring, args) {
-      if (!args[0]) args[0] = Math.floor(Math.random() * 12 + 1);
-      if (args[0] == '1') {
-        var wholesome = new Discord.MessageEmbed() .setImage('https://i.redditmedia.com/CsTEXpv1gA2KMS4WeT8lKIhjzr4LCc-Kb5XxBh3wBq4.jpg?w=320&s=6aff41d1c189cf568d9af5fd27def234'); 
-        return msg.channel.send(wholesome);
-      } else if (args[0] == '2') {
-        var wholesome = new Discord.MessageEmbed() .setImage('https://i.ytimg.com/vi/NL43nss1-Qo/maxresdefault.jpg'); 
-        return msg.channel.send(wholesome);
-      } else if (args[0] == '3') {
-        var wholesome = new Discord.MessageEmbed() .setImage('http://static.boredpanda.com/blog/wp-content/uploads/2017/04/funny-wholesome-animal-memes-40.jpg'); 
-        return msg.channel.send(wholesome);
-      } else if (args[0] == '4') {
-        var wholesome = new Discord.MessageEmbed() .setImage('https://pleated-jeans.com/wp-content/uploads/2017/04/funny-wholesome-animal-memes-25-58f098d26e11d__700.jpg'); 
-        return msg.channel.send(wholesome);
-      } else if (args[0] == '5') {
-        var wholesome = new Discord.MessageEmbed() .setImage('http://ichef.bbci.co.uk/images/ic/704xn/p063snf3.jpg'); 
-        return msg.channel.send(wholesome);
-      } else if (args[0] == '6') {
-        var wholesome = new Discord.MessageEmbed() .setImage('https://i.ytimg.com/vi/c9lhHHp6fHE/maxresdefault.jpg'); 
-        return msg.channel.send(wholesome);
-      } else if (args[0] == '7') {
-        var wholesome = new Discord.MessageEmbed() .setImage('https://i.ytimg.com/vi/8fzhaFDE8Bg/maxresdefault.jpg'); 
-        return msg.channel.send(wholesome);
-      } else if (args[0] == '8') {
-        var wholesome = new Discord.MessageEmbed() .setImage('https://pleated-jeans.com/wp-content/uploads/2017/04/funny-wholesome-animal-memes-43.jpg'); 
-        return msg.channel.send(wholesome);
-      } else if (args[0] == '9') {
-        var wholesome = new Discord.MessageEmbed() .setImage('https://thumbs.gfycat.com/WellinformedDirectBorderterrier-poster.jpg'); 
-        return msg.channel.send(wholesome);
-      } else if (args[0] == '10') {
-        var wholesome = new Discord.MessageEmbed() .setImage('https://i.ytimg.com/vi/WB_Dn4lO1Q8/maxresdefault.jpg'); 
-        return msg.channel.send(wholesome);
-      } else if (args[0] == '11') {
-        var wholesome = new Discord.MessageEmbed() .setImage('https://media.tenor.com/images/483a1eeec1e993844b84d956fdca8e4a/tenor.gif')
-          .setTitle('aww he is sad')
-          .setFooter('Emotional support for animals comes free when there so cute!');
-        return msg.channel.send(wholesome);
-      } else if (args[0] == '12') {
-        var wholesome = new Discord.MessageEmbed() .setImage('https://i.pinimg.com/originals/ef/81/d9/ef81d9899f8e39146fccec17f76fc3cf.gif')
-          .setTitle('He is so fluffy!')
-          .setFooter('Fluffy boi');
-        return msg.channel.send(wholesome);
-      }
-    }
-  },
-  {
-    name: 'bonk',
-    flags: 14,
-    execute(msg, cmdstring, command, argstring, args) {
-      if (!args[0]) args[0] = Math.floor(Math.random() * 5 + 1);
-      if (args[0] == '1') {
-        var bonk = new Discord.MessageEmbed() .setImage('https://media1.tenor.com/images/9e525a45499a65f44adfbec2a3c62d74/tenor.gif?itemid=18272416'); //https://tenor.com/view/bonk-gif-18272416 
-        return msg.channel.send(bonk);
-      } else if (args[0] == '2') {
-        var bonk = new Discord.MessageEmbed() .setImage('https://media1.tenor.com/images/be13cad325ddb680b607aaed09444fc7/tenor.gif?itemid=18715315'); //https://tenor.com/view/bonk-gif-18715315
-        return msg.channel.send(bonk);
-      } else if (args [0] == '3') {
-        var bonk = new Discord.MessageEmbed() .setImage('https://media1.tenor.com/images/c7864d3503714217331ce18482c7b2e4/tenor.gif?itemid=17425385'); //https://tenor.com/view/goose-grey-mess-with-the-honk-you-get-the-bonk-statewide-rp-gif-17425385
-        return msg.channel.send(bonk);
-      } else if (args [0] == '4') {
-        var bonk = new Discord.MessageEmbed() .setImage('https://media1.tenor.com/images/c658ef8183c978dd6fb528d4c06632c2/tenor.gif?itemid=17177822'); //https://tenor.com/view/sad-cat-bonk-awaken-sleep-gif-17177822
-        return msg.channel.send(bonk);
-      } else if (args [0] == '5') {
-        var bonk = new Discord.MessageEmbed() .setImage('https://media1.tenor.com/images/d7ee4336725809f0fb1350e134b6974c/tenor.gif?itemid=18247759') //https://tenor.com/view/hammer-bonk-hammer-bonk-hammer-bonk-screen-gif-18247759
-        return msg.channel.send(bonk);
-      }
-    }
-  },
-  {
-    name: 'cute animal',
-    flags: 14,
-    execute(msg, cmdstring, command, argstring, args) {
-      if (!args[0]) args[0] = Math.floor(Math.random() * 10 + 1);
-      if (args[0] == '1') {
-        var cuteanimal = new Discord.MessageEmbed() .setImage('https://i.ytimg.com/vi/6l2ISD5mE9I/hqdefault.jpg'); 
-        return msg.channel.send(cuteanimal);
-      } else if (args[0] == '2') {
-        var cuteanimal = new Discord.MessageEmbed() .setImage('https://i.redditmedia.com/l0ouJPvLrSm1rrE7jUUYvWDivqc-a9COtaFKlj63Of8.jpg?w=1024&s=e002114bc57603dd80c6c7cca9a11993'); 
-        return msg.channel.send(cuteanimal);
-      } else if (args[0] == '3') {
-        var cuteanimal = new Discord.MessageEmbed() .setImage('http://static.boredpanda.com/blog/wp-content/uploads/2014/03/cute-smiling-animals-coverimage.jpg'); 
-        return msg.channel.send(cuteanimal);
-      } else if (args[0] == '4') {
-        var cuteanimal = new Discord.MessageEmbed() .setImage('https://i.ytimg.com/vi/alJHDHo9nMA/hqdefault.jpg'); 
-        return msg.channel.send(cuteanimal);
-      } else if (args[0] == '5') {
-        var cuteanimal = new Discord.MessageEmbed() .setImage('http://www.mypokecard.com/my/galery/kcR5vX8o3Tb8.jpg'); 
-        return msg.channel.send(cuteanimal);
-      } else if (args[0] == '6') {
-        var cuteanimal = new Discord.MessageEmbed() .setImage('https://i.ytimg.com/vi/7IVzs28GsvU/maxresdefault.jpg'); 
-        return msg.channel.send(cuteanimal);
-      } else if (args[0] == '7') {
-        var cuteanimal = new Discord.MessageEmbed() .setImage('http://i.telegraph.co.uk/multimedia/archive/01661/seal_1661793c.jpg'); 
-        return msg.channel.send(cuteanimal);
-      } else if (args[0] == '8') {
-        var cuteanimal = new Discord.MessageEmbed() .setImage('https://imaliyam.files.wordpress.com/2015/10/cat-crying-sad-cat.jpg'); 
-        return msg.channel.send(cuteanimal);
-      } else if (args[0] == '9') {
-        var cuteanimal = new Discord.MessageEmbed() .setImage('https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fi.ytimg.com%2Fvi%2F1MDoLV8JCb4%2Fhqdefault.jpg&f=1&nofb=1'); 
-        return msg.channel.send(cuteanimal);
-      } else if (args[0] == '10') {
-        var cuteanimal = new Discord.MessageEmbed() .setImage('http://www.nakedcapitalism.com/wp-content/uploads/2015/10/cute-baby-fox.jpg'); 
-        return msg.channel.send(cuteanimal);
-      }
-    }
-  },
-  {
-    name: 'doggo',
-    flags: 14,
-    execute(msg, cmdstring, command, argstring, args) {
-      if (!args[0]) args[0] = Math.floor(Math.random() * 7 + 1);
-      if (args[0] == '1') {
-        var doggo = new Discord.MessageEmbed() .setImage('https://media.tenor.co/images/2e92887462db1626e7c1007c857ba548/tenor.gif')
-          .setTitle('Doggo no want bath')
-          .setFooter('so fluff');
-        return msg.channel.send(doggo);
-      } else if (args[0] == '2') {
-        var doggo = new Discord.MessageEmbed() .setImage('http://gifimage.net/wp-content/uploads/2017/07/doggo-gif-9.gif')
-          .setTitle('Doggo dance')
-          .setFooter('so fluff');
-        return msg.channel.send(doggo);
-      } else if (args[0] == '3') {
-        var doggo = new Discord.MessageEmbed() .setImage('https://media.tenor.com/images/911d70f8713972d664876e01acbdefc6/tenor.gif')
-          .setTitle('hewwo how awwe u')
-          .setFooter('so fluff');
-        return msg.channel.send(doggo);
-      } else if (args[0] == '4') {
-        var doggo = new Discord.MessageEmbed() .setImage('https://cdn.discordapp.com/emojis/688821607027966020.png?v=1')
-          .setTitle('Doggo is happy because he has hat on')
-          .setFooter('he is happy boi');
-        return msg.channel.send(doggo);
-      } else if (args[0] == '5') {
-        var doggo = new Discord.MessageEmbed() .setImage('https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fmedia1.tenor.com%2Fimages%2Fc53695a7480ecb471c15c449604f8be1%2Ftenor.gif%3Fitemid%3D8794301&f=1&nofb=1')
-          .setTitle('He has been rolled up')
-          .setFooter('he likes it though')
-        return msg.channel.send(doggo);
-      } else if (args[0] == '6') {
-        var doggo = new Discord.MessageEmbed() .setImage('https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fmedia.tenor.com%2Fimages%2F7515ca39e4e2f13599380796fa348c98%2Ftenor.gif&f=1&nofb=1')
-          .setTitle('Doggo ride on turtle')
-          .setFooter('he to lazy to walk')
-        return msg.channel.send(doggo);
-      } else if (args[0] == '7') {
-        var doggo = new Discord.MessageEmbed() .setImage('https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fmedia.giphy.com%2Fmedia%2FTmzqWbXnmPHBS%2Fgiphy-downsized-large.gif&f=1&nofb=1')
-          .setTitle('bird sits on doggo')
-          .setFooter('so cute')
-        return msg.channel.send(doggo);
-      }
-    }
-  },
-  {
-    name: 'uwu',
-    flags: 14,
-    execute(msg, cmdstring, command, argstring, args) {
-      if (!args[0]) args[0] = Math.floor(Math.random() * 2 + 1);
-      if (args[0] == '1') {
-        var uwu = new Discord.MessageEmbed() .setImage('https://media.tenor.co/images/7a2703befdd934a9e54ac4d44ae146e1/tenor.gif')
-          .setTitle('UWU dance')
-          .setFooter('so UwU');
-        return msg.channel.send(uwu);
-      } else if (args[0] == '2') {
-        var uwu = new Discord.MessageEmbed() .setImage('https://i.ytimg.com/vi/_beljCZLA-4/maxresdefault.jpg')
-          .setTitle('UWU')
-          .setFooter('so UwU');
-        return msg.channel.send(uwu);
-      }
-    }
-  },
-  {
-    name: 'surreal',
-    flags: 14,
-    execute(msg, cmdstring, command, argstring, args) {
-      if (!args[0]) args[0] = Math.floor(Math.random() * 2 + 1);
-      if (args[0] == '1') {
-        var surreal = new Discord.MessageEmbed() .setImage('https://vignette.wikia.nocookie.net/surrealmemes/images/6/67/Received_775602375964559.jpeg/revision/latest?cb=20180521211008');
-        return msg.channel.send(surreal);
-      } else if (args[0] == '2') {
-        var surreal = new Discord.MessageEmbed() .setImage('https://i.redditmedia.com/2wCcac81SacTIhtj7iJygWgImH7fPH265AjoKdVYVG8.jpg?w=751&s=10aa7ecfb10c740b29bc009249529cba');
-        return msg.channel.send(surreal);
-      }
-    }
-  },
-  {
-    name: 'minecraft',
-    flags: 14,
-    execute(msg, cmdstring, command, argstring, args) {
-      if (!args[0]) args[0] = Math.floor(Math.random() * 2 + 1);
-      if (args[0] == '1') {
-        var minecraft = new Discord.MessageEmbed() .setImage('http://1.bp.blogspot.com/-SqTOrZ9Hx4U/UHs0PK1yEUI/AAAAAAAAAFg/9Sz8LMNhkYQ/s1600/tumblr_m85obfgM221rcl24wo1_500.gif');
-        return msg.channel.send(minecraft);
-      } else if (args[0] == '2') {
-        var minecraft = new Discord.MessageEmbed() .setImage('http://1.bp.blogspot.com/-FxFMu7yct6g/UHs6l_o1DEI/AAAAAAAAAG8/w5t_pkcbMww/s1600/tumblr_m8vwr1mGeS1rq1xcqo1_500.gif');
-        return msg.channel.send(minecraft);
-      }
-    }
-  },
-  {
-    name: 'fortnite',
-    flags: 14,
-    execute(msg, cmdstring, command, argstring, args) {
-      var fortnite = new Discord.MessageEmbed() .setImage('https://media.tenor.com/images/98aa4ee2eb9834fbc140e792f9a55472/tenor.gif');
-      return msg.channel.send(fortnite);
-    }
-  },
-  {
-    name: 'gamer',
-    flags: 14,
-    execute(msg, cmdstring, command, argstring, args) {
-      var gamer = new Discord.MessageEmbed() .setImage('https://media.giphy.com/media/g0KiswZX0Hg0hUBvUr/giphy.gif');
-      return msg.channel.send(gamer);
-    }
-  },
-  {
-    name: 'true gamer',
-    flags: 15,
-    execute(msg, cmdstring, command, argstring, args) {
-      var truegamer = new Discord.MessageEmbed() .setImage('https://cdn.discordapp.com/attachments/534491966982062110/685510900609974322/ESbpeIcXsAERN9-.jpg')
-        .setTitle('Now this is what a True gamer looks like')
-        .setFooter('Tru gamer power')
-      return msg.channel.send(truegamer);
     }
   },
   {
@@ -529,75 +151,6 @@ module.exports = [
       }
     }
   },
-  {
-    name: 'me lon',
-    flags: 14,
-    execute(msg, cmdstring, command, argstring, args) {
-      if (!args[0]) args[0] = Math.floor(Math.random() * 2 + 1);
-      if (args[0] == '1') {
-        // https://tenor.com/view/fish-pog-fish-poggers-fish-pog-champ-poggers-gif-16548474
-        var me_lon = new Discord.MessageEmbed() .setImage('https://media1.tenor.com/images/069183ce88df4980868d33f9b2066226/tenor.gif?itemid=17541744');
-        return msg.channel.send(me_lon);
-      } else if (args[0] == '2') {
-        // https://tenor.com/view/pog-fish-fish-mouth-open-gif-17487624
-        var me_lon = new Discord.MessageEmbed() .setImage('https://media1.tenor.com/images/3310f9f53fa1b777a2fb5c1523392fbf/tenor.gif?itemid=17556743');
-        return msg.channel.send(me_lon);
-      }
-    }
-  },
-  {
-    name: 'mulan',
-    flags: 14,
-    execute(msg, cmdstring, command, argstring, args) {
-      // https://tenor.com/view/mulan-face-palm-gif-8266780
-      var mulan = new Discord.MessageEmbed() .setImage('https://media1.tenor.com/images/bda352877609bc1d662a4684ce5d82f1/tenor.gif?itemid=8266780');
-      return msg.channel.send(mulan);
-    }
-  },
-  {
-    name: 'poggers fish',
-    flags: 14,
-    execute(msg, cmdstring, command, argstring, args) { 
-      if (!args[0]) args[0] = Math.floor(Math.random() * 2 + 1);
-      if (args[0] == '1') {
-        // https://tenor.com/view/fish-pog-fish-poggers-fish-pog-champ-poggers-gif-16548474
-        var poggers_fish = new Discord.MessageEmbed() .setImage('https://media1.tenor.com/images/6fb1e8e4af3889dc615da730fc43c1ff/tenor.gif?itemid=16548474');
-        return msg.channel.send(poggers_fish);
-      } else if (args[0] == '2') {
-        // https://tenor.com/view/pog-fish-fish-mouth-open-gif-17487624
-        var poggers_fish = new Discord.MessageEmbed() .setImage('https://media1.tenor.com/images/30e1029fd63cb44bdb22e721d8454792/tenor.gif?itemid=17487624');
-        return msg.channel.send(poggers_fish);
-      }
-    }
-  },
-  {
-    name: 'big boi',
-    flags: 15,
-    execute(msg, cmdstring, command, argstring, args) {
-      var bigboi = new Discord.MessageEmbed() .setImage('https://cdn.discordapp.com/attachments/681900183063494715/684825699588112394/eeeeee.png')
-        .setTitle('he is chonky')
-        .setFooter('big boi');
-      return msg.channel.send(bigboi);
-    }
-  },
-  {
-    name: 'hug',
-    flags: 15,
-    execute(msg, cmdstring, command, argstring, args) {
-      var hug = new Discord.MessageEmbed() .setImage('https://media.giphy.com/media/f4HpCDvF84oh2/giphy.gif')
-        .setTitle('Heres a hug')
-        .setFooter('cuddly');
-      return msg.channel.send(hug);
-    }
-  },
-  {
-    name: 'bruh',
-    flags: 15,
-    execute(msg, cmdstring, command, argstring, args) {
-      var bruh = new Discord.MessageEmbed() .setImage('https://cdn.discordapp.com/attachments/681482685751099579/681482802822512689/image0.jpg')
-        .setTitle('i still question why this exists....')
-        .setFooter('why does this exist');
-      return msg.channel.send(bruh);
-    }
-  },
-];
+);
+
+exports.contentCommand = contentCommand;

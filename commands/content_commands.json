@@ -1,0 +1,314 @@
+{
+  "hey": { "type": "text_reply", "content": "wassup boi" },
+  "who am i": { "type": "text_reply", "content": "well you are you i suppose or maybe you are nothing...." },
+  "temmie": { "type": "text_reply", "content": "Do Yo U wA nNa HA vE a B aD TEM?" },
+  "vsco": { "type": "text_reply", "content": "And i oop sksk and i oop sksks pls save the turtles" },
+  "bot": { "type": "text_reply", "content": "Hello im Thebotcat i was made using Javascript pls no bully me im swag" },
+  "pls money": { "type": "text_reply", "content": "oh sorry dude i dont have any change on me" },
+  "unretard": { "type": "text_reply", "content": "Sorry But i am unable to do that." },
+  "techku": { "type": "text_reply", "content": "what are you doing here bitch lil bitch ass little bitch smh head bitch go away bitch what you say bitch smh my head smh smh bitch bitch bitch bitch boi stupid little bitch ass bitch bitch bitch boi little bitch" },
+  "goe mama": { "type": "text", "content": "goe mama fat!" },
+  "pp": { "type": "text_reply", "content": "fuck you" },
+  "shut": {
+    "type": "image",
+    "title": "shut", "desc": "The actual fuck up",
+    "image": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse2.mm.bing.net%2Fth%3Fid%3DOIP.xJlsa-JHMknJieoqdOqJXgHaHD%26pid%3DApi&f=1"
+  },
+  "joke": {
+    "type": "text_multi_reply",
+    "contents": [
+      "what do you call the security at a samsung store? GUARDIANS OF THE GALAXY he he he he",
+      "Why are there no migit accountants? BECAUSE THEY ALL COME UP SHORT he he he",
+      "what do you call a fat pumpkin A PLUMPKIN he he he"
+    ]
+  },
+  "fun fact": {
+    "type": "text_multi_reply",
+    "contents": [
+      "Did you know that Mars used to have an ocean?",
+      "did you know some cacti can go 2 years without water?",
+      "Did you know that Atacama Desert is the driest desert in the world?",
+      "What is a vampires favourite drink? B POSITIVE he he he"
+    ]
+  },
+  "pun": {
+    "type": "text_multi_reply",
+    "contents": [
+      "The first computer dates back to Adam and Eve. It was an Apple with limited memory, just one byte. And then everything crashed.",
+      "The future, the present and the past walked into a bar. Things got a little tense.",
+      "I wasnt originally going to get a brain transplant but then I changed my mind.",
+      "Im reading a book about anti gravity. Its impossible to put down.",
+      "How did I escape Iraq? Iran.",
+      "Dont spell part backwards. Its a trap."
+    ]
+  },
+  "meme": {
+    "type": "image_multi",
+    "embeds": [
+      { "image": "https://i.redd.it/eigm3xcqb4021.jpg" },
+      { "image": "https://i.redd.it/4k77d475ssr11.jpg" },
+      { "image": "https://i.imgflip.com/19k1e4.jpg" },
+      { "image": "http://www.dumpaday.com/wp-content/uploads/2017/10/mom-meme-13.jpg" },
+      { "image": "http://www.dumpaday.com/wp-content/uploads/2019/06/z-funny-19.jpg" },
+      { "image": "https://i.pinimg.com/736x/c7/e0/4a/c7e04a34e0615b1002971ca2c33c39bf--funny-harry-potter-memes-harry-potter-images.jpg" },
+      { "image": "https://4.bp.blogspot.com/-3e8gdP1uJV0/Vvqhh83m_9I/AAAAAAAACPA/kWZhRVb1Mr8XRe6l-DfQgndG5spqbT9wQ/s1600/cat%2Bplumbing%2Bmemes.jpg" },
+      { "image": "https://www.quirkybyte.com/wp-content/uploads/2017/03/2-65.jpg" },
+      { "image": "http://ruinmyweek.com/wp-content/uploads/2016/04/the-best-funny-pictures-of-shy-shark-meme-05.png" },
+      { "image": "http://images.complex.com/complex/image/upload/c_fill,g_center,w_1200/fl_lossy,pg_1,q_auto/ngfeuqkthhvjcge7wzpy.jpg" }
+    ]
+  },
+  "trump": {
+    "type": "image_multi",
+    "embeds": [
+      {
+        "title": "Trump memes coming right up!",
+        "image": "http://worldwideinterweb.com/wp-content/uploads/2016/03/best-meme-of-the-day.jpg",
+        "footer": "here are them sweet trump memes!"
+      },
+      {
+        "title": "Trump memes coming right up!",
+        "image": "http://cbsnews2.cbsistatic.com/hub/i/r/2017/02/10/7496e849-650a-4e21-b0a1-9e64c74080b3/resize/620x465/f9d411c7cb55df6929c55f912e24c5aa/screen-shot-2017-02-10-at-1-56-08-pm.png",
+        "footer": "here are them sweet trump memes!"
+      },
+      {
+        "title": "Trump memes coming right up!",
+        "image": "http://cbsnews3.cbsistatic.com/hub/i/r/2017/02/10/4bac0e53-46a2-4592-881d-39664d6762f1/resize/620x465/51dea4928ab5ef9d3cda4fdd5c1d50ea/screen-shot-2017-02-10-at-2-34-14-pm.png",
+        "footer": "here are them sweet trump memes!"
+      },
+      {
+        "title": "Trump memes coming right up!",
+        "image": "http://www.dumpaday.com/wp-content/uploads/2016/12/Funny-Donald-Trump-Meme.jpg",
+        "footer": "here are them sweet trump memes!"
+      },
+      {
+        "title": "Trump memes coming right up!",
+        "image": "https://www.essence.com/wp-content/uploads/2016/11/1478865384/Trump%20Memes-1.jpg",
+        "footer": "here are them sweet trump memes!"
+      },
+      {
+        "title": "Trump memes coming right up!",
+        "image": "https://cdn.newsapi.com.au/image/v1/7da0efab913deec4b4f79623951063e5",
+        "footer": "here are them sweet trump memes!"
+      },
+      {
+        "title": "Trump memes coming right up!",
+        "image": "https://acidcow.com/pics/20160621/trump_mems_12.jpg",
+        "footer": "here are them sweet trump memes!"
+      },
+      {
+        "title": "Trump memes coming right up!",
+        "image": "https://i.imgflip.com/xyf64.jpg",
+        "footer": "here are them sweet trump memes!"
+      },
+      {
+        "title": "Sweet orange boi!",
+        "image": "http://s15858.pcdn.co/wp-content/uploads/2015/12/13-donald-trump-meme-save-water-gatorade-electrolytes1.jpg",
+        "footer": "trump is a orange"
+      },
+      {
+        "title": "Are we sure?",
+        "image": "http://www.dumpaday.com/wp-content/uploads/2016/11/Donald-Trump-Wins-funny-memes-17.jpg",
+        "footer": "Are we really sure?"
+      }
+    ]
+  },
+  "corona meme": {
+    "type": "image_multi",
+    "embeds": [
+      {
+        "title": "when Corona appears",
+        "image": "https://cdn.discordapp.com/attachments/534487318992650269/688491541299200081/Image26.jpg",
+        "footer": "So true though"
+      },
+      {
+        "title": "This is true",
+        "image": "https://cdn.discordapp.com/attachments/656611956370964480/689198617134760064/b4b610c.jpg",
+        "footer": "So true though"
+      },
+      {
+        "title": "i know this is not funny but it is",
+        "image": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fthefunnybeaver.com%2Fwp-content%2Fuploads%2F2020%2F01%2Fcorona-virus-meme-9.jpg&f=1&nofb=1",
+        "footer": "im sorry"
+      },
+      {
+        "title": "This is what happens",
+        "image": "https://cdn.discordapp.com/attachments/534491966982062110/690671501594066984/wk79jxegwrn41.png",
+        "footer": "Big oof"
+      },
+      {
+        "title": "This is what happens When The government asks this to all workers",
+        "image": "https://cdn.discordapp.com/attachments/510163477462253577/691478243332718652/image0.jpg",
+        "footer": "Corona memes are the best"
+      }
+    ]
+  },
+  "wholesome": {
+    "type": "image_multi",
+    "embeds": [
+      { "image": "https://i.redditmedia.com/CsTEXpv1gA2KMS4WeT8lKIhjzr4LCc-Kb5XxBh3wBq4.jpg?w=320&s=6aff41d1c189cf568d9af5fd27def234" },
+      { "image": "https://i.ytimg.com/vi/NL43nss1-Qo/maxresdefault.jpg" },
+      { "image": "http://static.boredpanda.com/blog/wp-content/uploads/2017/04/funny-wholesome-animal-memes-40.jpg" },
+      { "image": "https://pleated-jeans.com/wp-content/uploads/2017/04/funny-wholesome-animal-memes-25-58f098d26e11d__700.jpg" },
+      { "image": "http://ichef.bbci.co.uk/images/ic/704xn/p063snf3.jpg" },
+      { "image": "https://i.ytimg.com/vi/c9lhHHp6fHE/maxresdefault.jpg" },
+      { "image": "https://i.ytimg.com/vi/8fzhaFDE8Bg/maxresdefault.jpg" },
+      { "image": "https://pleated-jeans.com/wp-content/uploads/2017/04/funny-wholesome-animal-memes-43.jpg" },
+      { "image": "https://thumbs.gfycat.com/WellinformedDirectBorderterrier-poster.jpg" },
+      { "image": "https://i.ytimg.com/vi/WB_Dn4lO1Q8/maxresdefault.jpg" },
+      {
+        "title": "aww he is sad",
+        "image": "https://media.tenor.com/images/483a1eeec1e993844b84d956fdca8e4a/tenor.gif",
+        "footer": "Emotional support for animals comes free when there so cute!"
+      },
+      {
+        "title": "He is so fluffy!",
+        "image": "https://i.pinimg.com/originals/ef/81/d9/ef81d9899f8e39146fccec17f76fc3cf.gif",
+        "footer": "Fluffy boi"
+      }
+    ]
+  },
+  "bonk": {
+    "type": "image_multi",
+    "embeds": [
+      { "image": "https://media1.tenor.com/images/9e525a45499a65f44adfbec2a3c62d74/tenor.gif?itemid=18272416" },
+      { "image": "https://media1.tenor.com/images/be13cad325ddb680b607aaed09444fc7/tenor.gif?itemid=18715315" },
+      { "image": "https://media1.tenor.com/images/c7864d3503714217331ce18482c7b2e4/tenor.gif?itemid=17425385" },
+      { "image": "https://media1.tenor.com/images/c658ef8183c978dd6fb528d4c06632c2/tenor.gif?itemid=17177822" },
+      { "image": "https://media1.tenor.com/images/d7ee4336725809f0fb1350e134b6974c/tenor.gif?itemid=18247759" }
+    ]
+  },
+  "cute animal": {
+    "type": "image_multi",
+    "embeds": [
+      { "image": "https://i.ytimg.com/vi/6l2ISD5mE9I/hqdefault.jpg" },
+      { "image": "https://i.redditmedia.com/l0ouJPvLrSm1rrE7jUUYvWDivqc-a9COtaFKlj63Of8.jpg?w=1024&s=e002114bc57603dd80c6c7cca9a11993" },
+      { "image": "http://static.boredpanda.com/blog/wp-content/uploads/2014/03/cute-smiling-animals-coverimage.jpg" },
+      { "image": "https://i.ytimg.com/vi/alJHDHo9nMA/hqdefault.jpg" },
+      { "image": "http://www.mypokecard.com/my/galery/kcR5vX8o3Tb8.jpg" },
+      { "image": "https://i.ytimg.com/vi/7IVzs28GsvU/maxresdefault.jpg" },
+      { "image": "http://i.telegraph.co.uk/multimedia/archive/01661/seal_1661793c.jpg" },
+      { "image": "https://imaliyam.files.wordpress.com/2015/10/cat-crying-sad-cat.jpg" },
+      { "image": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fi.ytimg.com%2Fvi%2F1MDoLV8JCb4%2Fhqdefault.jpg&f=1&nofb=1" },
+      { "image": "http://www.nakedcapitalism.com/wp-content/uploads/2015/10/cute-baby-fox.jpg" }
+    ]
+  },
+  "doggo": {
+    "type": "image_multi",
+    "embeds": [
+      {
+        "title": "Doggo no want bath",
+        "image": "https://media.tenor.co/images/2e92887462db1626e7c1007c857ba548/tenor.gif",
+        "footer": "so fluff"
+      },
+      {
+        "title": "Doggo dance",
+        "image": "http://gifimage.net/wp-content/uploads/2017/07/doggo-gif-9.gif",
+        "footer": "so fluff"
+      },
+      {
+        "title": "hewwo how awwe u",
+        "image": "https://media.tenor.com/images/911d70f8713972d664876e01acbdefc6/tenor.gif",
+        "footer": "so fluff"
+      },
+      {
+        "title": "Doggo is happy because he has hat on",
+        "image": "https://cdn.discordapp.com/emojis/688821607027966020.png?v=1",
+        "footer": "he is happy boi"
+      },
+      {
+        "title": "He has been rolled up",
+        "image": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fmedia1.tenor.com%2Fimages%2Fc53695a7480ecb471c15c449604f8be1%2Ftenor.gif%3Fitemid%3D8794301&f=1&nofb=1",
+        "footer": "he likes it though"
+      },
+      {
+        "title": "Doggo ride on turtle",
+        "image": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fmedia.tenor.com%2Fimages%2F7515ca39e4e2f13599380796fa348c98%2Ftenor.gif&f=1&nofb=1",
+        "footer": "he to lazy to walk"
+      },
+      {
+        "title": "bird sits on doggo",
+        "image": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fmedia.giphy.com%2Fmedia%2FTmzqWbXnmPHBS%2Fgiphy-downsized-large.gif&f=1&nofb=1",
+        "footer": "so cute"
+      }
+    ]
+  },
+  "uwu": {
+    "type": "image_multi",
+    "embeds": [
+      {
+        "title": "UWU dance",
+        "image": "https://media.tenor.co/images/7a2703befdd934a9e54ac4d44ae146e1/tenor.gif",
+        "footer": "so UwU"
+      },
+      {
+        "title": "UWU",
+        "image": "https://i.ytimg.com/vi/_beljCZLA-4/maxresdefault.jpg",
+        "footer": "so UwU"
+      }
+    ]
+  },
+  "surreal": {
+    "type": "image_multi",
+    "embeds": [
+      { "image": "https://vignette.wikia.nocookie.net/surrealmemes/images/6/67/Received_775602375964559.jpeg/revision/latest?cb=20180521211008" },
+      { "image": "https://i.redditmedia.com/2wCcac81SacTIhtj7iJygWgImH7fPH265AjoKdVYVG8.jpg?w=751&s=10aa7ecfb10c740b29bc009249529cba" }
+    ]
+  },
+  "minecraft": {
+    "type": "image_multi",
+    "embeds": [
+      { "image": "http://1.bp.blogspot.com/-SqTOrZ9Hx4U/UHs0PK1yEUI/AAAAAAAAAFg/9Sz8LMNhkYQ/s1600/tumblr_m85obfgM221rcl24wo1_500.gif" },
+      { "image": "http://1.bp.blogspot.com/-FxFMu7yct6g/UHs6l_o1DEI/AAAAAAAAAG8/w5t_pkcbMww/s1600/tumblr_m8vwr1mGeS1rq1xcqo1_500.gif" }
+    ]
+  },
+  "fortnite": {
+    "type": "image",
+    "image": "https://media.tenor.com/images/98aa4ee2eb9834fbc140e792f9a55472/tenor.gif"
+  },
+  "gamer": {
+    "type": "image",
+    "image": "https://media.giphy.com/media/g0KiswZX0Hg0hUBvUr/giphy.gif"
+  },
+  "true gamer": {
+    "type": "image",
+    "title": "Now this is what a True gamer looks like",
+    "image": "https://cdn.discordapp.com/attachments/534491966982062110/685510900609974322/ESbpeIcXsAERN9-.jpg",
+    "footer": "Tru gamer power"
+  },
+  "me lon": {
+    "type": "image_multi",
+    "embeds": [
+      { "image": "https://media1.tenor.com/images/069183ce88df4980868d33f9b2066226/tenor.gif?itemid=17541744" },
+      { "image": "https://media1.tenor.com/images/3310f9f53fa1b777a2fb5c1523392fbf/tenor.gif?itemid=17556743" }
+    ]
+  },
+  "mulan": {
+    "type": "image",
+    "image": "https://media1.tenor.com/images/bda352877609bc1d662a4684ce5d82f1/tenor.gif?itemid=8266780"
+  },
+  "poggers fish": {
+    "type": "image_multi",
+    "embeds": [
+      { "image": "https://media1.tenor.com/images/6fb1e8e4af3889dc615da730fc43c1ff/tenor.gif?itemid=16548474" },
+      { "image": "https://media1.tenor.com/images/30e1029fd63cb44bdb22e721d8454792/tenor.gif?itemid=17487624" }
+    ]
+  },
+  "big boi": {
+    "type": "image",
+    "title": "he is chonky",
+    "image": "https://cdn.discordapp.com/attachments/681900183063494715/684825699588112394/eeeeee.png",
+    "footer": "big boi"
+  },
+  "hug": {
+    "type": "image",
+    "title": "Heres a hug",
+    "image": "https://media.giphy.com/media/f4HpCDvF84oh2/giphy.gif",
+    "footer": "cuddly"
+  },
+  "bruh": {
+    "type": "image",
+    "title": "i still question why this exists....",
+    "image": "https://cdn.discordapp.com/attachments/681482685751099579/681482802822512689/image0.jpg",
+    "footer": "why does this exist"
+  }
+}
