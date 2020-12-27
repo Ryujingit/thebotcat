@@ -70,10 +70,8 @@ var clientVCManager = {
       desc: null,
       expectedLength: null,
       stream: null,
-      resolve: null,
     };
     voice.songslist.push(latestObj);
-    await new Promise(resolve => latestObj.resolve = resolve);
     return latestObj;
   },
   
@@ -91,7 +89,6 @@ var clientVCManager = {
           console.log(infof = info);
           latestObj.desc = `${info.videoDetails.title} by ${info.videoDetails.author.name}`;
           latestObj.expectedLength = info.length_seconds * 1000;
-          voice.songslist[0].resolve();
         });
         voice.dispatcher = voice.connection.play(stream, { volume: voice.volume });
         while (voice.dispatcher && !voice.dispatcher.destroyed) {

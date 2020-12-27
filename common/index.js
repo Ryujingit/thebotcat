@@ -59,7 +59,7 @@ module.exports = {
   msecToHMS, msecToHMSs, fancyDateStringWD, fancyDateStringMD, fancyDateString,
   getBotcatUptimeMessage, getBotcatStatusMessage, getBotcatFullStatusMessage,
   explainChannel, stringToBoolean,
-  arrayGet, BreakError, sendObjThruBuffer, receiveObjThruBuffer,
+  BreakError, arrayGet, sendObjThruBuffer, receiveObjThruBuffer,
   isDeveloper, isConfirmDeveloper, isOwner, isAdmin, hasBotPermissions, getBotPermissions, getBotPermissionsArray, getPermissions,
   serializePermissionOverwrites,
   partialDeserializePermissionOverwrites, completeDeserializePermissionOverwrites,

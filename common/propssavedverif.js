@@ -306,15 +306,15 @@ module.exports = {
             if (!guildIsObj || typeof guild.overrides != 'object') return {};
             let overObj = {};
             Object.keys(guild.overrides).forEach(x => {
-              let includesEveryone = false;
               let obj = guild.overrides[x], newObj = {};
               Object.keys(obj)
                 .forEach(x => {
-                  if (!isId(x)) return;
-                  if (x == id && !includesEveryone) includesEveryone = true;
-                  newObj[x] = Number.isSafeInteger(obj[x]) ? obj[x] : 0;
+                  if (!isId(x) || typeof obj[x] != 'object') return;
+                  newObj[x] = {
+                    allows: Number.isSafeInteger(obj[x].allows) ? obj[x].allows : 0,
+                    denys: Number.isSafeInteger(obj[x].denys) ? obj[x].denys : 0,
+                  };
                 });
-              if (!includesEveryone) newObj[id] = commonConstants.botRolePermDef;
               overObj[x] = newObj;
             });
             return overObj;

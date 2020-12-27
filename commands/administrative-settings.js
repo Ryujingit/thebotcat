@@ -23,7 +23,7 @@ module.exports = [
       
       if (args.length == 0) {
         if (fullperms)
-          return msg.channel.send(`List of settings:\nprefix, badwords, logchannel, mutedrole, roles, enabledcmds`);
+          return msg.channel.send(`List of settings:\nprefix, badwords, logchannel, mutedrole, roles, overrides, enabledcmds`);
         else
           return msg.channel.send(`List of settings:\nprefix, badwords`);
       }
@@ -329,6 +329,269 @@ module.exports = [
               
               default:
                 return msg.channel.send('Invalid option. Run `settings roles` to view options.');
+                break;
+            }
+          }
+          break;
+        
+        case 'overrides':
+          if (!fullperms) return silenced ? null : msg.channel.send('You do not have permission to run this command.');
+          if (args.length == 1) {
+            return msg.channel.send(
+              'This command configures the bot-level permission overrides for certain channels.\n\n' +
+              'To view channels with overrides, run `settings overrides view`.\n' +
+              'To view override roles for a channel, run `settings overrides view #channel`.\n' +
+              'To view the permissions for one role on one channel, run `settings overrides view #channel <@mention|name|query>`\n' +
+              'To create overrides for a channel, run `settings overrides init #channel`\n' +
+              'To remove overrides for a channel, run `settings overrides clear #channel`\n' +
+              'To create permissions for a role, run `settings overrides init #channel <@mention|name|query>`\n' +
+              'To remove permissions for a role, run `settings overrides clear #channel <@mention|name|query>`\n' +
+              'To set a specific permission for a role, run `settings overrides allow/deny/neutral #channel <@mention|name|query> <permission name|permission id> [<2nd permission name|permission id> ...]`',
+            );
+          } else {
+            switch (args[1]) {
+              case 'view':
+                if (args.length == 2) {
+                  return msg.channel.send({
+                    embed: {
+                      title: 'Channels',
+                      description: 'Channels with bot-level permission overrides:\n' + Object.keys(guilddata.overrides).map(x => `<#${x}>`),
+                    }
+                  });
+                } else if (args.length == 3) {
+                  let channel = msg.guild.channels.cache.get(/^<#([0-9]+)>$/.exec(args[2])[1]);
+                  if (!channel) {
+                    return msg.channel.send('Error: no such channel');
+                  }
+                  if (!guilddata.overrides[channel.id]) {
+                    return msg.channel.send({
+                      embed: {
+                        title: 'No Overrides',
+                        description: `No bot-level overrides for channel <#${channel.id}>.`
+                      }
+                    });
+                  }
+                  return msg.channel.send({
+                    embed: {
+                      title: 'Roles',
+                      description: `Roles with bot-level permission overrides for <#${channel.id}>:\n` + Object.keys(guilddata.overrides[channel.id]).map(x => `<@&${x}>`),
+                    }
+                  });
+                } else {
+                  let channel = msg.guild.channels.cache.get(/^<#([0-9]+)>$/.exec(args[2])[1]);
+                  if (!channel) {
+                    return msg.channel.send('Error: no such channel');
+                  }
+                  if (!guilddata.overrides[channel.id]) {
+                    return msg.channel.send({
+                      embed: {
+                        title: 'No Overrides',
+                        description: `No bot-level overrides for channel <#${channel.id}>.`
+                      }
+                    });
+                  }
+                  let role = common.searchRoles(msg.guild.roles, args.slice(3).join(' '));
+                  if (Array.isArray(role)) {
+                    return msg.channel.send({
+                      embed: { title: 'Not Specific Enough', description: `Your query narrows it down to these roles:\n${role.map(x => '<@&' + x.id + '>').join(' ')}` }
+                    });
+                  } else {
+                    if (!guilddata.overrides[channel.id][role.id])
+                      return msg.channel.send({
+                        embed: {
+                          title: 'No Permissions',
+                          description: `No bot-level overrides in channel <#${channel.id}> for role <@&${role.id}>.`
+                        }
+                      });
+                    return msg.channel.send({
+                      embed: {
+                        title: 'Permissions',
+                        description: `Permissions for <@&${role.id}>:\n` + 
+                          common.getBotPermissionsArray(guilddata.overrides[channel.id][role.id], true).map(x => `${x[1] > 0 ? '🟩' : x[1] < 0 ? '🟥' : '⬛'} ${x[0]}`).join('\n')
+                      }
+                    });
+                  }
+                }
+                break;
+              
+              case 'init':
+                if (args.length == 3) {
+                  let channel = msg.guild.channels.cache.get(/^<#([0-9]+)>$/.exec(args[2])[1]);
+                  if (!channel) {
+                    return msg.channel.send('Error: no such channel');
+                  }
+                  if (guilddata.overrides[channel.id])
+                    return msg.channel.send({
+                      embed: {
+                        title: 'Overrides Exist',
+                        description: `Bot-level overrides already exist for channel <#${channel.id}>.`
+                      }
+                    });
+                  guilddata.overrides[channel.id] = {};
+                  schedulePropsSave();
+                  return msg.channel.send({
+                    embed: {
+                      title: 'Overrides Created',
+                      description: `Overrides created for channel <#${channel.id}>.`
+                    }
+                  });
+                } else {
+                  let channel = msg.guild.channels.cache.get(/^<#([0-9]+)>$/.exec(args[2])[1]);
+                  if (!channel) {
+                    return msg.channel.send('Error: no such channel');
+                  }
+                  if (!guilddata.overrides[channel.id]) {
+                    return msg.channel.send({
+                      embed: {
+                        title: 'No Overrides',
+                        description: `No bot-level overrides for channel <#${channel.id}>.`
+                      }
+                    });
+                  }
+                  let role = common.searchRoles(msg.guild.roles, args.slice(3).join(' '));
+                  if (Array.isArray(role)) {
+                    return msg.channel.send({
+                      embed: { title: 'Not Specific Enough', description: `Your query narrows it down to these roles:\n${role.map(x => '<@&' + x.id + '>').join(' ')}` }
+                    });
+                  } else {
+                    if (guilddata.overrides[channel.id][role.id])
+                      return msg.channel.send({
+                        embed: {
+                          title: 'Overrides Exist',
+                          description: `Bot-level overrides already exist in channel <#${channel.id}> for role <@&${role.id}>.`
+                        }
+                      });
+                    guilddata.overrides[channel.id][role.id] = { allows: 0, denys: 0 };
+                    schedulePropsSave();
+                    return msg.channel.send({
+                      embed: {
+                        title: 'Overrides Created',
+                        description: `Overrides created in channel <#${channel.id}> for role <@&${role.id}>.`
+                      }
+                    });
+                  }
+                }
+                break;
+              
+              case 'clear':
+                if (args.length == 3) {
+                  let channel = msg.guild.channels.cache.get(/^<#([0-9]+)>$/.exec(args[2])[1]);
+                  if (!channel) {
+                    return msg.channel.send('Error: no such channel');
+                  }
+                  if (!guilddata.overrides[channel.id])
+                    return msg.channel.send({
+                      embed: {
+                        title: 'Overrides Do Not Exist',
+                        description: `Bot-level overrides do not exist for channel <#${channel.id}>.`
+                      }
+                    });
+                  delete guilddata.overrides[channel.id];
+                  schedulePropsSave();
+                  return msg.channel.send({
+                    embed: {
+                      title: 'Overrides Cleared',
+                      description: `Overrides cleared for channel <#${channel.id}>.`
+                    }
+                  });
+                } else {
+                  let channel = msg.guild.channels.cache.get(/^<#([0-9]+)>$/.exec(args[2])[1]);
+                  if (!channel) {
+                    return msg.channel.send('Error: no such channel');
+                  }
+                  if (!guilddata.overrides[channel.id]) {
+                    return msg.channel.send({
+                      embed: {
+                        title: 'No Overrides',
+                        description: `No bot-level overrides for channel <#${channel.id}>.`
+                      }
+                    });
+                  }
+                  let role2 = common.searchRoles(msg.guild.roles, args.slice(3).join(' '));
+                  if (Array.isArray(role2)) {
+                    return msg.channel.send({
+                      embed: { title: 'Not Specific Enough', description: `Your query narrows it down to these roles:\n${role2.map(x => '<@&' + x.id + '>').join(' ')}` }
+                    });
+                  } else {
+                    if (!guilddata.overrides[channel.id][role2.id])
+                      return msg.channel.send({
+                        embed: {
+                          title: 'Overrides Do Not Exist',
+                          description: `Bot-level overrides do not exist in channel <#${channel.id}> for role <@&${role2.id}>.`
+                        }
+                      });
+                    delete guilddata.overrides[channel.id][role2.id];
+                    schedulePropsSave();
+                    return msg.channel.send({
+                      embed: {
+                        title: 'Overrides Cleared',
+                        description: `Overrides cleared in channel <#${channel.id}> for role <@&${role2.id}>.`
+                      }
+                    });
+                  }
+                }
+                break;
+              
+              case 'allow':
+              case 'deny':
+              case 'neutral':
+                let channel = msg.guild.channels.cache.get(/^<#([0-9]+)>$/.exec(args[2])[1]);
+                if (!channel) {
+                  return msg.channel.send('Error: no such channel');
+                }
+                if (!guilddata.overrides[channel.id]) {
+                  return msg.channel.send({
+                    embed: {
+                      title: 'No Overrides',
+                      description: `No bot-level overrides for channel <#${channel.id}>.`
+                    }
+                  });
+                }
+                let role3 = common.searchRoles(msg.guild.roles, args[3]);
+                if (Array.isArray(role3)) {
+                  return msg.channel.send({
+                    embed: { title: 'Not Specific Enough', description: `Your query narrows it down to these roles:\n${role3.map(x => '<@&' + x.id + '>').join(' ')}` }
+                  });
+                } else {
+                  if (!guilddata.overrides[channel.id][role3.id])
+                    return msg.channel.send({
+                      embed: {
+                        title: 'Overrides Do Not Exist',
+                        description: `Bot-level overrides do not exist in channel <#${channel.id}> for role <@&${role3.id}>.`
+                      }
+                    });
+                  let changedPerms = [];
+                  let permsToChange = args.slice(4).map(perm => {
+                    let nperm = Number(perm);
+                    if (nperm == nperm) return Number.isSafeInteger(nperm) && nperm > 0 ? nperm : null;
+                    else return common.constants.botRolePermBits[perm];
+                  }).filter(x => x != null).reduce((a, c) => (changedPerms.push(common.constants.botRolePermBitsInv[c]), a + c), 0) & common.constants.botRolePermAll;
+                  switch (args[1]) {
+                    case 'allow':
+                      guilddata.overrides[channel.id][role3.id].allows |= permsToChange;
+                      guilddata.overrides[channel.id][role3.id].denys &= ~permsToChange;
+                      break;
+                    case 'deny':
+                      guilddata.overrides[channel.id][role3.id].denys |= permsToChange;
+                      guilddata.overrides[channel.id][role3.id].allows &= ~permsToChange;
+                      break;
+                    case 'neutral':
+                      guilddata.overrides[channel.id][role3.id].allows &= ~permsToChange;
+                      guilddata.overrides[channel.id][role3.id].denys &= ~permsToChange;
+                      break;
+                  }
+                  schedulePropsSave();
+                  return msg.channel.send({
+                    embed: {
+                      title: 'Overrides Updated',
+                      description: `Overrides ${changedPerms.map(x => `\'${x}\'`).join(', ')} ${args[1] == 'allow' ? 'allowed' : args[1] == 'deny' ? 'denied' : 'neutralized'} in channel <#${channel.id}> for role <@&${role3.id}>.`
+                    }
+                  });
+                }
+                break;
+              
+              default:
+                return msg.channel.send('Invalid option. Run `settings overrides` to view options.');
                 break;
             }
           }

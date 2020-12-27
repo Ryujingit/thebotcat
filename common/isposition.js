@@ -27,8 +27,8 @@ function isAdmin(msg) {
 
 
 function hasBotPermissions(msg, permMask, channel) {
-  if (typeof perms == 'string') perms = commonConstants.botRolePermBits[perms];
-  else if (Array.isArray(perms)) perms = perms.map(x => commonConstants.botRolePermBits[x]).reduce((a, c) => a + c, 0);
+  if (typeof permMask == 'string') permMask = commonConstants.botRolePermBits[permMask];
+  else if (Array.isArray(permMask)) permMask = permMask.map(x => commonConstants.botRolePermBits[x]).reduce((a, c) => a | c, 0);
   
   if (!msg.guild) return 0;
   
@@ -37,111 +37,133 @@ function hasBotPermissions(msg, permMask, channel) {
     schedulePropsSave();
   }
   
-  if (!channel) channel = msg.channel;
+  if (channel === undefined) channel = msg.channel;
   
-  let permGuildIDs = Object.keys(props.saved.guilds[msg.guild.id].perms);
+  let guildPerms = props.saved.guilds[msg.guild.id].perms,
+    channelOverrides = channel ? props.saved.guilds[msg.guild.id].overrides[channel.id] : null;
+  let guildPermKeys = Object.keys(guildPerms),
+    channelOverrideKeys = channelOverrides ? Object.keys(channelOverrides) : null;
   
-  var perms = msg.member.roles.cache.array().map(x => x.id).filter(x => permGuildIDs.includes(x)).reduce((a, c) => a | props.saved.guilds[msg.guild.id].perms[c] & permMask, 0) & commonConstants.botRolePermAll;
+  let serverPerms = msg.member.roles.cache.keyArray()
+    .filter(x => guildPermKeys.includes(x))
+    .reduce((a, c) => a | guildPerms[c] & permMask, 0)
+    & commonConstants.botRolePermAll;
+  
+  let channelPerms = serverPerms;
+  if (channelOverrides) {
+    if (channelOverrides[msg.guild.id])
+      channelPerms = channelPerms & ~channelOverrides[msg.guild.id].denys | channelOverrides[msg.guild.id].allows;
+    let roleIntersect = msg.member.roles.cache.keyArray()
+      .filter(x => x != msg.guild.id && channelOverrideKeys.includes(x));
+    let denys = roleIntersect.reduce((a, c) => a | channelOverrides[c].denys & commonConstants.botRolePermCnl & permMask, 0),
+      allows = roleIntersect.reduce((a, c) => a | channelOverrides[c].allows & commonConstants.botRolePermCnl & permMask, 0);
+    channelPerms = channelPerms & ~denys | allows;
+  }
   
   if (permMask & commonConstants.botRolePermBits.NORMAL &&
-    !(perms & commonConstants.botRolePermBits.NORMAL) &&
+    !(channelPerms & commonConstants.botRolePermBits.NORMAL) &&
     (msg.member.hasPermission('ADMINISTRATOR') &&
       msg.member.roles.highest.position > msg.guild.me.roles.highest.position || isOwner(msg)))
-    perms |= commonConstants.botRolePermBits.NORMAL;
+    channelPerms |= commonConstants.botRolePermBits.NORMAL;
   
   if (permMask & commonConstants.botRolePermBits.BYPASS_LOCK &&
-    !(perms & commonConstants.botRolePermBits.BYPASS_LOCK) &&
-    (channel.permissionsFor(msg.member).has('MANAGE_ROLES') || perms & commonConstants.botRolePermBits.LOCK_CHANNEL))
-    perms |= commonConstants.botRolePermBits.BYPASS_LOCK;
+    !(channelPerms & commonConstants.botRolePermBits.BYPASS_LOCK) &&
+    ((channel ? channel.permissionsFor(msg.member).has('MANAGE_ROLES') : msg.member.hasPermission('MANAGE_ROLES')) || channelPerms & commonConstants.botRolePermBits.LOCK_CHANNEL))
+    channelPerms |= commonConstants.botRolePermBits.BYPASS_LOCK;
   
   if (permMask & commonConstants.botRolePermBits.JOIN_VC &&
-    !(perms & commonConstants.botRolePermBits.JOIN_VC) &&
+    !(channelPerms & commonConstants.botRolePermBits.JOIN_VC) &&
     (msg.member.hasPermission('ADMINISTRATOR') &&
       msg.member.roles.highest.position > msg.guild.me.roles.highest.position || isOwner(msg)))
-    perms |= commonConstants.botRolePermBits.JOIN_VC;
+    channelPerms |= commonConstants.botRolePermBits.JOIN_VC;
   
   if (permMask & commonConstants.botRolePermBits.LEAVE_VC &&
-    !(perms & commonConstants.botRolePermBits.LEAVE_VC) &&
+    !(channelPerms & commonConstants.botRolePermBits.LEAVE_VC) &&
     (msg.member.hasPermission('ADMINISTRATOR') &&
       msg.member.roles.highest.position > msg.guild.me.roles.highest.position || isOwner(msg)))
-    perms |= commonConstants.botRolePermBits.LEAVE_VC;
+    channelPerms |= commonConstants.botRolePermBits.LEAVE_VC;
   
   if (permMask & commonConstants.botRolePermBits.PLAY_SONG &&
-    !(perms & commonConstants.botRolePermBits.PLAY_SONG) &&
+    !(channelPerms & commonConstants.botRolePermBits.PLAY_SONG) &&
     (msg.member.hasPermission('ADMINISTRATOR') &&
       msg.member.roles.highest.position > msg.guild.me.roles.highest.position || isOwner(msg)))
-    perms |= commonConstants.botRolePermBits.PLAY_SONG;
+    channelPerms |= commonConstants.botRolePermBits.PLAY_SONG;
   
   if (permMask & commonConstants.botRolePermBits.PLAY_PLAYLIST &&
-    !(perms & commonConstants.botRolePermBits.PLAY_PLAYLIST) &&
+    !(channelPerms & commonConstants.botRolePermBits.PLAY_PLAYLIST) &&
     (msg.member.hasPermission('ADMINISTRATOR') &&
       msg.member.roles.highest.position > msg.guild.me.roles.highest.position || isOwner(msg)))
-    perms |= commonConstants.botRolePermBits.PLAY_PLAYLIST;
+    channelPerms |= commonConstants.botRolePermBits.PLAY_PLAYLIST;
   
   if (permMask & commonConstants.botRolePermBits.REMOTE_CMDS &&
-    !(perms & commonConstants.botRolePermBits.REMOTE_CMDS) &&
+    !(channelPerms & commonConstants.botRolePermBits.REMOTE_CMDS) &&
     (msg.member.hasPermission('ADMINISTRATOR') &&
       msg.member.roles.highest.position > msg.guild.me.roles.highest.position || isOwner(msg)))
-    perms |= commonConstants.botRolePermBits.REMOTE_CMDS;
+    channelPerms |= commonConstants.botRolePermBits.REMOTE_CMDS;
   
   if (permMask & commonConstants.botRolePermBits.DELETE_MESSAGES &&
-    !(perms & commonConstants.botRolePermBits.DELETE_MESSAGES) &&
+    !(channelPerms & commonConstants.botRolePermBits.DELETE_MESSAGES) &&
     (msg.member.hasPermission('ADMINISTRATOR') &&
       msg.member.roles.highest.position > msg.guild.me.roles.highest.position || isOwner(msg)))
-    perms |= commonConstants.botRolePermBits.DELETE_MESSAGES;
+    channelPerms |= commonConstants.botRolePermBits.DELETE_MESSAGES;
   
   if (permMask & commonConstants.botRolePermBits.LOCK_CHANNEL &&
-    !(perms & commonConstants.botRolePermBits.LOCK_CHANNEL) &&
-    channel.permissionsFor(msg.member).has('MANAGE_ROLES'))
-    perms |= commonConstants.botRolePermBits.LOCK_CHANNEL;
+    !(channelPerms & commonConstants.botRolePermBits.LOCK_CHANNEL) &&
+    (channel ? channel.permissionsFor(msg.member).has('MANAGE_ROLES') : msg.member.hasPermission('MANAGE_ROLES')))
+    channelPerms |= commonConstants.botRolePermBits.LOCK_CHANNEL;
   
   if (permMask & commonConstants.botRolePermBits.MUTE &&
-    !(perms & commonConstants.botRolePermBits.MUTE) &&
+    !(channelPerms & commonConstants.botRolePermBits.MUTE) &&
     (msg.member.hasPermission('MANAGE_ROLES') &&
       (props.saved.guilds[msg.guild.id].mutedrole == null ||
         msg.member.roles.highest.position > msg.guild.roles.cache.get(props.saved.guilds[msg.guild.id].mutedrole).position) || isOwner(msg)))
-    perms |= commonConstants.botRolePermBits.MUTE;
+    channelPerms |= commonConstants.botRolePermBits.MUTE;
   
   if (permMask & commonConstants.botRolePermBits.KICK &&
-    !(perms & commonConstants.botRolePermBits.KICK) &&
+    !(channelPerms & commonConstants.botRolePermBits.KICK) &&
     msg.member.hasPermission('KICK_MEMBERS'))
-    perms |= commonConstants.botRolePermBits.KICK;
+    channelPerms |= commonConstants.botRolePermBits.KICK;
   
   if (permMask & commonConstants.botRolePermBits.BAN &&
-    !(perms & commonConstants.botRolePermBits.BAN) &&
+    !(channelPerms & commonConstants.botRolePermBits.BAN) &&
     msg.member.hasPermission('BAN_MEMBERS'))
-    perms |= commonConstants.botRolePermBits.BAN;
+    channelPerms |= commonConstants.botRolePermBits.BAN;
   
   if (permMask & commonConstants.botRolePermBits.MANAGE_BOT &&
-    !(perms & commonConstants.botRolePermBits.MANAGE_BOT) &&
+    !(channelPerms & commonConstants.botRolePermBits.MANAGE_BOT) &&
     (msg.member.hasPermission('ADMINISTRATOR') &&
       msg.member.roles.highest.position > msg.guild.me.roles.highest.position || isOwner(msg)))
-    perms |= commonConstants.botRolePermBits.MANAGE_BOT;
+    channelPerms |= commonConstants.botRolePermBits.MANAGE_BOT;
   
   if (permMask & commonConstants.botRolePermBits.MANAGE_BOT_FULL &&
-    !(perms & commonConstants.botRolePermBits.MANAGE_BOT_FULL) &&
     (msg.member.hasPermission('ADMINISTRATOR') &&
-      msg.member.roles.highest.position > msg.guild.me.roles.highest.position || isOwner(msg)))
-    perms |= commonConstants.botRolePermBits.MANAGE_BOT_FULL;
+      msg.member.roles.highest.position > msg.guild.me.roles.highest.position || isOwner(msg))) {
+    if (!(channelPerms & commonConstants.botRolePermBits.MANAGE_BOT_FULL))
+      channelPerms |= commonConstants.botRolePermBits.MANAGE_BOT_FULL;
+  } else if (channelPerms & commonConstants.botRolePermBits.MANAGE_BOT_FULL)
+    channelPerms &= ~commonConstants.botRolePermBits.MANAGE_BOT_FULL;
   
   if (permMask & commonConstants.botRolePermBits.SLOWMODE &&
-    !(perms & commonConstants.botRolePermBits.SLOWMODE) &&
-    channel.permissionsFor(msg.member).has('MANAGE_CHANNELS'))
-    perms |= commonConstants.botRolePermBits.SLOWMODE;
+    !(channelPerms & commonConstants.botRolePermBits.SLOWMODE) &&
+    (channel ? channel.permissionsFor(msg.member).has('MANAGE_CHANNELS') : msg.member.hasPermission('MANAGE_CHANNELS')))
+    channelPerms |= commonConstants.botRolePermBits.SLOWMODE;
   
-  return perms;
+  return channelPerms;
 }
 
 
-function getBotPermissions(msg) {
-  let perms = typeof msg == 'number' ? msg : hasBotPermissions(msg, commonConstants.botRolePermAll);
+function getBotPermissions(msg, channelMode) {
+  let perms = typeof msg == 'number' || typeof msg == 'object' ? msg : hasBotPermissions(msg, channelMode ? commonConstants.botRolePermCnl : commonConstants.botRolePermAll, null);
   let obj = {};
-  Object.keys(commonConstants.botRolePermBits).forEach(x => x != 'MANAGE_BOT_FULL' ? obj[x] = Boolean(perms & commonConstants.botRolePermBits[x]) : null);
+  if (channelMode)
+    Object.keys(commonConstants.botRolePermBits).forEach(x => x != 'MANAGE_BOT_FULL' && commonConstants.botRolePermBits[x] & commonConstants.botRolePermCnl ? obj[x] = Math.sign((perms.allows & commonConstants.botRolePermBits[x]) - (perms.denys & commonConstants.botRolePermBits[x])) : null);
+  else
+    Object.keys(commonConstants.botRolePermBits).forEach(x => x != 'MANAGE_BOT_FULL' ? obj[x] = Boolean(perms & commonConstants.botRolePermBits[x]) : null);
   return obj;
 }
 
-function getBotPermissionsArray(msg) {
-  let perms = getBotPermissions(msg);
+function getBotPermissionsArray(msg, channelMode) {
+  let perms = getBotPermissions(msg, channelMode);
   return Object.keys(perms).map(x => [x, perms[x]]);
 }
 

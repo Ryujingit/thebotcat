@@ -171,17 +171,13 @@ format for props.saved:
           channel : null / VoiceChannel,
           connection : null / VoiceConnection,
           dispatcher : null / StreamDispatcher,
-          proc : null / child_process (ffmpeg),
-          procpipe : null / common.BufferStream,
-          proc2 : null / child_process (ffmpeg),
-          proc2pipe : null / common.BufferStream,
           mainloop : int 0 (not playing) / 1 (playing) / 2 (skip request) / 3 (terminate song mainloop),
           songslist : array [
             object {
-              query : string,
               url : string,
               desc : string,
               expectedLength : int (msec),
+              stream : ytdl object,
             },
             ...
           ],
