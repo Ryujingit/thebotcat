@@ -139,6 +139,22 @@ module.exports = async msg => {
     }
   }
   
-  if (isCommand >= 2)
-    return commands[isCommand - 2].execute(msg, cmdstring, command, argstring, args);
+  if (isCommand >= 2) {
+    try {
+      return commands[isCommand - 2].execute(msg, cmdstring, command, argstring, args);
+    } catch (e) {
+      if (e instanceof common.BotError) {
+        if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(e.message)) {
+          return msg.channel.send({
+            embed: {
+              title: 'Error',
+              description: `Error: ${e.message}`,
+            }
+          });
+        } else {
+          return msg.channel.send(`Error: ${e.message}`);
+        }
+      } else throw e;
+    }
+  }
 };
