@@ -15,14 +15,14 @@ module.exports = [
       let playperms = perms & common.constants.botRolePermBits.PLAY_SONG, remoteperms = perms & common.constants.botRolePermBits.REMOTE_CMDS;
       if (!((msg.member.voice.channelID == guilddata.voice.channel.id || remoteperms) && playperms))
         return msg.channel.send('You must be in the same voice channel as I\'m in to play a song.  Admins and mods can bypass this though.');
-      let latestobj;
+      let latestObj;
       try {
-        latestobj = await common.clientVCManager.addSong(guilddata.voice, args[0]);
+        latestObj = await common.clientVCManager.addSong(guilddata.voice, args[0]);
       } catch (e) {
         if (e.toString() != 'Error: invalid url') console.error(e);
         return msg.channel.send('Invalid url');
       }
-      let text = `${latestobj.desc} added to queue`;
+      let text = `${latestObj.desc} added to queue`;
       if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Song Added', description: text } };
       msg.channel.send(text);
       return common.clientVCManager.startMainLoop(guilddata.voice, msg.channel);

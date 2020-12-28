@@ -75,7 +75,7 @@ var addlbotperms = {};
 var mutelist = [];
 
 
-var version = '1.5.6d.1';
+var version = '1.5.6e';
 global.updateStatus = async () => {
   let newStatus = props.feat.status ? props.feat.status.replace('{prefix}', defaultprefix).replace('{guilds}', client.guilds.cache.size) : null;
   let currentStatus;

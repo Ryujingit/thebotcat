@@ -84,9 +84,9 @@ var clientVCManager = {
     voice.mainloop = 1;
     try {
       while (voice.songslist.length > 0) {
-        let stream = voice.songslist[0].stream = ytdl(voice.songslist[0].url);
+        let latestObj = voice.songslist[0];
+        let stream = latestObj.stream = ytdl(latestObj.url);
         stream.on('info', (info, format) => {
-          console.log(infof = info);
           latestObj.desc = `${info.videoDetails.title} by ${info.videoDetails.author.name}`;
           latestObj.expectedLength = info.length_seconds * 1000;
         });
@@ -101,7 +101,7 @@ var clientVCManager = {
             voice.songslist.length = 0;
           }
         }
-        if (voice.mainloop != 2 && voice.mainloop != 3 && voice.dispatcher && voice.dispatcher.streamTime < voice.songslist[0].expectedLength - 5000)
+        if (voice.mainloop != 2 && voice.mainloop != 3 && voice.dispatcher && voice.dispatcher.streamTime < latestObj.expectedLength - 5000)
           msgchannel.send(`Error: something broke when playing ${voice.songslist[0].desc}`);
         if (voice.mainloop == 2 || voice.mainloop == 3) voice.mainloop = 1;
         if (!voice.loop) voice.songslist.splice(0, 1);
