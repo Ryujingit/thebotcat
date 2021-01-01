@@ -38,6 +38,8 @@ var { isDeveloper, isConfirmDeveloper, isOwner, isAdmin, hasBotPermissions, getB
 
 var { serializePermissionOverwrites, partialDeserializePermissionOverwrites, completeDeserializePermissionOverwrites, serializedPermissionsEqual } = require('./permserialize');
 
+var { parseArgs } = require('./parsecommand');
+
 var { searchRoles, searchMembers, searchUsers, searchRole, searchMember, searchUser } = require('./searchcollection');
 
 var { leftPadID, getFancyGuilds, getSortedChannels, getFancyChannels } = require('./generalserialize');
@@ -67,6 +69,7 @@ module.exports = {
   serializePermissionOverwrites,
   partialDeserializePermissionOverwrites, completeDeserializePermissionOverwrites,
   serializedPermissionsEqual,
+  parseArgs,
   searchRoles, searchMembers, searchUsers, searchRole, searchMember, searchUser,
   leftPadID, getFancyGuilds, getSortedChannels, getFancyChannels,
   invokeMessageHandler,

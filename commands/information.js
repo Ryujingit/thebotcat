@@ -3,9 +3,9 @@ module.exports = [
     name: 'help',
     description: '`!help` to list my commands\n`!help <command>` to print help for command',
     flags: 14,
-    execute(msg, cmdstring, command, argstring, args) {
-      if (args.length == 0 || args[0] == 'all') {
-        let [commandsList, commandsCategorized] = getCommandsCategorized(args[0] == 'all' ? null : msg.guild ? props.saved.guilds[msg.guild.id] : false);
+    execute(o, msg, rawArgs) {
+      if (rawArgs.length == 0 || rawArgs[0] == 'all') {
+        let [commandsList, commandsCategorized] = getCommandsCategorized(rawArgs[0] == 'all' ? null : msg.guild ? props.saved.guilds[msg.guild.id] : false);
         return msg.channel.send({
           embed: {
             title: `Commands (${commandsList.length})`,
@@ -16,14 +16,15 @@ module.exports = [
           }
         });
       } else {
-        let cmdobj = commands.filter(x => x.name == argstring)[0];
+        let name = o.argstring[0] == '"' || o.argstring[0] == '\'' ? rawArgs[0] : o.argstring;
+        let cmdobj = commands.filter(x => x.name == name)[0];
         if (cmdobj && cmdobj.flags & 2) {
           if (cmdobj.description)
             return msg.channel.send(cmdobj.description);
           else
-            return msg.channel.send(`Command ${argstring} has no description.`);
+            return msg.channel.send(`Command ${name} has no description.`);
         } else {
-          return msg.channel.send(`Command ${argstring} does not exist.`);
+          return msg.channel.send(`Command ${name} does not exist.`);
         }
       }
     }
@@ -32,7 +33,7 @@ module.exports = [
     name: 'version',
     description: '`!version` prints the version of my code',
     flags: 14,
-    execute(msg, cmdstring, command, argstring, args) {
+    execute(o, msg, rawArgs) {
       if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(version))
         return msg.channel.send({ embed: { title: 'Version', description: `Thebotcat is version ${version}` } });
       else
@@ -43,7 +44,7 @@ module.exports = [
     name: 'uptime',
     description: '`!uptime` to see my uptime',
     flags: 14,
-    execute(msg, cmdstring, command, argstring, args) {
+    execute(o, msg, rawArgs) {
       msg.channel.send(common.getBotcatUptimeMessage());
     }
   },
@@ -51,7 +52,7 @@ module.exports = [
     name: 'status',
     description: '`!status` to see my status',
     flags: 14,
-    execute(msg, cmdstring, command, argstring, args) {
+    execute(o, msg, rawArgs) {
       msg.channel.send(common.getBotcatStatusMessage());
     }
   },
@@ -59,7 +60,7 @@ module.exports = [
     name: 'fullstatus',
     description: '`!fullstatus` to see my full status',
     flags: 14,
-    execute(msg, cmdstring, command, argstring, args) {
+    execute(o, msg, rawArgs) {
       msg.channel.send(common.getBotcatFullStatusMessage());
     }
   },
@@ -67,7 +68,7 @@ module.exports = [
     name: 'ping',
     description: '`!ping` checks my ping in the websocket, to the web, and discord',
     flags: 14,
-    execute(msg, cmdstring, command, argstring, args) {
+    execute(o, msg, rawArgs) {
       return new Promise((resolve, reject) => {
         msg.channel.send('Checking Ping').then(m => {
           let beforerequest = Date.now(), afterrequest;
@@ -89,7 +90,7 @@ module.exports = [
     name: 'discord',
     description: '`!discord` for a link to my Discord Server',
     flags: 14,
-    execute(msg, cmdstring, command, argstring, args) {
+    execute(o, msg, rawArgs) {
       var discord = new Discord.MessageEmbed()
         .setTitle('This is my discord support server if you wanna join click the link! https://discord.gg/NamrBZc')
         .setFooter('Server for thebotcat discord bot come along and say hi!');
@@ -100,7 +101,7 @@ module.exports = [
     name: 'github',
     description: '`!github` for a link to my GitHub repo',
     flags: 14,
-    execute(msg, cmdstring, command, argstring, args) {
+    execute(o, msg, rawArgs) {
       var discord = new Discord.MessageEmbed()
         .setTitle('This is my github repository (its completely open source)!\nhttps://github.com/thebotcat/thebotcat')
         .setFooter('Star our GitHub repo! (If you like the code of course)\n\nAnd when they clicked "make public" they felt an evil leave their presence.');
@@ -111,7 +112,7 @@ module.exports = [
     name: 'invite',
     description: '`!invite` for my invite link',
     flags: 14,
-    execute(msg, cmdstring, command, argstring, args) {
+    execute(o, msg, rawArgs) {
       var discord = new Discord.MessageEmbed()
         .setTitle('My invite link, to add me to any server!\nhttps://discord.com/api/oauth2/authorize?client_id=682719630967439378&permissions=1379265775&scope=bot');
       return msg.channel.send(discord);
@@ -121,12 +122,12 @@ module.exports = [
     name: 'avatar',
     description: '`!avatar` displays your avatar\n`!avatar @someone` displays someone\'s avatar',
     flags: 14,
-    async execute(msg, cmdstring, command, argstring, args) {
+    async execute(o, msg, rawArgs) {
       let member;
       if (msg.guild) {
-        if (args.length) {
+        if (rawArgs.length) {
           try {
-            member = await common.searchMember(msg.guild.members, argstring);
+            member = await common.searchMember(msg.guild.members, o.argstring[0] == '"' || o.argstring[0] == '\'' ? rawArgs[0] : o.argstring);
             if (!member) member = msg.member;
           } catch (e) {
             console.error(e);
@@ -190,10 +191,10 @@ module.exports = [
     name: 'userinfo',
     description: '`!userinfo`',
     flags: 14,
-    async execute(msg, cmdstring, command, argstring, args) {
+    async execute(o, msg, rawArgs) {
       let user;
-      if (msg.guild && args.length) {
-        let member = await common.searchMember(msg.guild.members, argstring);
+      if (msg.guild && rawArgs.length) {
+        let member = await common.searchMember(msg.guild.members, o.argstring[0] == '"' || o.argstring[0] == '\'' ? rawArgs[0] : o.argstring);
         if (!member) return msg.channel.send('User not found in guild.');
         user = member.user;
       } else user = msg.author;
@@ -235,10 +236,10 @@ module.exports = [
     name: 'memberinfo',
     description: '`!memberinfo`',
     flags: 6,
-    async execute(msg, cmdstring, command, argstring, args) {
+    async execute(o, msg, rawArgs) {
       let member;
-      if (args.length) {
-        member = await common.searchMember(msg.guild.members, argstring);
+      if (rawArgs.length) {
+        member = await common.searchMember(msg.guild.members, o.argstring[0] == '"' || o.argstring[0] == '\'' ? rawArgs[0] : o.argstring);
         if (!member) return msg.channel.send('Member not found in guild.');
       } else member = msg.member;
       
@@ -263,7 +264,7 @@ module.exports = [
     name: 'serverinfo',
     description: '`!serverinfo`',
     flags: 6,
-    execute(msg, cmdstring, command, argstring, args) {
+    execute(o, msg, rawArgs) {
       let guild = msg.guild;
       
       let createdDate = new Date(new Date('2015-01-01T00:00:00.000Z').getTime() + Number(BigInt(guild.id) >> 22n));
@@ -285,7 +286,7 @@ module.exports = [
         `[big\xa0png](${baseurl}.png?size=4096), ` +
         `[big\xa0webp](${baseurl}.webp?size=4096)`);
       
-      if (args[0] == 'all')
+      if (rawArgs[0] == 'all')
         return msg.channel.send({
           embed: {
             title: `Information for ${guild.name}`,
@@ -318,12 +319,12 @@ module.exports = [
     name: 'firstmsg',
     description: '`!firstmsg` for a link to the first message in this channel\n`!firstmsg #channel` for a link to the first message in #channel',
     flags: 14,
-    async execute(msg, cmdstring, command, argstring, args) {
+    async execute(o, msg, rawArgs) {
       let channel;
-      if (args.length == 0) {
+      if (rawArgs.length == 0) {
         channel = msg.channel;
-      } else if (/<#[0-9]+>/.test(args[0])) {
-        channel = msg.guild.channels.cache.get(args[0].slice(2, -1));
+      } else if (/<#[0-9]+>/.test(rawArgs[0])) {
+        channel = msg.guild.channels.cache.get(rawArgs[0].slice(2, -1));
         if (!channel || !channel.permissionsFor(msg.member).has('VIEW_CHANNEL')) channel = msg.channel;
       }
       let msgs = (await channel.messages.fetch({ after: 0, limit: 1 })).array();
@@ -337,9 +338,9 @@ module.exports = [
     name: 'dateid',
     description: '`!dateid <id>` to get the UTC date/time of an ID in discord',
     flags: 14,
-    execute(msg, cmdstring, command, argstring, args) {
+    execute(o, msg, rawArgs) {
       try {
-        let id = BigInt(args[0]);
+        let id = BigInt(rawArgs[0]);
         return msg.channel.send(`Date: ${new Date(new Date('2015-01-01T00:00:00.000Z').getTime() + Number(id >> 22n)).toISOString()}`);
       } catch (e) {
         return msg.channel.send('Invalid ID');
@@ -350,9 +351,9 @@ module.exports = [
     name: 'idinfo',
     description: '`!idinfo <id>` to get the fields of an ID in discord',
     flags: 14,
-    execute(msg, cmdstring, command, argstring, args) {
+    execute(o, msg, rawArgs) {
       try {
-        let id = BigInt(args[0]);
+        let id = BigInt(rawArgs[0]);
         return msg.channel.send({
           embed: {
             title: 'ID Info',

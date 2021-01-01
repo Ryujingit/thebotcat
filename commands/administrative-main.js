@@ -3,21 +3,21 @@ module.exports = [
     name: 'suppressembeds',
     description: '`!suppressembeds <\'suppress\'/\'unsuppress\'> [#channel] <messageid>` to suppress or unsuppress embeds on a message',
     flags: 6,
-    async execute(msg, cmdstring, command, argstring, args) {
+    async execute(o, msg, rawArgs) {
       let suppress, channel, msgid;
       
-      switch (args[0]) {
+      switch (rawArgs[0]) {
         case 'suppress': suppress = true; break;
         case 'unsuppress': suppress = false; break;
         default: return msg.channel.send('Options are \'suppress\' and \'unsuppress\'').then(x => setTimeout(() => x.delete(), 5000)); break;
       }
       
-      if (/<#[0-9]+>/.test(args[1])) {
-        channel = msg.guild.channels.cache.find(x => x.id == args[1].slice(2, -1));
+      if (/<#[0-9]+>/.test(rawArgs[1])) {
+        channel = msg.guild.channels.cache.find(x => x.id == rawArgs[1].slice(2, -1));
         if (!channel || !channel.permissionsFor(msg.member).has('VIEW_CHANNEL')) return msg.channel.send('Cannot set slowmode in channel outside of this guild.').then(x => setTimeout(() => x.delete(), 5000));
-        msgid = args[2];
+        msgid = rawArgs[2];
       } else {
-        msgid = args[1];
+        msgid = rawArgs[1];
       }
       
       if (!channel) channel = msg.channel;
@@ -43,15 +43,15 @@ module.exports = [
     name: 'slowmode',
     description: '`!slowmode [#channel] <seconds>` to set the slowmode in a text channel to a certain value',
     flags: 6,
-    async execute(msg, cmdstring, command, argstring, args) {
+    async execute(o, msg, rawArgs) {
       let channel, seconds;
       
-      if (/<#[0-9]+>/.test(args[0])) {
-        channel = msg.guild.channels.cache.find(x => x.id == args[0].slice(2, -1));
+      if (/<#[0-9]+>/.test(rawArgs[0])) {
+        channel = msg.guild.channels.cache.find(x => x.id == rawArgs[0].slice(2, -1));
         if (!channel || !channel.permissionsFor(msg.member).has('VIEW_CHANNEL')) return msg.channel.send('Cannot set slowmode in channel outside of this guild.');
-        seconds = Math.floor(Number(args[1]));
+        seconds = Math.floor(Number(rawArgs[1]));
       } else {
-        seconds = Math.floor(Number(args[0]));
+        seconds = Math.floor(Number(rawArgs[0]));
       }
       
       if (!channel) channel = msg.channel;
@@ -83,15 +83,15 @@ module.exports = [
     name: 'bitrate',
     description: '`!bitrate [#channel] <bytespersec>` to set the bitrate (bps not kbps) in a voice channel to a certain value',
     flags: 6,
-    async execute(msg, cmdstring, command, argstring, args) {
+    async execute(o, msg, rawArgs) {
       let channel, bitrate;
       
-      if (/<#[0-9]+>/.test(args[0])) {
-        channel = msg.guild.channels.cache.find(x => x.id == args[0].slice(2, -1));
+      if (/<#[0-9]+>/.test(rawArgs[0])) {
+        channel = msg.guild.channels.cache.find(x => x.id == rawArgs[0].slice(2, -1));
         if (!channel || !channel.permissionsFor(msg.member).has('VIEW_CHANNEL')) return msg.channel.send('Cannot set bitrate of channel outside of this guild.');
-        bitrate = Math.floor(Number(args[1]));
+        bitrate = Math.floor(Number(rawArgs[1]));
       } else {
-        bitrate = Math.floor(Number(args[0]));
+        bitrate = Math.floor(Number(rawArgs[0]));
       }
       
       if (!channel) channel = msg.channel;
@@ -125,7 +125,7 @@ module.exports = [
     name: 'purge',
     description: '`!purge [#channel] <amount>` to delete `amount` messages from the channel',
     flags: 14,
-    async execute(msg, cmdstring, command, argstring, args) {
+    async execute(o, msg, rawArgs) {
       if (!props.saved.guilds[msg.guild.id]) {
         props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
         schedulePropsSave();
@@ -133,12 +133,12 @@ module.exports = [
       
       let channel, msgs;
       
-      if (/<#[0-9]+>/.test(args[0])) {
-        channel = msg.guild.channels.cache.find(x => x.id == args[0].slice(2, -1));
+      if (/<#[0-9]+>/.test(rawArgs[0])) {
+        channel = msg.guild.channels.cache.find(x => x.id == rawArgs[0].slice(2, -1));
         if (!channel || !channel.permissionsFor(msg.member).has('VIEW_CHANNEL')) return msg.channel.send('Cannot purge messages in channel outside of this guild.');
-        msgs = args[1] == 'all' ? -1 : Number(args[1]);
+        msgs = rawArgs[1] == 'all' ? -1 : Number(rawArgs[1]);
       } else {
-        msgs = args[0] == 'all' ? -1 : Number(args[0]);
+        msgs = rawArgs[0] == 'all' ? -1 : Number(rawArgs[0]);
       }
       
       if (!channel) channel = msg.channel;
@@ -160,7 +160,7 @@ module.exports = [
     name: 'lock',
     description: '`!lock [#channel]` to lock the channel, preventing anyone other than moderators from talking in it',
     flags: 6,
-    async execute(msg, cmdstring, command, argstring, args) {
+    async execute(o, msg, rawArgs) {
       if (!props.saved.guilds[msg.guild.id]) {
         props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
         schedulePropsSave();
@@ -171,11 +171,11 @@ module.exports = [
       
       let channel, reason = [];
       
-      for (var i = 0; i < args.length; i++) {
-        if (i > 0 || !/<#[0-9]+>/.test(args[i])) {
-          reason.push(args[i]);
+      for (var i = 0; i < rawArgs.length; i++) {
+        if (i > 0 || !/<#[0-9]+>/.test(rawArgs[i])) {
+          reason.push(rawArgs[i]);
         } else {
-          channel = msg.guild.channels.cache.find(x => x.id == args[i].slice(2, -1));
+          channel = msg.guild.channels.cache.find(x => x.id == rawArgs[i].slice(2, -1));
           if (!channel || !channel.permissionsFor(msg.member).has('VIEW_CHANNEL')) return msg.channel.send('Cannot lock channel outside of this guild.');
         }
       }
@@ -233,7 +233,7 @@ module.exports = [
     name: 'unlock',
     description: '`!unlock [#channel]` to unlock the channel, resetting permissions to what they were before the lock',
     flags: 6,
-    async execute(msg, cmdstring, command, argstring, args) {
+    async execute(o, msg, rawArgs) {
       if (!props.saved.guilds[msg.guild.id]) {
         props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
         schedulePropsSave();
@@ -244,11 +244,11 @@ module.exports = [
       
       let channel, reason = [];
       
-      for (var i = 0; i < args.length; i++) {
-        if (i > 0 || !/<#[0-9]+>/.test(args[i])) {
-          reason.push(args[i]);
+      for (var i = 0; i < rawArgs.length; i++) {
+        if (i > 0 || !/<#[0-9]+>/.test(rawArgs[i])) {
+          reason.push(rawArgs[i]);
         } else {
-          channel = msg.guild.channels.cache.find(x => x.id == args[i].slice(2, -1));
+          channel = msg.guild.channels.cache.find(x => x.id == rawArgs[i].slice(2, -1));
           if (!channel || !channel.permissionsFor(msg.member).has('VIEW_CHANNEL')) return msg.channel.send('Cannot unlock channel outside of this guild.');
         }
       }
@@ -278,7 +278,7 @@ module.exports = [
     name: 'mute',
     description: '`!mute @person` to mute someone by adding the muted role to them',
     flags: 6,
-    async execute(msg, cmdstring, command, argstring, args) {
+    async execute(o, msg, rawArgs) {
       if (!props.saved.guilds[msg.guild.id]) {
         props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
         schedulePropsSave();
@@ -292,13 +292,13 @@ module.exports = [
       
       let member;
       try {
-        member = await common.searchMember(msg.guild.members, args[0]);
+        member = await common.searchMember(msg.guild.members, rawArgs[0]);
         if (!member) return msg.channel.send('Could not find member.');
       } catch (e) {
         return msg.channel.send('Could not find member.');
       }
       
-      let mutereason = args.slice(1).join(' ');
+      let mutereason = rawArgs.slice(1).join(' ');
       
       if (!member.roles.cache.get(props.saved.guilds[msg.guild.id].mutedrole)) {
         await member.roles.add(props.saved.guilds[msg.guild.id].mutedrole, `[By ${msg.author.tag} (id ${msg.author.id})]${mutereason ? ' ' + mutereason : ''}`);
@@ -313,7 +313,7 @@ module.exports = [
     name: 'unmute',
     description: '`!unmute @person` to unmute someone by removing the muted role from them',
     flags: 6,
-    async execute(msg, cmdstring, command, argstring, args) {
+    async execute(o, msg, rawArgs) {
       if (!props.saved.guilds[msg.guild.id]) {
         props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
         schedulePropsSave();
@@ -327,13 +327,13 @@ module.exports = [
       
       let member;
       try {
-        member = await common.searchMember(msg.guild.members, args[0]);
+        member = await common.searchMember(msg.guild.members, rawArgs[0]);
         if (!member) return msg.channel.send('Could not find member.');
       } catch (e) {
         return msg.channel.send('Could not find member.');
       }
       
-      let unmutereason = args.slice(1).join(' ');
+      let unmutereason = rawArgs.slice(1).join(' ');
       
       if (member.roles.cache.get(props.saved.guilds[msg.guild.id].mutedrole)) {
         await member.roles.remove(props.saved.guilds[msg.guild.id].mutedrole, `[By ${msg.author.tag} (id ${msg.author.id})]${unmutereason ? ' ' + unmutereason : ''}`);
@@ -346,7 +346,7 @@ module.exports = [
   {
     name: 'resetnicknames',
     flags: 6,
-    execute(msg, cmdstring, command, argstring, args) {
+    execute(o, msg, rawArgs) {
       if (!(common.isDeveloper(msg) || common.isAdmin(msg))) return;
       console.log(`resetnickname called by ${msg.author.tag} in ${msg.guild.name}`);
       var member_array = msg.guild.members.cache.array();
@@ -377,20 +377,20 @@ module.exports = [
     name: 'kick',
     description: '`!kick @person` to kick someone from this guild',
     flags: 6,
-    async execute(msg, cmdstring, command, argstring, args) {
+    async execute(o, msg, rawArgs) {
       if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.KICK))
         return msg.channel.send('You do not have permission to run this command.');
       
       let member;
       try {
-        member = await common.searchMember(msg.guild.members, args[0]);
+        member = await common.searchMember(msg.guild.members, rawArgs[0]);
         if (!member) return msg.channel.send('Could not find member.');
       } catch (e) {
         console.error(e);
         return msg.channel.send('Could not find member.');
       }
       
-      let kickreason = args.slice(1).join(' ');
+      let kickreason = rawArgs.slice(1).join(' ');
       
       if (!msg.guild.me.hasPermission('KICK_MEMBERS'))
         return msg.channel.send('Error: I do not have permission to kick members.');
@@ -425,24 +425,24 @@ module.exports = [
     name: 'ban',
     description: '`!ban @person` to ban someone from this guild',
     flags: 6,
-    async execute(msg, cmdstring, command, argstring, args) {
+    async execute(o, msg, rawArgs) {
       if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.BAN))
         return msg.channel.send('You do not have permission to run this command.');
       
       let member, nomember;
       try {
-        member = await common.searchMember(msg.guild.members, args[0]);
+        member = await common.searchMember(msg.guild.members, rawArgs[0]);
         if (!member) {
-          if (/[0-9]+/.test(args[0])) nomember = true;
+          if (/[0-9]+/.test(rawArgs[0])) nomember = true;
           else return msg.channel.send('Could not find member.');
         }
       } catch (e) {
-        if (/[0-9]+/.test(args[0])) nomember = true;
+        if (/[0-9]+/.test(rawArgs[0])) nomember = true;
         else return msg.channel.send('Could not find member.');
       }
       
       if (nomember) {
-        let banreason = args.slice(1).join(' ');
+        let banreason = rawArgs.slice(1).join(' ');
         
         if (!msg.guild.me.hasPermission('BAN_MEMBERS'))
           return msg.channel.send('Error: I do not have permission to ban members.');
@@ -464,7 +464,7 @@ module.exports = [
           return msg.channel.send('Error: something went wrong.');
         }
       } else {
-        let banreason = args.slice(1).join(' ');
+        let banreason = rawArgs.slice(1).join(' ');
         
         if (!msg.guild.me.hasPermission('BAN_MEMBERS'))
           return msg.channel.send('Error: I do not have permission to ban members.');
@@ -500,14 +500,14 @@ module.exports = [
     name: 'unban',
     description: '`!unban @person` to unban someone from this guild',
     flags: 6,
-    async execute(msg, cmdstring, command, argstring, args) {
+    async execute(o, msg, rawArgs) {
       if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.BAN))
         return msg.channel.send('You do not have permission to run this command.');
       
       let memberid;
-      if (args[0]) {
-        if (/<@!?[0-9]+>|[0-9]+/.test(args[0]))
-          memberid = args[0].replace(/[<@!>]/g, '');
+      if (rawArgs[0]) {
+        if (/<@!?[0-9]+>|[0-9]+/.test(rawArgs[0]))
+          memberid = rawArgs[0].replace(/[<@!>]/g, '');
       }
       if (!memberid) return;
       
@@ -519,7 +519,7 @@ module.exports = [
         return msg.channel.send('User not banned or nonexistent.');
       }
       
-      let unbanreason = args.slice(1).join(' ');
+      let unbanreason = rawArgs.slice(1).join(' ');
       
       if (!msg.guild.me.hasPermission('BAN_MEMBERS'))
         return msg.channel.send('Error: I do not have permission to unban members.');
@@ -545,24 +545,24 @@ module.exports = [
     name: 'emoterole',
     description: '`!emoterole add <emote|id|name> [<@role|id|name>] ...` to add roles that can use the emoji\n`!emoterole remove <emote|id|name> [<@role|id|name>] ...` to remove roles that can use the emoji\n`!emoterole set <emote|id|name> [<@role|id|name>] ...` to set that can use the emoji',
     flags: 6,
-    execute(msg, cmdstring, command, argstring, args) {
+    execute(o, msg, rawArgs) {
       if (!msg.member.hasPermission('MANAGE_EMOJIS'))
         return msg.channel.send('You do not have permission to run this command.');
       
       let emote;
       
-      if (/<a?:[A-Za-z]+:[0-9]+>/.test(args[1])) {
-        let end = args[1].slice(':')[2];
+      if (/<a?:[A-Za-z]+:[0-9]+>/.test(rawArgs[1])) {
+        let end = rawArgs[1].slice(':')[2];
         emote = msg.guild.emojis.resolve(end.slice(0, -1));
-      } else if (/[0-9]+/.test(args[1])) {
-        emote = msg.guild.emojis.resolve(args[1]);
+      } else if (/[0-9]+/.test(rawArgs[1])) {
+        emote = msg.guild.emojis.resolve(rawArgs[1]);
       } else {
-        emote = msg.guild.emojis.cache.find(x => x.name == args[1]);
+        emote = msg.guild.emojis.cache.find(x => x.name == rawArgs[1]);
       }
       
-      let roles = args.slice(2).map(x => common.searchRole(msg.guild.roles, x));
+      let roles = rawArgs.slice(2).map(x => common.searchRole(msg.guild.roles, x));
       
-      switch (args[0]) {
+      switch (rawArgs[0]) {
         case 'add':
           emote.roles.add(roles);
           return msg.channel.send({ embed: { title: 'Roles Added', description: `Roles ${roles.length ? roles.map(x => `<@&${x.id}>`).join(' ') : 'nothing'} added to <:${emote.name}:${emote.id}> emote` } });

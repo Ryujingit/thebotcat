@@ -3,7 +3,7 @@ module.exports = [
     name: 'play',
     description: '`!play <url>` to play the audio of a youtube url, like every other music bot in existence',
     flags: 6,
-    async execute(msg, cmdstring, command, argstring, args) {
+    async execute(o, msg, rawArgs) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
       if (!guilddata) {
@@ -17,7 +17,7 @@ module.exports = [
         return msg.channel.send('You must be in the same voice channel as I\'m in to play a song.  Admins and mods can bypass this though.');
       let latestObj;
       try {
-        latestObj = await common.clientVCManager.addSong(guilddata.voice, args[0]);
+        latestObj = await common.clientVCManager.addSong(guilddata.voice, rawArgs[0]);
       } catch (e) {
         if (e.toString() != 'Error: invalid url') console.error(e);
         return msg.channel.send('Invalid url');
@@ -32,7 +32,7 @@ module.exports = [
     name: 'pause',
     description: '`!pause` pauses the currently playing song',
     flags: 6,
-    execute(msg, cmdstring, command, argstring, args) {
+    execute(o, msg, rawArgs) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
       if (!guilddata) {
@@ -55,7 +55,7 @@ module.exports = [
     name: 'resume',
     description: '`!resume` resumes the currently paused song',
     flags: 6,
-    execute(msg, cmdstring, command, argstring, args) {
+    execute(o, msg, rawArgs) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
       if (!guilddata) {
@@ -78,7 +78,7 @@ module.exports = [
     name: 'volume',
     description: '`!volume <float>` sets my volume in a vc, with 1 being the normal volume',
     flags: 6,
-    execute(msg, cmdstring, command, argstring, args) {
+    execute(o, msg, rawArgs) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
       if (!guilddata) {
@@ -87,7 +87,7 @@ module.exports = [
       }
       let channel = guilddata.voice.channel;
       if (!channel) return msg.channel.send('I\'m not in a voice channel');
-      if (args.length == 0) {
+      if (rawArgs.length == 0) {
         return msg.channel.send(`Playback volume is currently set to ${common.clientVCManager.getVolume(guilddata.voice)}`);
       } else {
         let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.PLAY_SONG | common.constants.botRolePermBits.FORCESKIP | common.constants.botRolePermBits.REMOTE_CMDS);
@@ -95,7 +95,7 @@ module.exports = [
         let vcmembers = channel.members.keyArray();
         if (!((msg.member.voice.channelID == guilddata.voice.channel.id || remoteperms) && (fsperms || vcmembers.length == 2 && vcmembers.includes(msg.author.id) && playperms)))
           return msg.channel.send('Only admins and mods can change my volume, or someone who is alone with me in a voice channel.');
-        let wantedvolume = Number(args[0]);
+        let wantedvolume = Number(rawArgs[0]);
         if (isNaN(wantedvolume) || wantedvolume == Infinity || wantedvolume == -Infinity || wantedvolume < 0 || wantedvolume > 10)
           return msg.channel.send('Volume out of bounds or not specified.');
         common.clientVCManager.setVolume(guilddata.voice, wantedvolume);
@@ -107,7 +107,7 @@ module.exports = [
     name: 'loop',
     description: '`!loop` toggles whether the currently playing song will loop',
     flags: 6,
-    execute(msg, cmdstring, command, argstring, args) {
+    execute(o, msg, rawArgs) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
       if (!guilddata) {
@@ -129,7 +129,7 @@ module.exports = [
     name: 'forceskip',
     description: '`!forceskip` skips the currently playing song',
     flags: 6,
-    execute(msg, cmdstring, command, argstring, args) {
+    execute(o, msg, rawArgs) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
       if (!guilddata) {
@@ -152,7 +152,7 @@ module.exports = [
     name: 'stop',
     description: '`!stop` clears the song list and stops playing',
     flags: 6,
-    execute(msg, cmdstring, command, argstring, args) {
+    execute(o, msg, rawArgs) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
       if (!guilddata) {
@@ -175,7 +175,7 @@ module.exports = [
     name: 'songslist',
     description: '`!songslist` to list the currently playing song and the next songs',
     flags: 6,
-    execute(msg, cmdstring, command, argstring, args) {
+    execute(o, msg, rawArgs) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
       if (!guilddata) {
@@ -201,7 +201,7 @@ module.exports = [
     name: 'currentsong',
     description: '`!currentsong` to list the currently playing song',
     flags: 6,
-    execute(msg, cmdstring, command, argstring, args) {
+    execute(o, msg, rawArgs) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
       if (!guilddata) {

@@ -3,7 +3,7 @@ module.exports = [
     name: 'settings',
     description: '`!settings` to see available settings\n`!settings <setting>` for help on a specific setting',
     flags: 6,
-    execute(msg, cmdstring, command, argstring, args) {
+    execute(o, msg, rawArgs) {
       if (!props.saved.guilds[msg.guild.id]) {
         props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
         schedulePropsSave();
@@ -21,26 +21,26 @@ module.exports = [
       
       if (!basicperms) return silenced ? null : msg.channel.send('You do not have permission to run this command.');
       
-      if (args.length == 0) {
+      if (rawArgs.length == 0) {
         if (fullperms)
           return msg.channel.send(`List of settings:\nprefix, badwords, logchannel, mutedrole, roles, overrides, enabledcmds`);
         else
           return msg.channel.send(`List of settings:\nprefix, badwords`);
       }
       
-      switch (args[0]) {
+      switch (rawArgs[0]) {
         case 'prefix':
-          if (args.length == 1) {
+          if (rawArgs.length == 1) {
             return msg.channel.send(`The current server prefix is: \`${guilddata.prefix}\`\n\`${guilddata.prefix}settings prefix <newprefix>\` to set.`);
           } else {
-            guilddata.prefix = args.slice(1).join(' ');
+            guilddata.prefix = rawArgs.slice(1).join(' ');
             schedulePropsSave();
             return msg.channel.send(`Server prefix set to: \`${guilddata.prefix}\``);
           }
           break;
         
         case 'badwords':
-          if (args.length == 1) {
+          if (rawArgs.length == 1) {
             return msg.channel.send(
               'To list badwords run `settings badwords list`.\n' +
               'To list info about one badword run `settings badwords list <word>`.\n' +
@@ -49,13 +49,13 @@ module.exports = [
               'To modify badword run `settings badwords modify <word> <enabled> <type> <ignore_admin> [<ignored_role> ...] <retaliation>`.'
             );
           } else {
-            switch (args[1]) {
+            switch (rawArgs[1]) {
               case 'list':
-                if (args.length == 2) {
+                if (rawArgs.length == 2) {
                   return msg.channel.send({ embed: { title: 'List of badwords', description: guilddata.basic_automod.bad_words.map(x => x.word).join(', ') } });
                 } else {
-                  let word = guilddata.basic_automod.bad_words.filter(x => x.word == args[2])[0];
-                  if (!word) return msg.channel.send({ embed: { title: 'Error', description: 'Word ${args[2]} not found' } });
+                  let word = guilddata.basic_automod.bad_words.filter(x => x.word == rawArgs[2])[0];
+                  if (!word) return msg.channel.send({ embed: { title: 'Error', description: 'Word ${rawArgs[2]} not found' } });
                   return msg.channel.send({
                     embed: {
                       title: `Information for badword ${util.inspect(word.word)}`,
@@ -71,48 +71,48 @@ module.exports = [
                 break;
               
               case 'add':
-                if (args.length < 7) return msg.channel.send('Not enough arguments');
-                let type = Number(args[3]);
+                if (rawArgs.length < 7) return msg.channel.send('Not enough arguments');
+                let type = Number(rawArgs[3]);
                 if (!(Number.isSafeInteger(type) && type >= 0 && type < 8))
                   return msg.channel.send('Type must be an integer and within 0-8');
-                if (guilddata.basic_automod.bad_words.filter(x => x.word == args[5]).length)
-                  return msg.channel.send({ embed: { title: 'Word Already Exists', description: `Word ${util.inspect(args[5])} already exists` } });
-                guilddata.basic_automod.bad_words.push({ enabled: common.stringToBoolean(args[2]), type, ignore_admin: common.stringToBoolean(args[4]), ignored_roles: [], word: args[5], retaliation: args.slice(6).join(' ') });
+                if (guilddata.basic_automod.bad_words.filter(x => x.word == rawArgs[5]).length)
+                  return msg.channel.send({ embed: { title: 'Word Already Exists', description: `Word ${util.inspect(rawArgs[5])} already exists` } });
+                guilddata.basic_automod.bad_words.push({ enabled: common.stringToBoolean(rawArgs[2]), type, ignore_admin: common.stringToBoolean(rawArgs[4]), ignored_roles: [], word: rawArgs[5], retaliation: rawArgs.slice(6).join(' ') });
                 schedulePropsSave();
-                return msg.channel.send({ embed: { title: 'Word Added', description: `Word ${util.inspect(args[5])} successfully added` } });
+                return msg.channel.send({ embed: { title: 'Word Added', description: `Word ${util.inspect(rawArgs[5])} successfully added` } });
                 break;
               
               case 'remove':
-                if (args.length < 3) return msg.channel.send('Not enough arguments');
+                if (rawArgs.length < 3) return msg.channel.send('Not enough arguments');
                 let index = null;
                 for (var i = 0; i < guilddata.basic_automod.bad_words.length; i++) {
-                  if (guilddata.basic_automod.bad_words[i].word == args[2]) {
+                  if (guilddata.basic_automod.bad_words[i].word == rawArgs[2]) {
                     index = i;
                     break;
                   }
                 }
-                if (index == null) return msg.channel.send({ embed: { title: 'Word Not Found', description: `Word ${util.inspect(args[5])} not found` } });
+                if (index == null) return msg.channel.send({ embed: { title: 'Word Not Found', description: `Word ${util.inspect(rawArgs[5])} not found` } });
                 guilddata.basic_automod.bad_words.splice(index, 1);
                 schedulePropsSave();
-                return msg.channel.send({ embed: { title: 'Word Removed', description: `Word ${util.inspect(args[5])} successfully removed` } });
+                return msg.channel.send({ embed: { title: 'Word Removed', description: `Word ${util.inspect(rawArgs[5])} successfully removed` } });
                 break;
               
               case 'modify':
-                if (args.length < 7) return msg.channel.send('Not enough arguments');
+                if (rawArgs.length < 7) return msg.channel.send('Not enough arguments');
                 let index2 = null;
                 for (var i = 0; i < guilddata.basic_automod.bad_words.length; i++) {
-                  if (guilddata.basic_automod.bad_words[i].word == args[2]) {
+                  if (guilddata.basic_automod.bad_words[i].word == rawArgs[2]) {
                     index2 = i;
                     break;
                   }
                 }
-                if (index2 == null) return msg.channel.send({ embed: { title: 'Word Not Found', description: `Word ${util.inspect(args[2])} not found` } });
-                let type2 = Number(args[4]);
+                if (index2 == null) return msg.channel.send({ embed: { title: 'Word Not Found', description: `Word ${util.inspect(rawArgs[2])} not found` } });
+                let type2 = Number(rawArgs[4]);
                 if (!(Number.isSafeInteger(type2) && type2 >= 0 && type2 < 8))
                   return msg.channel.send('Type must be an integer and within 0-8');
-                guilddata.basic_automod.bad_words[index2] = { enabled: common.stringToBoolean(args[2]), type2, ignore_admin: common.stringToBoolean(args[4]), ignored_roles: [], word: args[5], retaliation: args.slice(6).join(' ') };
+                guilddata.basic_automod.bad_words[index2] = { enabled: common.stringToBoolean(rawArgs[2]), type2, ignore_admin: common.stringToBoolean(rawArgs[4]), ignored_roles: [], word: rawArgs[5], retaliation: rawArgs.slice(6).join(' ') };
                 schedulePropsSave();
-                return msg.channel.send({ embed: { title: 'Word Modified', description: `Word ${util.inspect(args[5])} successfully modified` } });
+                return msg.channel.send({ embed: { title: 'Word Modified', description: `Word ${util.inspect(rawArgs[5])} successfully modified` } });
                 break;
             }
           }
@@ -120,7 +120,7 @@ module.exports = [
         
         case 'logchannel':
           if (!fullperms) return silenced ? null : msg.channel.send('You do not have permission to run this command.');
-          if (args.length == 1) {
+          if (rawArgs.length == 1) {
             return msg.channel.send(
               `The current logging channel is ` + (guilddata.logging.main ? `<#${guilddata.logging.main}> (id ${guilddata.logging.main})` : `none`) + '.\n' +
               'To set logging channel to this channel run `settings logchannel set`.\n' +
@@ -128,7 +128,7 @@ module.exports = [
               'To turn of logging run `settings logchannel null`.'
             );
           } else {
-            let logchannel = args.slice(1).join(' ');
+            let logchannel = rawArgs.slice(1).join(' ');
             if (logchannel == 'null') {
               guilddata.logging.main = null;
               schedulePropsSave();
@@ -159,7 +159,7 @@ module.exports = [
         
         case 'mutedrole':
           if (!fullperms) return silenced ? null : msg.channel.send('You do not have permission to run this command.');
-          if (args.length == 1) {
+          if (rawArgs.length == 1) {
             return msg.channel.send({
               embed: {
                 title: 'Muted Role',
@@ -168,8 +168,8 @@ module.exports = [
               }
             });
           } else {
-            if (args[1] == 'set') {
-              let role = common.searchRoles(msg.guild.roles, args.slice(2).join(' '));
+            if (rawArgs[1] == 'set') {
+              let role = common.searchRoles(msg.guild.roles, rawArgs.slice(2).join(' '));
               if (Array.isArray(role)) {
                 return msg.channel.send({
                   embed: { title: 'Not Specific Enough', description: `Your query narrows it down to these roles:\n${roles.map(x => '<@&' + x.id + '>').join(' ')}` }
@@ -179,7 +179,7 @@ module.exports = [
                 schedulePropsSave();
                 return msg.channel.send({ embed: { title: 'Muted Role', description: `<@&${role.id}> set as muted role.` } });
               }
-            } else if (args[1] == 'reset') {
+            } else if (rawArgs[1] == 'reset') {
               if (guilddata.mutedrole) {
                 guilddata.mutedrole = null;
                 schedulePropsSave();
@@ -195,7 +195,7 @@ module.exports = [
         
         case 'roles':
           if (!fullperms) return silenced ? null : msg.channel.send('You do not have permission to run this command.');
-          if (args.length == 1) {
+          if (rawArgs.length == 1) {
             return msg.channel.send(
               'This command configures the bot-level permissions certain roles have, ranging from music command access to muting, locking, kicking, banning, and bot settings control.\n\n' +
               'To view roles with bot-level permissions set, run `settings roles view`.\n' +
@@ -205,9 +205,9 @@ module.exports = [
               'To set a specific permission for a role, run `settings roles enable/disable <@mention|name|query> <permission name|permission id> [<2nd permission name|permission id> ...]`',
             );
           } else {
-            switch (args[1]) {
+            switch (rawArgs[1]) {
               case 'view':
-                if (args.length == 2) {
+                if (rawArgs.length == 2) {
                   return msg.channel.send({
                     embed: {
                       title: 'Roles',
@@ -215,7 +215,7 @@ module.exports = [
                     }
                   });
                 } else {
-                  let role = common.searchRoles(msg.guild.roles, args.slice(2).join(' '));
+                  let role = common.searchRoles(msg.guild.roles, rawArgs.slice(2).join(' '));
                   if (Array.isArray(role)) {
                     return msg.channel.send({
                       embed: { title: 'Not Specific Enough', description: `Your query narrows it down to these roles:\n${role.map(x => '<@&' + x.id + '>').join(' ')}` }
@@ -240,7 +240,7 @@ module.exports = [
                 break;
               
               case 'init':
-                let role = common.searchRoles(msg.guild.roles, args.slice(2).join(' '));
+                let role = common.searchRoles(msg.guild.roles, rawArgs.slice(2).join(' '));
                 if (Array.isArray(role)) {
                   return msg.channel.send({
                     embed: { title: 'Not Specific Enough', description: `Your query narrows it down to these roles:\n${role.map(x => '<@&' + x.id + '>').join(' ')}` }
@@ -265,7 +265,7 @@ module.exports = [
                 break;
               
               case 'clear':
-                let role2 = common.searchRoles(msg.guild.roles, args.slice(2).join(' '));
+                let role2 = common.searchRoles(msg.guild.roles, rawArgs.slice(2).join(' '));
                 if (Array.isArray(role2)) {
                   return msg.channel.send({
                     embed: { title: 'Not Specific Enough', description: `Your query narrows it down to these roles:\n${role2.map(x => '<@&' + x.id + '>').join(' ')}` }
@@ -294,7 +294,7 @@ module.exports = [
               
               case 'enable':
               case 'disable':
-                let role3 = common.searchRoles(msg.guild.roles, args[2]);
+                let role3 = common.searchRoles(msg.guild.roles, rawArgs[2]);
                 if (Array.isArray(role3)) {
                   return msg.channel.send({
                     embed: { title: 'Not Specific Enough', description: `Your query narrows it down to these roles:\n${role3.map(x => '<@&' + x.id + '>').join(' ')}` }
@@ -308,12 +308,12 @@ module.exports = [
                       }
                     });
                   let changedPerms = [];
-                  let permsToChange = args.slice(3).map(perm => {
+                  let permsToChange = rawArgs.slice(3).map(perm => {
                     let nperm = Number(perm);
                     if (nperm == nperm) return Number.isSafeInteger(nperm) && nperm > 0 ? nperm : null;
                     else return common.constants.botRolePermBits[perm];
                   }).filter(x => x != null).reduce((a, c) => (changedPerms.push(common.constants.botRolePermBitsInv[c]), a + c), 0) & common.constants.botRolePermAll;
-                  if (args[1] == 'enable')
+                  if (rawArgs[1] == 'enable')
                     guilddata.perms[role3.id] |= permsToChange;
                   else
                     guilddata.perms[role3.id] &= ~permsToChange;
@@ -321,7 +321,7 @@ module.exports = [
                   return msg.channel.send({
                     embed: {
                       title: 'Permissions Updated',
-                      description: `Permissions ${changedPerms.map(x => `\'${x}\'`).join(', ')} ${args[1] == 'enable' ? 'enabled' : 'disabled'} for role <@&${role3.id}>.`
+                      description: `Permissions ${changedPerms.map(x => `\'${x}\'`).join(', ')} ${rawArgs[1] == 'enable' ? 'enabled' : 'disabled'} for role <@&${role3.id}>.`
                     }
                   });
                 }
@@ -336,7 +336,7 @@ module.exports = [
         
         case 'overrides':
           if (!fullperms) return silenced ? null : msg.channel.send('You do not have permission to run this command.');
-          if (args.length == 1) {
+          if (rawArgs.length == 1) {
             return msg.channel.send(
               'This command configures the bot-level permission overrides for certain channels.\n\n' +
               'To view channels with overrides, run `settings overrides view`.\n' +
@@ -349,17 +349,17 @@ module.exports = [
               'To set a specific permission for a role, run `settings overrides allow/deny/neutral #channel <@mention|name|query> <permission name|permission id> [<2nd permission name|permission id> ...]`',
             );
           } else {
-            switch (args[1]) {
+            switch (rawArgs[1]) {
               case 'view':
-                if (args.length == 2) {
+                if (rawArgs.length == 2) {
                   return msg.channel.send({
                     embed: {
                       title: 'Channels',
                       description: 'Channels with bot-level permission overrides:\n' + Object.keys(guilddata.overrides).map(x => `<#${x}>`),
                     }
                   });
-                } else if (args.length == 3) {
-                  let channel = msg.guild.channels.cache.get(/^<#([0-9]+)>$/.exec(args[2])[1]);
+                } else if (rawArgs.length == 3) {
+                  let channel = msg.guild.channels.cache.get(/^<#([0-9]+)>$/.exec(rawArgs[2])[1]);
                   if (!channel) {
                     return msg.channel.send('Error: no such channel');
                   }
@@ -378,7 +378,7 @@ module.exports = [
                     }
                   });
                 } else {
-                  let channel = msg.guild.channels.cache.get(/^<#([0-9]+)>$/.exec(args[2])[1]);
+                  let channel = msg.guild.channels.cache.get(/^<#([0-9]+)>$/.exec(rawArgs[2])[1]);
                   if (!channel) {
                     return msg.channel.send('Error: no such channel');
                   }
@@ -390,7 +390,7 @@ module.exports = [
                       }
                     });
                   }
-                  let role = common.searchRoles(msg.guild.roles, args.slice(3).join(' '));
+                  let role = common.searchRoles(msg.guild.roles, rawArgs.slice(3).join(' '));
                   if (Array.isArray(role)) {
                     return msg.channel.send({
                       embed: { title: 'Not Specific Enough', description: `Your query narrows it down to these roles:\n${role.map(x => '<@&' + x.id + '>').join(' ')}` }
@@ -415,8 +415,8 @@ module.exports = [
                 break;
               
               case 'init':
-                if (args.length == 3) {
-                  let channel = msg.guild.channels.cache.get(/^<#([0-9]+)>$/.exec(args[2])[1]);
+                if (rawArgs.length == 3) {
+                  let channel = msg.guild.channels.cache.get(/^<#([0-9]+)>$/.exec(rawArgs[2])[1]);
                   if (!channel) {
                     return msg.channel.send('Error: no such channel');
                   }
@@ -436,7 +436,7 @@ module.exports = [
                     }
                   });
                 } else {
-                  let channel = msg.guild.channels.cache.get(/^<#([0-9]+)>$/.exec(args[2])[1]);
+                  let channel = msg.guild.channels.cache.get(/^<#([0-9]+)>$/.exec(rawArgs[2])[1]);
                   if (!channel) {
                     return msg.channel.send('Error: no such channel');
                   }
@@ -448,7 +448,7 @@ module.exports = [
                       }
                     });
                   }
-                  let role = common.searchRoles(msg.guild.roles, args.slice(3).join(' '));
+                  let role = common.searchRoles(msg.guild.roles, rawArgs.slice(3).join(' '));
                   if (Array.isArray(role)) {
                     return msg.channel.send({
                       embed: { title: 'Not Specific Enough', description: `Your query narrows it down to these roles:\n${role.map(x => '<@&' + x.id + '>').join(' ')}` }
@@ -474,8 +474,8 @@ module.exports = [
                 break;
               
               case 'clear':
-                if (args.length == 3) {
-                  let channel = msg.guild.channels.cache.get(/^<#([0-9]+)>$/.exec(args[2])[1]);
+                if (rawArgs.length == 3) {
+                  let channel = msg.guild.channels.cache.get(/^<#([0-9]+)>$/.exec(rawArgs[2])[1]);
                   if (!channel) {
                     return msg.channel.send('Error: no such channel');
                   }
@@ -495,7 +495,7 @@ module.exports = [
                     }
                   });
                 } else {
-                  let channel = msg.guild.channels.cache.get(/^<#([0-9]+)>$/.exec(args[2])[1]);
+                  let channel = msg.guild.channels.cache.get(/^<#([0-9]+)>$/.exec(rawArgs[2])[1]);
                   if (!channel) {
                     return msg.channel.send('Error: no such channel');
                   }
@@ -507,7 +507,7 @@ module.exports = [
                       }
                     });
                   }
-                  let role2 = common.searchRoles(msg.guild.roles, args.slice(3).join(' '));
+                  let role2 = common.searchRoles(msg.guild.roles, rawArgs.slice(3).join(' '));
                   if (Array.isArray(role2)) {
                     return msg.channel.send({
                       embed: { title: 'Not Specific Enough', description: `Your query narrows it down to these roles:\n${role2.map(x => '<@&' + x.id + '>').join(' ')}` }
@@ -535,7 +535,7 @@ module.exports = [
               case 'allow':
               case 'deny':
               case 'neutral':
-                let channel = msg.guild.channels.cache.get(/^<#([0-9]+)>$/.exec(args[2])[1]);
+                let channel = msg.guild.channels.cache.get(/^<#([0-9]+)>$/.exec(rawArgs[2])[1]);
                 if (!channel) {
                   return msg.channel.send('Error: no such channel');
                 }
@@ -547,7 +547,7 @@ module.exports = [
                     }
                   });
                 }
-                let role3 = common.searchRoles(msg.guild.roles, args[3]);
+                let role3 = common.searchRoles(msg.guild.roles, rawArgs[3]);
                 if (Array.isArray(role3)) {
                   return msg.channel.send({
                     embed: { title: 'Not Specific Enough', description: `Your query narrows it down to these roles:\n${role3.map(x => '<@&' + x.id + '>').join(' ')}` }
@@ -561,12 +561,12 @@ module.exports = [
                       }
                     });
                   let changedPerms = [];
-                  let permsToChange = args.slice(4).map(perm => {
+                  let permsToChange = rawArgs.slice(4).map(perm => {
                     let nperm = Number(perm);
                     if (nperm == nperm) return Number.isSafeInteger(nperm) && nperm > 0 ? nperm : null;
                     else return common.constants.botRolePermBits[perm];
                   }).filter(x => x != null).reduce((a, c) => (changedPerms.push(common.constants.botRolePermBitsInv[c]), a + c), 0) & common.constants.botRolePermAll;
-                  switch (args[1]) {
+                  switch (rawArgs[1]) {
                     case 'allow':
                       guilddata.overrides[channel.id][role3.id].allows |= permsToChange;
                       guilddata.overrides[channel.id][role3.id].denys &= ~permsToChange;
@@ -584,7 +584,7 @@ module.exports = [
                   return msg.channel.send({
                     embed: {
                       title: 'Overrides Updated',
-                      description: `Overrides ${changedPerms.map(x => `\'${x}\'`).join(', ')} ${args[1] == 'allow' ? 'allowed' : args[1] == 'deny' ? 'denied' : 'neutralized'} in channel <#${channel.id}> for role <@&${role3.id}>.`
+                      description: `Overrides ${changedPerms.map(x => `\'${x}\'`).join(', ')} ${rawArgs[1] == 'allow' ? 'allowed' : rawArgs[1] == 'deny' ? 'denied' : 'neutralized'} in channel <#${channel.id}> for role <@&${role3.id}>.`
                     }
                   });
                 }
@@ -599,7 +599,7 @@ module.exports = [
         
         case 'enabledcmds':
           if (!fullperms) return silenced ? null : msg.channel.send('You do not have permission to run this command.');
-          if (args.length == 1) {
+          if (rawArgs.length == 1) {
             return msg.channel.send(
               'This command configures which commands are enabled.\n\n' +
               'To view whether commands are enabled globally, run `settings enabledcmds view global`.\n' +
@@ -609,28 +609,28 @@ module.exports = [
               'To enable or disable everything, run `settings enabledcmds <\'enable\'/\'disable\'> all`.',
             );
           } else {
-            switch (args[1]) {
+            switch (rawArgs[1]) {
               case 'view':
-                switch (args[2]) {
+                switch (rawArgs[2]) {
                   case 'global':
                     return msg.channel.send(`Commands are globally ${guilddata.enabled_commands.global ? 'enabled' : 'disabled'}.`);
                     break;
                   
                   case 'category':
-                    let category = guilddata.enabled_commands.categories[args.slice(3).join(' ')];
+                    let category = guilddata.enabled_commands.categories[rawArgs.slice(3).join(' ')];
                     if (category != null) {
-                      return msg.channel.send(`The category '${args.slice(3).join(' ')}' is ${category ? 'enabled' : 'disabled'}.`);
+                      return msg.channel.send(`The category '${rawArgs.slice(3).join(' ')}' is ${category ? 'enabled' : 'disabled'}.`);
                     } else {
-                      return msg.channel.send(`The category '${ args.slice(3).join(' ')}' does not exist.`);
+                      return msg.channel.send(`The category '${ rawArgs.slice(3).join(' ')}' does not exist.`);
                     }
                     break;
                   
                   case 'command':
-                    let command = guilddata.enabled_commands.commands[args.slice(3).join(' ')];
+                    let command = guilddata.enabled_commands.commands[rawArgs.slice(3).join(' ')];
                     if (command != null) {
-                      return msg.channel.send(`The command '${args.slice(3).join(' ')}' is ${command ? 'enabled' : 'disabled'}.`);
+                      return msg.channel.send(`The command '${rawArgs.slice(3).join(' ')}' is ${command ? 'enabled' : 'disabled'}.`);
                     } else {
-                      return msg.channel.send(`The command '${args.slice(3).join(' ')}' does not exist.`);
+                      return msg.channel.send(`The command '${rawArgs.slice(3).join(' ')}' does not exist.`);
                     }
                     break;
                   
@@ -642,37 +642,37 @@ module.exports = [
               
               case 'enable':
               case 'disable':
-                switch (args[2]) {
+                switch (rawArgs[2]) {
                   case 'global':
-                    guilddata.enabled_commands.global = args[1] == 'enable';
+                    guilddata.enabled_commands.global = rawArgs[1] == 'enable';
                     schedulePropsSave();
-                    return msg.channel.send(`Global commands have been successfully ${args[1] == 'enable' ? 'enabled' : 'disabled'}.`);
+                    return msg.channel.send(`Global commands have been successfully ${rawArgs[1] == 'enable' ? 'enabled' : 'disabled'}.`);
                     break;
                   
                   case 'category':
-                    let category = guilddata.enabled_commands.categories[args.slice(3).join(' ')];
+                    let category = guilddata.enabled_commands.categories[rawArgs.slice(3).join(' ')];
                     if (category != null) {
-                      guilddata.enabled_commands.categories[args.slice(3).join(' ')] = args[1] == 'enable';
+                      guilddata.enabled_commands.categories[rawArgs.slice(3).join(' ')] = rawArgs[1] == 'enable';
                       schedulePropsSave();
-                      return msg.channel.send(`The category '${args.slice(3).join(' ')}' has been successfully ${args[1] == 'enable' ? 'enabled' : 'disabled'}.`);
+                      return msg.channel.send(`The category '${rawArgs.slice(3).join(' ')}' has been successfully ${rawArgs[1] == 'enable' ? 'enabled' : 'disabled'}.`);
                     } else {
-                      return msg.channel.send(`The category '${args.slice(3).join(' ')}' does not exist.`);
+                      return msg.channel.send(`The category '${rawArgs.slice(3).join(' ')}' does not exist.`);
                     }
                     break;
                   
                   case 'command':
-                    let command = guilddata.enabled_commands.commands[args.slice(3).join(' ')];
+                    let command = guilddata.enabled_commands.commands[rawArgs.slice(3).join(' ')];
                     if (command != null) {
-                      guilddata.enabled_commands.commands[args.slice(3).join(' ')] = args[1] == 'enable';
+                      guilddata.enabled_commands.commands[rawArgs.slice(3).join(' ')] = rawArgs[1] == 'enable';
                       schedulePropsSave();
-                      return msg.channel.send(`The command '${args.slice(3).join(' ')}' has been successfully ${args[1] == 'enable' ? 'enabled' : 'disabled'}.`);
+                      return msg.channel.send(`The command '${rawArgs.slice(3).join(' ')}' has been successfully ${rawArgs[1] == 'enable' ? 'enabled' : 'disabled'}.`);
                     } else {
-                      return msg.channel.send(`The command '${args.slice(3).join(' ')}' does not exist.`);
+                      return msg.channel.send(`The command '${rawArgs.slice(3).join(' ')}' does not exist.`);
                     }
                     break;
                   
                   case 'all':
-                    let val = args[1] == 'enable';
+                    let val = rawArgs[1] == 'enable';
                     guilddata.enabled_commands.global = val;
                     Object.keys(guilddata.enabled_commands.categories)
                       .forEach(x => guilddata.enabled_commands.categories[x] = val);

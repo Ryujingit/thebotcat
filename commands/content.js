@@ -60,17 +60,17 @@ try {
   var commands = {};
 }
 
-function contentCommand(obj, msg, cmdstring, command, argstring, args) {
+function contentCommand(obj, o) {
   switch (obj.type) {
     case 'text': return msg.channel.send(obj.content);
     case 'text_reply': return msg.reply(obj.content);
     case 'text_multi_reply':
-      if (args.length == 0) {
+      if (rawArgs.length == 0) {
         return msg.reply(obj.contents[Math.floor(Math.random() * obj.contents.length)]);
-      } else if (args[0] == 'count') {
+      } else if (rawArgs[0] == 'count') {
         return msg.channel.send(`The command has ${obj.contents.length} entries.`);
       } else {
-        let num = Number(args[0]);
+        let num = Number(rawArgs[0]);
         if (!Number.isSafeInteger(num)) return msg.channel.send('Invalid command entry number.');
         if (num < 1) return msg.channel.send('Entry number must be greater than or equal to 1.');
         if (num > obj.contents.length) return msg.channel.send(`Entry number greater than number of items. (${obj.contents.length})`);
@@ -79,13 +79,13 @@ function contentCommand(obj, msg, cmdstring, command, argstring, args) {
     case 'image':
       return msg.channel.send({ embed: { title: obj.title, description: obj.desc, image: { url: obj.image }, footer: { text: obj.footer } } });
     case 'image_multi':
-      if (args.length == 0) {
+      if (rawArgs.length == 0) {
         let embed = obj.embeds[Math.floor(Math.random() * obj.embeds.length)];
         return msg.channel.send({ embed: { title: embed.title, description: embed.desc, image: { url: embed.image }, footer: { text: embed.footer } } });
-      } else if (args[0] == 'count') {
+      } else if (rawArgs[0] == 'count') {
         return msg.channel.send(`The command has ${obj.embeds.length} entries.`);
       } else {
-        let num = Number(args[0]);
+        let num = Number(rawArgs[0]);
         if (!Number.isSafeInteger(num)) return msg.channel.send('Invalid command entry number.');
         if (num < 1) return msg.channel.send('Entry number must be greater than or equal to 1.');
         if (num > obj.embeds.length) return msg.channel.send(`Entry number greater than number of items. (${obj.embeds.length})`);
@@ -107,11 +107,11 @@ exports.push(
   {
     name: 'lamo',
     flags: 14,
-    execute(msg, cmdstring, command, argstring, args) {
-      if (!args[0]) {
+    execute(o, msg, rawArgs) {
+      if (!rawArgs[0]) {
         return msg.channel.send('lamomamoemao');
       }
-      let len = Number(args[0]);
+      let len = Number(rawArgs[0]);
       if (!len || len < 4 || len > 100) return;
       else {
         len -= 4;
@@ -128,7 +128,7 @@ exports.push(
   {
     name: 'segue',
     flags: 13,
-    execute(msg, cmdstring, command, argstring, args) {
+    execute(o, msg, rawArgs) {
       if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025') return msg.channel.send('segue?');
       msg.channel.send('segue?');
       let cip = require('crypto').createDecipheriv('aes256', 'utf8-le-obl-34929918|nonlinear=y', 'iv-0120495==eafs'), cipdata = [];
@@ -141,12 +141,12 @@ exports.push(
   {
     name: 'hack',
     flags: 14,
-    execute(msg, cmdstring, command, argstring, args) {
-      if (!args[0] || args[0].toLowerCase() == 'thebotcat') {
+    execute(o, msg, rawArgs) {
+      if (!rawArgs[0] || rawArgs[0].toLowerCase() == 'thebotcat') {
         return msg.reply('dont hack me plz');
-      } else if (args[0].toLowerCase() == 'ryujin') {
+      } else if (rawArgs[0].toLowerCase() == 'ryujin') {
         return msg.reply('bruh');
-      } else if (args[0].toLowerCase() == 'coolguy284') {
+      } else if (rawArgs[0].toLowerCase() == 'coolguy284') {
         return msg.reply('bruhhurb');
       }
     }

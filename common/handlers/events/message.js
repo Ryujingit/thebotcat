@@ -53,7 +53,7 @@ module.exports = async msg => {
   // argstring = the part after the workingprefix, command and args in one big string
   // command = the actual command
   // args = array of arguments
-  var isCommand = 0, cmdstring, command, argstring, args;
+  var isCommand = 0, cmdstring, command, argstring, rawArgs;
   let guilddata = props.saved.guilds[msg.guild ? msg.guild.id : 'default'];
   let workingprefix = guilddata ? guilddata.prefix : props.saved.guilds.default.prefix;
   
@@ -92,8 +92,8 @@ module.exports = async msg => {
             !props.saved.guilds[msg.guild.id].enabled_commands.categories[commands[i].category] ||
             !props.saved.guilds[msg.guild.id].enabled_commands.commands[command])) ||
         !(commands[i].flags & 2) && !persGuildData.special_guilds.includes(msg.guild.id))) continue;
-      argstring = cmdstring.slice(command.length + 1);
-      args = argstring == '' ? [] : argstring.split(' ');
+      argstring = cmdstring.slice(command.length).trim();
+      rawArgs = common.parseArgs(argstring);
       isCommand = 2 + i;
       break;
     }
@@ -141,7 +141,7 @@ module.exports = async msg => {
   
   if (isCommand >= 2) {
     try {
-      return commands[isCommand - 2].execute(msg, cmdstring, command, argstring, args);
+      return commands[isCommand - 2].execute({ msg, cmdstring, command, argstring, rawArgs }, msg, rawArgs);
     } catch (e) {
       if (e instanceof common.BotError) {
         if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(e.message)) {
