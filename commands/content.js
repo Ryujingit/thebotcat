@@ -60,7 +60,7 @@ try {
   var commands = {};
 }
 
-function contentCommand(obj, o) {
+function contentCommand(obj, o, msg, rawArgs) {
   switch (obj.type) {
     case 'text': return msg.channel.send(obj.content);
     case 'text_reply': return msg.reply(obj.content);
