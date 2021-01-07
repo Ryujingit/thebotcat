@@ -552,13 +552,15 @@ module.exports = [
       let emote;
       
       if (/<a?:[A-Za-z]+:[0-9]+>/.test(rawArgs[1])) {
-        let end = rawArgs[1].slice(':')[2];
+        let end = rawArgs[1].split(':')[2];
         emote = msg.guild.emojis.resolve(end.slice(0, -1));
       } else if (/[0-9]+/.test(rawArgs[1])) {
         emote = msg.guild.emojis.resolve(rawArgs[1]);
       } else {
         emote = msg.guild.emojis.cache.find(x => x.name == rawArgs[1]);
       }
+      
+      if (emote == null) return msg.channel.send('Error: couldn\'t fetch emote.');
       
       let roles = rawArgs.slice(2).map(x => common.searchRole(msg.guild.roles, x));
       

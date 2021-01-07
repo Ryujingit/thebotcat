@@ -12,7 +12,7 @@ module.exports = [
     description: '`!roll d#|#` rolls a dice with the given number of sides',
     flags: 14,
     execute(o, msg, rawArgs) {
-      let sides = Number(rawArgs[0].replace(/[^0-9.e-]/g, '')) || 6;
+      let sides = (rawArgs[0] ? Number(rawArgs[0].replace(/[^0-9.e-]/g, '')) : 0) || 6;
       return msg.channel.send(`Result of rolling a d${sides}: ${1 + Math.floor(Math.random() * sides)}`);
     }
   },
