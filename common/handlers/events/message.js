@@ -48,14 +48,14 @@ module.exports = async msg => {
   
   if (msg.channel.permissionsFor && !msg.channel.permissionsFor(client.user.id).has('SEND_MESSAGES')) return;
   
-  if (msg.content == '<@' + client.user.id + '>' || msg.content == '<@!' + client.user.id + '>') return msg.channel.send(`I am ${props.feat.version == 'canary' ? 'Thebotcat Canary' : 'Thebotcat'} version ${version}, prefix \`${workingprefix}\``);
-  
   // argstring = the part after the workingprefix, command and args in one big string
   // command = the actual command
   // args = array of arguments
   var isCommand = 0, cmdstring, command, argstring, rawArgs;
   let guilddata = props.saved.guilds[msg.guild ? msg.guild.id : 'default'];
-  let workingprefix = guilddata ? guilddata.prefix : props.saved.guilds.default.prefix;
+  let workingprefix = guilddata.prefix;
+  
+  if (msg.content == '<@' + client.user.id + '>' || msg.content == '<@!' + client.user.id + '>') return msg.channel.send(`I am ${props.feat.version == 'canary' ? 'Thebotcat Canary' : 'Thebotcat'} version ${version}, prefix \`${workingprefix}\``);
   
   if (msg.content.startsWith(universalprefix)) {
     isCommand = 1;
