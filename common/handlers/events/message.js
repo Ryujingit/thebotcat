@@ -52,7 +52,7 @@ module.exports = async msg => {
   // command = the actual command
   // args = array of arguments
   var isCommand = 0, cmdstring, command, argstring, rawArgs;
-  let guilddata = props.saved.guilds[msg.guild ? msg.guild.id : 'default'];
+  let guilddata = props.saved.guilds[msg.guild ? msg.guild.id : 'default'] || props.saved.guilds.default;
   let workingprefix = guilddata.prefix;
   
   if (msg.content == '<@' + client.user.id + '>' || msg.content == '<@!' + client.user.id + '>') return msg.channel.send(`I am ${props.feat.version == 'canary' ? 'Thebotcat Canary' : 'Thebotcat'} version ${version}, prefix \`${workingprefix}\``);
