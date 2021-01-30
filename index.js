@@ -75,7 +75,7 @@ var addlbotperms = {};
 var mutelist = [];
 
 
-var version = '1.5.6f.4';
+var version = '1.5.6g';
 global.updateStatus = async () => {
   let newStatus = props.feat.status ? props.feat.status.replace('{prefix}', defaultprefix).replace('{guilds}', client.guilds.cache.size) : null;
   let currentStatus;
@@ -350,7 +350,7 @@ global.handlers = common.handlers;
 })();
 
 client.on('ready', () => {
-  console.log(`Logged in as ${client.user.tag}!`);
+  nonlogmsg(`Logged in as ${client.user.tag}!`);
   
   updateStatus();
   
@@ -360,23 +360,23 @@ client.on('ready', () => {
 });
 
 client.on('guildCreate', guild => {
-  console.log(`Joined a new guild: ${guild.name}`);
+  nonlogmsg(`Joined a new guild: ${guild.name}`);
   
   updateStatus();
 });
 
 client.on('guildDelete', guild => {
-  console.log(`Left a guild: ${guild.name}`);
+  nonlogmsg(`Left a guild: ${guild.name}`);
   
   updateStatus();
 });
 
 client.on('reconnecting', () => {
-  console.log(`Reconnecting!`);
+  nonlogmsg(`Reconnecting!`);
 });
 
 client.on('disconnect', () => {
-  console.log(`Disconnect!`);
+  nonlogmsg(`Disconnect!`);
 });
 
 ['message', 'voiceStateUpdate'].forEach(evtType => {

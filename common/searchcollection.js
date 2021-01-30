@@ -108,7 +108,7 @@ async function searchMembers(members, query) {
   return minArr ? minArr : null;
 }
 
-async function searchUsers(users, query) {
+async function searchUsers(users, query, options) {
   // convert mentions to the inside
   if (/^<(?:@!?|@&|#)([0-9]+)>$/.test(query)) query = /^<(?:@!?|@&|#)([0-9]+)>$/.exec(query)[1];
   
@@ -122,31 +122,34 @@ async function searchUsers(users, query) {
   // step 1: check if there is only one possibility anyway
   if (userArr.length == 1) return userArr[0];
   
-  // step 2: run through the array checking every element for various things
-  var userLowerIncludes = [], userLowerEqual = [], userIncludes = [], userEqual = [], userID = [];
-  for (var i = 0, x; i < userArr.length; i++) {
-    x = userArr[i];
-    if (x.username.toLowerCase() == queryLower) { userLowerIncludes.push(x); userLowerEqual.push(x); }
-    else if (x.tag.toLowerCase().includes(queryLower)) userLowerIncludes.push(x);
-    if (x.username == query) { userIncludes.push(x); userEqual.push(x); }
-    else if (x.tag.includes(query)) userIncludes.push(x);
-    if (x.id.includes(queryNumbers)) userID.push(x);
-  }
-  
-  // step 3: all the checking for array of size 1 lol
-  if (userLowerEqual.length == 1) return userLowerEqual[0];
-  if (userLowerIncludes.length == 1) return userLowerIncludes[0];
-  if (userEqual.length == 1) return userEqual[0];
-  if (userIncludes.length == 1) return userIncludes[0];
-  if (userID.length == 1) return userID[0];
-  
-  var arrays = [userLowerEqual, userLowerIncludes, userEqual, userIncludes, userID];
-  
-  var minSize = Infinity, minArr = null;
-  for (var i = 0; i < arrays.length; i++) {
-    if (arrays[i].length < minSize && arrays[i].length != 0) {
-      minArr = arrays[i];
-      minSize = minArr.length;
+  // all these will not be run for non debug circumstances
+  if (typeof options == 'object' && options.safeMode != null && !options.safeMode) {
+    // step 2: run through the array checking every element for various things
+    var userLowerIncludes = [], userLowerEqual = [], userIncludes = [], userEqual = [], userID = [];
+    for (var i = 0, x; i < userArr.length; i++) {
+      x = userArr[i];
+      if (x.username.toLowerCase() == queryLower) { userLowerIncludes.push(x); userLowerEqual.push(x); }
+      else if (x.tag.toLowerCase().includes(queryLower)) userLowerIncludes.push(x);
+      if (x.username == query) { userIncludes.push(x); userEqual.push(x); }
+      else if (x.tag.includes(query)) userIncludes.push(x);
+      if (x.id.includes(queryNumbers)) userID.push(x);
+    }
+    
+    // step 3: all the checking for array of size 1 lol
+    if (userLowerEqual.length == 1) return userLowerEqual[0];
+    if (userLowerIncludes.length == 1) return userLowerIncludes[0];
+    if (userEqual.length == 1) return userEqual[0];
+    if (userIncludes.length == 1) return userIncludes[0];
+    if (userID.length == 1) return userID[0];
+    
+    var arrays = [userLowerEqual, userLowerIncludes, userEqual, userIncludes, userID];
+    
+    var minSize = Infinity, minArr = null;
+    for (var i = 0; i < arrays.length; i++) {
+      if (arrays[i].length < minSize && arrays[i].length != 0) {
+        minArr = arrays[i];
+        minSize = minArr.length;
+      }
     }
   }
   
@@ -171,8 +174,8 @@ async function searchMember(members, query) {
   return member;
 }
 
-async function searchUser(query) {
-  let user = await searchUsers(client.users, query);
+async function searchUser(query, options) {
+  let user = await searchUsers(client.users, query, options);
   if (Array.isArray(user)) return null;
   return user;
 }

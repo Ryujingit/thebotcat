@@ -124,20 +124,23 @@ module.exports = [
     flags: 14,
     async execute(o, msg, rawArgs) {
       let member;
-      if (msg.guild) {
-        if (rawArgs.length) {
-          try {
-            member = await common.searchMember(msg.guild.members, o.argstring[0] == '"' || o.argstring[0] == '\'' ? rawArgs[0] : o.argstring);
-            if (!member) member = msg.member;
-          } catch (e) {
-            console.error(e);
-            member = msg.member;
+      if (rawArgs.length) {
+        if (msg.guild) {
+          let potentialMember = await common.searchMember(msg.guild.members, o.argstring[0] == '"' || o.argstring[0] == '\'' ? rawArgs[0] : o.argstring);
+          if (potentialMember) member = potentialMember;
+          else {
+            let user = await common.searchUser(o.argstring[0] == '"' || o.argstring[0] == '\'' ? rawArgs[0] : o.argstring);
+            if (user) member = { user, displayHexColor: '#000000' };
+            else return msg.channel.send('User not found.');
           }
         } else {
-          member = msg.member;
+          let user = await common.searchUser(o.argstring[0] == '"' || o.argstring[0] == '\'' ? rawArgs[0] : o.argstring);
+          if (user) member = { user: user, displayHexColor: '#000000' };
+          else return msg.channel.send('User not found.');
         }
       } else {
-        member = { user: msg.author, displayHexColor: '#000000' };
+        if (msg.guild) member = msg.member;
+        else member = { user: msg.author, displayHexColor: '#000000' };
       }
       
       let avatarURL = member.user.displayAvatarURL({ dynamic: true });
@@ -193,10 +196,20 @@ module.exports = [
     flags: 14,
     async execute(o, msg, rawArgs) {
       let user;
-      if (msg.guild && rawArgs.length) {
-        let member = await common.searchMember(msg.guild.members, o.argstring[0] == '"' || o.argstring[0] == '\'' ? rawArgs[0] : o.argstring);
-        if (!member) return msg.channel.send('User not found in guild.');
-        user = member.user;
+      if (rawArgs.length) {
+        if (msg.guild) {
+          let member = await common.searchMember(msg.guild.members, o.argstring[0] == '"' || o.argstring[0] == '\'' ? rawArgs[0] : o.argstring);
+          if (member) user = member.user;
+          else {
+            let potentialUser = await common.searchUser(o.argstring[0] == '"' || o.argstring[0] == '\'' ? rawArgs[0] : o.argstring);
+            if (potentialUser) user = potentialUser;
+            else return msg.channel.send('User not found.');
+          }
+        } else {
+          let potentialUser = await common.searchUser(o.argstring[0] == '"' || o.argstring[0] == '\'' ? rawArgs[0] : o.argstring);
+          if (potentialUser) user = potentialUser;
+          else return msg.channel.send('User not found.');
+        }
       } else user = msg.author;
       
       let createdDate = new Date(new Date('2015-01-01T00:00:00.000Z').getTime() + Number(BigInt(user.id) >> 22n));
@@ -221,11 +234,11 @@ module.exports = [
       return msg.channel.send({
         embed: {
           title: `User Info for ${user.tag}`,
-          description: `**ID: ${user.id}**`,
+          description: `**ID: ${user.id}, Bot: ${user.bot ? 'Yes' : 'No'}**`,
           thumbnail: { url: user.displayAvatarURL() + '?size=64' },
           fields: [
             { name: 'Created At', value: `${createdDate.toISOString()} (${common.msecToHMSs(Date.now() - createdDate.getTime())} ago)`, inline: false },
-            { name: 'Flags', value: user.flags ? user.flags.toArray().join(' ') : 'None', inline: false },
+            { name: 'Flags', value: user.flags && user.flags.toArray().length ? user.flags.toArray().join(' ') : 'None', inline: false },
             { name: 'Avatar', value: avatarStr, inline: false },
           ],
         }
@@ -250,6 +263,7 @@ module.exports = [
         embed: {
           title: `Member Info for ${member.user.tag}`,
           description: `**ID: ${member.id}**`,
+          color: member.displayColor,
           thumbnail: { url: member.user.displayAvatarURL() + '?size=64' },
           fields: [
             { name: 'Created At', value: `${createdDate.toISOString()} (${common.msecToHMSs(Date.now() - createdDate.getTime())} ago)`, inline: false },

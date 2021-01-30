@@ -38,7 +38,7 @@ module.exports = [
     flags: 12,
     async execute(o, msg, rawArgs) {
       if (!(common.isDeveloper(msg) || addlbotperms[msg.author.id] & 4)) return;
-      let user = await common.searchUser(rawArgs.join(' '));
+      let user = await common.searchUser(rawArgs.join(' '), { safeMode: false });
       if (!user) return msg.channel.send(`Query invalid`);
       let dmchannel = await user.createDM();
       return msg.channel.send(`DM channel for ${user.tag} is ${dmchannel.id}, use \`!sayy <#${dmchannel.id}> content\` to speak in channel`);

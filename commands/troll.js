@@ -63,7 +63,7 @@ module.exports = [
       if (!(common.isDeveloper(msg) || common.isOwner(msg) || common.isAdmin(msg)))
         return;
       if (rawArgs.length == 1 && rawArgs[0] == 'all') {
-        console.debug(`ghostdot from ${msg.author.tag} in ${msg.guild ? msg.guild.name + ':' + msg.channel.name : 'dms'}: all`);
+        if (persGuildData.special_guilds.includes(msg.guild.id)) nonlogmsg(`ghostdot from ${msg.author.tag} in ${msg.guild ? msg.guild.name + ':' + msg.channel.name : 'dms'}: all`);
         let channels = msg.guild.channels.cache.array(), channel, message;
         for (var i = 0; i < channels.length; i++) {
           if (channels[i] && (channels[i].type == 'text' || channels[i].type == 'news')) {
@@ -73,7 +73,7 @@ module.exports = [
           }
         }
       } else {
-        console.debug(`ghostdot from ${msg.author.tag} in ${msg.guild ? msg.guild.name + ':' + msg.channel.name : 'dms'}: ${rawArgs.join(' ')}`);
+        if (persGuildData.special_guilds.includes(msg.guild.id)) nonlogmsg(`ghostdot from ${msg.author.tag} in ${msg.guild ? msg.guild.name + ':' + msg.channel.name : 'dms'}: ${rawArgs.join(' ')}`);
         for (var i = 0; i < rawArgs.length; i++) {
           if (/<#[0-9]+>/g.test(rawArgs[i])) {
             channel = msg.guild.channels.cache.get(rawArgs[i].slice(2, rawArgs[0].length - 1));
@@ -96,7 +96,7 @@ module.exports = [
         return msg.delete();
       msg.delete();
       if (rawArgs.length == 1 && rawArgs[0] == 'all') {
-        console.debug(`ghostdot_delmsg from ${msg.author.tag} in ${msg.guild ? msg.guild.name + ':' + msg.channel.name : 'dms'}: all`);
+        if (persGuildData.special_guilds.includes(msg.guild.id)) nonlogmsg(`ghostdot_delmsg from ${msg.author.tag} in ${msg.guild ? msg.guild.name + ':' + msg.channel.name : 'dms'}: all`);
         let channels = msg.guild.channels.cache.array(), channel, message;
         for (var i = 0; i < channels.length; i++) {
           if (channels[i] && (channels[i].type == 'text' || channels[i].type == 'news')) {
@@ -106,7 +106,7 @@ module.exports = [
           }
         }
       } else {
-        console.debug(`ghostdot_delmsg from ${msg.author.tag} in ${msg.guild ? msg.guild.name + ':' + msg.channel.name : 'dms'}: ${rawArgs.join(' ')}`);
+        if (persGuildData.special_guilds.includes(msg.guild.id)) nonlogmsg(`ghostdot_delmsg from ${msg.author.tag} in ${msg.guild ? msg.guild.name + ':' + msg.channel.name : 'dms'}: ${rawArgs.join(' ')}`);
         for (var i = 0; i < rawArgs.length; i++) {
           if (/<#[0-9]+>/g.test(rawArgs[i])) {
             channel = msg.guild.channels.cache.get(rawArgs[i].slice(2, rawArgs[0].length - 1));
