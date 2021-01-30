@@ -13,7 +13,7 @@ var cp = require('child_process');
 var stream = require('stream');
 var Discord = require('discord.js');
 var ytdl;
-try { ytdl = require('ytdl-core'); } catch (e) { ytdl = null; }
+try { ytdl = require('ytdl-core-discord'); } catch (e) { ytdl = null; }
 var common = require('./common/index');
 var math = require('./math.min.js');
 var client = new Discord.Client();
@@ -75,7 +75,7 @@ var addlbotperms = {};
 var mutelist = [];
 
 
-var version = '1.5.6g';
+var version = '1.5.7';
 global.updateStatus = async () => {
   let newStatus = props.feat.status ? props.feat.status.replace('{prefix}', defaultprefix).replace('{guilds}', client.guilds.cache.size) : null;
   let currentStatus;

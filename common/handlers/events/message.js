@@ -141,7 +141,9 @@ module.exports = async msg => {
   
   if (isCommand >= 2) {
     try {
-      return commands[isCommand - 2].execute({ msg, cmdstring, command, argstring, rawArgs }, msg, rawArgs);
+      let cmd = commands[isCommand - 2].execute;
+      if (cmd.constructor == Function) return cmd({ msg, cmdstring, command, argstring, rawArgs }, msg, rawArgs);
+      else return await cmd({ msg, cmdstring, command, argstring, rawArgs }, msg, rawArgs);
     } catch (e) {
       if (e instanceof common.BotError) {
         if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(e.message)) {

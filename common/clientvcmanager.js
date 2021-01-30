@@ -10,6 +10,7 @@ var clientVCManager = {
       songslist: [],
       volume: null,
       loop: null,
+      queueloop: null,
     };
   },
   
@@ -25,6 +26,7 @@ var clientVCManager = {
     }
     voice.volume = 1;
     voice.loop = false;
+    voice.queueloop = false;
   },
   
   leave: function leave(voice) {
@@ -36,6 +38,7 @@ var clientVCManager = {
     voice.songslist.splice(0, Infinity);
     voice.volume = null;
     voice.loop = null;
+    voice.queueloop = null;
   },
   
   getVolume: function getVolume(voice) {
@@ -64,11 +67,17 @@ var clientVCManager = {
   },
   
   addSong: async function addSong(voice, url) {
-    if (!/^https?:\/\/(?:www.)?youtube.com\/[A-Za-z0-9?&=\-_%.]+$/.test(url)) throw new Error('invalid url');
+    if (!/^https?:\/\/(?:www.)?youtube.com\/[A-Za-z0-9?&=\-_%.]+$/.test(url)) throw new common.BotError('Invalid URL Format');
+    let info;
+    try {
+      info = await ytdl.getBasicInfo(url);
+    } catch (e) {
+      throw new common.BotError('Invalid URL');
+    }
     let latestObj = {
       url: url,
-      desc: null,
-      expectedLength: null,
+      desc: `${info.videoDetails.title} by ${info.videoDetails.author.name}`,
+      expectedLength: info.length_seconds * 1000,
       stream: null,
     };
     voice.songslist.push(latestObj);
@@ -85,15 +94,11 @@ var clientVCManager = {
     try {
       while (voice.songslist.length > 0) {
         let latestObj = voice.songslist[0];
-        let stream = latestObj.stream = ytdl(latestObj.url);
-        stream.on('info', (info, format) => {
-          latestObj.desc = `${info.videoDetails.title} by ${info.videoDetails.author.name}`;
-          latestObj.expectedLength = info.length_seconds * 1000;
-        });
-        voice.dispatcher = voice.connection.play(stream, { volume: voice.volume });
+        let stream = latestObj.stream = await ytdl(latestObj.url);
+        voice.dispatcher = voice.connection.play(stream, { type: 'opus', volume: voice.volume });
         while (voice.dispatcher && !voice.dispatcher.destroyed) {
           await new Promise(r => setTimeout(r, 15));
-          if (voice.dispatcher && voice.dispatcher.streamTime > voice.songslist[0].expectedLength - 2) voice.mainloop = 2;
+          if (voice.dispatcher && voice.dispatcher.streamTime > voice.songslist[0].expectedLength - 2 && voice.mainloop != 3) voice.mainloop = 2;
           if (voice.mainloop == 2) {
             voice.dispatcher.destroy();
           } else if (voice.mainloop == 3) {
@@ -103,8 +108,13 @@ var clientVCManager = {
         }
         if (voice.mainloop != 2 && voice.mainloop != 3 && voice.dispatcher && voice.dispatcher.streamTime < latestObj.expectedLength - 5000)
           msgchannel.send(`Error: something broke when playing ${voice.songslist[0].desc}`);
-        if (voice.mainloop == 2 || voice.mainloop == 3) voice.mainloop = 1;
-        if (!voice.loop) voice.songslist.splice(0, 1);
+        if (voice.mainloop == 2 || voice.mainloop == 3) {
+          voice.mainloop = 1;
+          if (voice.songslist.length) voice.songslist.splice(0, 1);
+        } else if (!voice.loop && voice.songslist.length) {
+          if (voice.queueloop) voice.songslist.push(voice.songslist.splice(0, 1));
+          else voice.songslist.splice(0, 1);
+        }
         voice.dispatcher = null;
       }
     } catch (e) {
