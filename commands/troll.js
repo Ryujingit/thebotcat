@@ -57,12 +57,14 @@ module.exports = [
   },
   {
     name: 'ghostdot',
-    description: '`!ghostdot` to send a message then delete it in this channel\n`!ghostdot #channel1 [#channel2 ...]` to send a message and delete it in a certain channel or channels\n`!ghostdot all` to send a message then immediately delete it in every channel in a guild',
+    description: '`!ghostdot #channel1 [#channel2 ...]` to send a message and delete it in a certain channel or channels\n`!ghostdot all` to send a message then immediately delete it in every channel in a guild',
     flags: 6,
     async execute(o, msg, rawArgs) {
       if (!(common.isDeveloper(msg) || common.isOwner(msg) || common.isAdmin(msg)))
         return;
-      if (rawArgs.length == 1 && rawArgs[0] == 'all') {
+      if (rawArgs.length == 0) {
+        return msg.channel.send(o.command.description);
+      } else if (rawArgs.length == 1 && rawArgs[0] == 'all') {
         if (persGuildData.special_guilds.includes(msg.guild.id)) nonlogmsg(`ghostdot from ${msg.author.tag} in ${msg.guild ? msg.guild.name + ':' + msg.channel.name : 'dms'}: all`);
         let channels = msg.guild.channels.cache.array(), channel, message;
         for (var i = 0; i < channels.length; i++) {
