@@ -41,6 +41,14 @@ var clientVCManager = {
     voice.queueloop = null;
   },
   
+  toggleSelfMute: function toggleSelfMute(voice) {
+    voice.connection.voice.setSelfMute(!voice.connection.voice.selfMute);
+  },
+  
+  toggleSelfDeaf: function toggleSelfDeaf(voice) {
+    voice.connection.voice.setSelfDeaf(!voice.connection.voice.selfDeaf);
+  },
+  
   getVolume: function getVolume(voice) {
     return voice.volume;
   },
@@ -58,6 +66,10 @@ var clientVCManager = {
     voice.loop = !voice.loop;
   },
   
+  toggleQueueLoop: function toggleQueueLoop(voice) {
+    voice.queueloop = !voice.queueloop;
+  },
+  
   pause: function pause(voice) {
     voice.dispatcher.pause();
   },
@@ -66,7 +78,7 @@ var clientVCManager = {
     voice.dispatcher.resume();
   },
   
-  addSong: async function addSong(voice, url) {
+  addSong: async function addSong(voice, url, userid) {
     if (!/^https?:\/\/(?:www.)?youtube.com\/[A-Za-z0-9?&=\-_%.]+$/.test(url)) throw new common.BotError('Invalid URL Format');
     let info;
     try {
@@ -77,8 +89,9 @@ var clientVCManager = {
     let latestObj = {
       url: url,
       desc: `${info.videoDetails.title} by ${info.videoDetails.author.name}`,
-      expectedLength: info.length_seconds * 1000,
+      expectedLength: info.videoDetails.lengthSeconds * 1000,
       stream: null,
+      userid: common.isId(userid) ? userid : null,
     };
     voice.songslist.push(latestObj);
     return latestObj;

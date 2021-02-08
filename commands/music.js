@@ -15,8 +15,8 @@ module.exports = [
       let playperms = perms & common.constants.botRolePermBits.PLAY_SONG, remoteperms = perms & common.constants.botRolePermBits.REMOTE_CMDS;
       if (!((msg.member.voice.channelID == guilddata.voice.channel.id || remoteperms) && playperms))
         return msg.channel.send('You must be in the same voice channel as I\'m in to play a song.  Admins and mods can bypass this though.');
-      let latestObj = await common.clientVCManager.addSong(guilddata.voice, rawArgs[0]);
-      let text = `${latestObj.desc} added to queue`;
+      let latestObj = await common.clientVCManager.addSong(guilddata.voice, rawArgs[0], msg.author.id);
+      let text = `${latestObj.desc} (${common.msecToHMS(Number(latestObj.expectedLength))}) added to queue`;
       if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Song Added', description: text } };
       msg.channel.send(text);
       return common.clientVCManager.startMainLoop(guilddata.voice, msg.channel);
@@ -114,9 +114,31 @@ module.exports = [
       let playperms = perms & common.constants.botRolePermBits.PLAY_SONG, fsperms = common.constants.botRolePermBits.FORCESKIP, remoteperms = perms & common.constants.botRolePermBits.REMOTE_CMDS;
       let vcmembers = channel.members.keyArray();
       if (!((msg.member.voice.channelID == guilddata.voice.channel.id || remoteperms) && (fsperms || vcmembers.length == 2 && vcmembers.includes(msg.author.id) && playperms)))
-        return msg.channel.send('Only admins and mods can change toggle loop, or someone who is alone with me in a voice channel.');
+        return msg.channel.send('Only admins and mods can toggle loop, or someone who is alone with me in a voice channel.');
       common.clientVCManager.toggleLoop(guilddata.voice);
       return msg.channel.send(`Toggled loop to ${guilddata.voice.loop ? 'enabled' : 'disabled'}`);
+    }
+  },
+  {
+    name: 'loopqueue',
+    description: '`!loopqueue` toggles whether the entire queue will loop, meaning that when a song finishes playing it is added to the end of the queue',
+    flags: 6,
+    execute(o, msg, rawArgs) {
+      if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
+      let guilddata = props.saved.guilds[msg.guild.id];
+      if (!guilddata) {
+        props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+        schedulePropsSave();
+      }
+      let channel = guilddata.voice.channel;
+      if (!channel) return msg.channel.send('I\'m not in a voice channel');
+      let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.PLAY_SONG | common.constants.botRolePermBits.FORCESKIP | common.constants.botRolePermBits.REMOTE_CMDS);
+      let playperms = perms & common.constants.botRolePermBits.PLAY_SONG, fsperms = common.constants.botRolePermBits.FORCESKIP, remoteperms = perms & common.constants.botRolePermBits.REMOTE_CMDS;
+      let vcmembers = channel.members.keyArray();
+      if (!((msg.member.voice.channelID == guilddata.voice.channel.id || remoteperms) && (fsperms || vcmembers.length == 2 && vcmembers.includes(msg.author.id) && playperms)))
+        return msg.channel.send('Only admins and mods can toggle queue loop, or someone who is alone with me in a voice channel.');
+      common.clientVCManager.toggleQueueLoop(guilddata.voice);
+      return msg.channel.send(`Toggled queue loop to ${guilddata.voice.loop ? 'enabled' : 'disabled'}`);
     }
   },
   {
@@ -135,8 +157,7 @@ module.exports = [
       if (!guilddata.voice.dispatcher) return msg.channel.send('Error: no song is playing');
       let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.PLAY_SONG | common.constants.botRolePermBits.FORCESKIP | common.constants.botRolePermBits.REMOTE_CMDS);
       let playperms = perms & common.constants.botRolePermBits.PLAY_SONG, fsperms = common.constants.botRolePermBits.FORCESKIP, remoteperms = perms & common.constants.botRolePermBits.REMOTE_CMDS;
-      let vcmembers = channel.members.keyArray();
-      if (!((msg.member.voice.channelID == guilddata.voice.channel.id || remoteperms) && (fsperms || vcmembers.length == 2 && vcmembers.includes(msg.author.id) && playperms)))
+      if (!((msg.member.voice.channelID == guilddata.voice.channel.id || remoteperms) && (fsperms || playperms && channel.members.array().filter(x => !x.user.bot && x.user.id != msg.author.id).length == 0 && msg.member.voice.channelID == channel.id)))
         return msg.channel.send('Only admins and mods can forceskip, or someone who is alone with me in a voice channel.');
       common.clientVCManager.forceSkip(guilddata.voice);
       return msg.channel.send(`Skipped`);
@@ -178,17 +199,12 @@ module.exports = [
       }
       if (!guilddata.voice.channel) return msg.channel.send('I\'m not in a voice channel');
       let songslist = guilddata.voice.songslist;
-      if (songslist.length == 0) {
-        return msg.channel.send('Currently playing no songs');
-      } else if (songslist.length == 1) {
-        let text = `Currently playing ${songslist[0].desc} (${guilddata.voice.dispatcher ? common.msecToHMS(guilddata.voice.dispatcher.streamTime) : '-:--.---'} / ${common.msecToHMS(songslist[0].expectedLength)})`;
-        if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Song List', description: text } };
-        return msg.channel.send(text);
-      } else {
-        let text = `Currently playing ${songslist[0].desc} (${guilddata.voice.dispatcher ? common.msecToHMS(guilddata.voice.dispatcher.streamTime) : '-:--.---'} / ${common.msecToHMS(songslist[0].expectedLength)})\nQueue:\n${songslist.slice(1).map(x => x.desc).join('\n')}`;
-        if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Song List', description: text } };
-        return msg.channel.send(text);
-      }
+      let text = `Currently playing ${songslist.length ? songslist[0].desc + (songslist[0].userid ? ' (requested by ' + (msg.guild.members.cache.get(songslist[0].userid) ? msg.guild.members.cache.get(songslist[0].userid).user.tag : 'null') + ', id ' + songslist[0].userid + ')' : '') : 'No Song'}\n` +
+        (guilddata.voice.dispatcher ? `Time: ${guilddata.voice.dispatcher && songslist.length ? common.formatPlaybackBar(guilddata.voice.dispatcher.streamTime / songslist[0].expectedLength) : '---'} (${guilddata.voice.dispatcher ? common.msecToHMS(guilddata.voice.dispatcher.streamTime) : '-:--.---'} / ${songslist.length ? common.msecToHMS(songslist[0].expectedLength) : '-:--.---'})\n` : '') +
+        `Queue${songslist.length > 1 ? ':\n' + songslist.slice(1).map((x, i) => (i + 1) + '. ' + x.desc + ' (' + common.msecToHMS(x.expectedLength) + (x.userid ? ', requested by ' + (msg.guild.members.cache.get(x.userid) ? msg.guild.members.cache.get(x.userid).user.tag : 'null') + ', id ' + x.userid : '') + ')').join('\n') : ' empty'}\n` +
+        `Status: ${guilddata.voice.dispatcher ? (guilddata.voice.dispatcher.paused ? 'Paused' : 'Playing') : ['Stopped', 'Running', 'Pending Skip', 'Pending Stop'][guilddata.voice.mainloop]}, Volume: ${guilddata.voice.volume}, Loop: ${guilddata.voice.loop ? '✅' : '❌'}, Queue Loop: ${guilddata.voice.queueloop ? '✅' : '❌'}, Self Muted: ${guilddata.voice.connection.voice.selfMute ? '✅' : '❌'}, Self Deafened: ${guilddata.voice.connection.voice.selfDeaf ? '✅' : '❌'}`;
+      if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Song List', description: text } };
+      return msg.channel.send(text);
     }
   },
   {
@@ -204,13 +220,11 @@ module.exports = [
       }
       if (!guilddata.voice.channel) return msg.channel.send('I\'m not in a voice channel');
       let songslist = guilddata.voice.songslist;
-      if (songslist.length == 0) {
-        return msg.channel.send('Currently playing no songs');
-      } else {
-        let text = `Currently playing ${songslist[0].desc} (${guilddata.voice.dispatcher ? common.msecToHMS(guilddata.voice.dispatcher.streamTime) : '-:--.---'} / ${common.msecToHMS(songslist[0].expectedLength)})`;
-        if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Current Song', description: text } };
-        return msg.channel.send(text);
-      }
+      let text = `Currently playing ${songslist.length ? songslist[0].desc + (songslist[0].userid ? ' (requested by ' + (msg.guild.members.cache.get(songslist[0].userid) ? msg.guild.members.cache.get(songslist[0].userid).user.tag : 'null') + ', id ' + songslist[0].userid + ')' : '') : 'No Song'}\n` +
+        (guilddata.voice.dispatcher ? `Time: ${guilddata.voice.dispatcher && songslist.length ? common.formatPlaybackBar(guilddata.voice.dispatcher.streamTime / songslist[0].expectedLength) : '---'} (${guilddata.voice.dispatcher ? common.msecToHMS(guilddata.voice.dispatcher.streamTime) : '-:--.---'} / ${songslist.length ? common.msecToHMS(songslist[0].expectedLength) : '-:--.---'})\n` : '') +
+        `Status: ${guilddata.voice.dispatcher ? (guilddata.voice.dispatcher.paused ? 'Paused' : 'Playing') : ['Stopped', 'Running', 'Pending Skip', 'Pending Stop'][guilddata.voice.mainloop]}, Volume: ${guilddata.voice.volume}, Loop: ${guilddata.voice.loop ? '✅' : '❌'}, Queue Loop: ${guilddata.voice.queueloop ? '✅' : '❌'}, Self Muted: ${guilddata.voice.connection.voice.selfMute ? '✅' : '❌'}, Self Deafened: ${guilddata.voice.connection.voice.selfDeaf ? '✅' : '❌'}`;
+      if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Current Song', description: text } };
+      return msg.channel.send(text);
     }
   },
 ];

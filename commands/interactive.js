@@ -75,7 +75,7 @@ module.exports = [
   {
     name: 'calc',
     description: '`!calc <expression>` calculates the result of a mathematical expression using math.js evaluate (<https://mathjs.org/docs/expressions/index.html> for info)\n' +
-      'Note: a delete command has been added to delete a property from an object:\n' +
+      'Note: a delete function has been added to delete a property from an object:\n' +
       '  `delete(obj, prop)` to delete `prop` from `obj` or\n' +
       '  `delete(prop)` to delete `prop` from global scope\n' +
       '`!calc :view` to print out serialized JSON of your calc scope\n' +
@@ -266,7 +266,8 @@ module.exports = [
   },
   {
     name: 'echoargs',
-    flags: 12,
+    description: '`!echoargs [arguments]` prints out the parsed version of the arguments sent to the command',
+    flags: 14,
     execute(o, msg, rawArgs) {
       return msg.channel.send('rawArgs: ' + JSON.stringify(rawArgs).replace(/@/g, '@\u200b').replace(/(<)/g, '\\$1'));
     }

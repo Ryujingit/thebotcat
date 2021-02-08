@@ -6,6 +6,14 @@ var { recursiveReaddir } = require('./convenience');
 
 var { msecToHMS, msecToHMSs, fancyDateStringWD, fancyDateStringMD, fancyDateString } = require('./time'); 
 
+function formatPlaybackBar(frac, numElems) {
+  if (!Number.isFinite(frac)) frac = 0;
+  if (frac < 0 || frac > 1) frac = Math.min(Math.max(frac, 0), 1);
+  if (!Number.isSafeInteger(numElems) || numElems < 0) numElems = 30;
+  var dotElem = Math.floor(frac * numElems);
+  return '-'.repeat(Math.max(dotElem, 0)) + '•' + '-'.repeat(Math.max(numElems - dotElem - 1, 0));
+}
+
 var { getBotcatUptimeMessage, getBotcatStatusMessage, getBotcatFullStatusMessage } = require('./status');
 
 var explainChannel = (channel, full) => {
@@ -60,7 +68,7 @@ var { isId, propsSavedCreateVerifiedCopy, getEmptyGuildObject, getEmptyUserObjec
 // also an interesting way to make js cleaner is by shortening { e: e } to { e }, and the compiler still understands
 module.exports = {
   constants, recursiveReaddir,
-  msecToHMS, msecToHMSs, fancyDateStringWD, fancyDateStringMD, fancyDateString,
+  msecToHMS, msecToHMSs, fancyDateStringWD, fancyDateStringMD, fancyDateString, formatPlaybackBar,
   getBotcatUptimeMessage, getBotcatStatusMessage, getBotcatFullStatusMessage,
   explainChannel, stringToBoolean,
   BotError,

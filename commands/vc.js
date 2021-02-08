@@ -4,7 +4,7 @@ module.exports = [
     description: '`!join` for me to join the voice channel you are in\n`!join #channel` for me to join a voice channel',
     flags: 6,
     async execute(o, msg, rawArgs) {
-      if (!(props.saved.feat.audio & 1)) return msg.channel.send('Join/leave features are disabled');
+      if (!(props.saved.feat.audio & 1)) return msg.channel.send('Voice Channel features are disabled.');
       let guilddata = props.saved.guilds[msg.guild.id];
       if (!guilddata) {
         props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
@@ -45,7 +45,7 @@ module.exports = [
     description: '`!leave` for me to leave the voice channel I am in',
     flags: 6,
     async execute(o, msg, rawArgs) {
-      if (!(props.saved.feat.audio & 1)) return msg.channel.send('Join/leave features are disabled');
+      if (!(props.saved.feat.audio & 1)) return msg.channel.send('Voice Channel features are disabled.');
       let guilddata = props.saved.guilds[msg.guild.id];
       if (!guilddata) {
         props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
@@ -66,6 +66,56 @@ module.exports = [
         return msg.channel.send(`Left channel <#${channel.id}>`);
       } else {
         return msg.channel.send('You do not have permission to get me to leave the voice channel.');
+      }
+    }
+  },
+  {
+    name: 'toggleselfmute',
+    description: '`!toggleselfmute` for me to toggle my selfmute status',
+    flags: 6,
+    async execute(o, msg, rawArgs) {
+      if (!(props.saved.feat.audio & 1)) return msg.channel.send('Voice Channel features are disabled.');
+      let guilddata = props.saved.guilds[msg.guild.id];
+      if (!guilddata) {
+        props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+        schedulePropsSave();
+      }
+      let channel = guilddata.voice.channel;
+      if (!channel || !channel.permissionsFor(msg.member).has('VIEW_CHANNEL')) return msg.channel.send('I\'m not in a voice channel');
+      let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.JOIN_VC | common.constants.botRolePermBits.MANAGE_BOT | common.constants.botRolePermBits.REMOTE_CMDS);
+      let joinperms = perms & common.constants.botRolePermBits.JOIN_VC, manageperms = perms & common.constants.botRolePermBits.MANAGE_BOT, remoteperms = perms & common.constants.botRolePermBits.REMOTE_CMDS;
+      if (joinperms && manageperms) {
+        if (msg.member.voice.channelID != channel.id && !remoteperms)
+          return msg.channel.send('You do not have permission to get me to toggle my selfmute status remotely.');
+        common.clientVCManager.toggleSelfMute(guilddata.voice);
+        return msg.channel.send(`Set self mute to ${guilddata.voice.connection.voice.selfMute ? 'enabled' : 'disabled'}`);
+      } else {
+        return msg.channel.send('You do not have permission to get me to toggle my selfmute status.');
+      }
+    }
+  },
+  {
+    name: 'toggleselfdeaf',
+    description: '`!toggleselfdeaf` for me to toggle my selfdeafen status',
+    flags: 6,
+    async execute(o, msg, rawArgs) {
+      if (!(props.saved.feat.audio & 1)) return msg.channel.send('Voice Channel features are disabled.');
+      let guilddata = props.saved.guilds[msg.guild.id];
+      if (!guilddata) {
+        props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+        schedulePropsSave();
+      }
+      let channel = guilddata.voice.channel;
+      if (!channel || !channel.permissionsFor(msg.member).has('VIEW_CHANNEL')) return msg.channel.send('I\'m not in a voice channel');
+      let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.JOIN_VC | common.constants.botRolePermBits.MANAGE_BOT | common.constants.botRolePermBits.REMOTE_CMDS);
+      let joinperms = perms & common.constants.botRolePermBits.JOIN_VC, manageperms = perms & common.constants.botRolePermBits.MANAGE_BOT, remoteperms = perms & common.constants.botRolePermBits.REMOTE_CMDS;
+      if (joinperms && manageperms) {
+        if (msg.member.voice.channelID != channel.id && !remoteperms)
+          return msg.channel.send('You do not have permission to get me to toggle my selfdeaf status remotely.');
+        common.clientVCManager.toggleSelfDeaf(guilddata.voice);
+        return msg.channel.send(`Set self deaf to ${guilddata.voice.connection.voice.selfDeaf ? 'enabled' : 'disabled'}`);
+      } else {
+        return msg.channel.send('You do not have permission to get me to toggle my selfdeaf status.');
       }
     }
   },

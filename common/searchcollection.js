@@ -2,7 +2,7 @@
 
 function searchRoles(roles, query) {
   // convert mentions to the inside
-  if (/^<(?:@!?|@&|#)([0-9]+)>$/.test(query)) query = /^<(?:@!?|@&|#)([0-9]+)>$/.exec(query)[1];
+  if (/^ *<(?:@!?|@&|#)([0-9]+)> *$/.test(query)) query = /^ *<(?:@!?|@&|#)([0-9]+)> *$/.exec(query)[1];
   
   // if mention / id by itself is valid, return it immediately
   var mentionRole = roles.cache.get(query);
@@ -47,7 +47,7 @@ function searchRoles(roles, query) {
 
 async function searchMembers(members, query) {
   // convert mentions to the inside
-  if (/^<(?:@!?|@&|#)([0-9]+)>$/.test(query)) query = /^<(?:@!?|@&|#)([0-9]+)>$/.exec(query)[1];
+  if (/^ *<(?:@!?|@&|#)([0-9]+)> *$/.test(query)) query = /^ *<(?:@!?|@&|#)([0-9]+)> *$/.exec(query)[1];
   
   // if mention / id by itself is valid, return it immediately
   var mentionMember = members.cache.get(query);
@@ -110,7 +110,7 @@ async function searchMembers(members, query) {
 
 async function searchUsers(users, query, options) {
   // convert mentions to the inside
-  if (/^<(?:@!?|@&|#)([0-9]+)>$/.test(query)) query = /^<(?:@!?|@&|#)([0-9]+)>$/.exec(query)[1];
+  if (/^ *<(?:@!?|@&|#)([0-9]+)> *$/.test(query)) query = /^ *<(?:@!?|@&|#)([0-9]+)> *$/.exec(query)[1];
   
   // if mention / id by itself is valid, return it immediately
   var mentionUser = users.cache.get(query);

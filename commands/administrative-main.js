@@ -194,7 +194,7 @@ module.exports = [
         });
       }
       let type = { dm: 0, text: 1, voice: 2, category: 3, news: 1, store: 1, unknown: 0 }[channel.type];
-      let bits = Discord.Permissions.FLAGS['SEND_MESSAGES'] * (type & 1) | Discord.Permissions.FLAGS['CONNECT'] * (type & 2);
+      let bits = Discord.Permissions.FLAGS['SEND_MESSAGES'] * !!(type & 1) | Discord.Permissions.FLAGS['CONNECT'] * !!(type & 2);
       newperms.forEach(x => {
         if (!Object.keys(props.saved.guilds[msg.guild.id].perms).filter(y => y == x.id && props.saved.guilds[msg.guild.id].perms[y] & (common.constants.botRolePermBits.LOCK_CHANNEL | common.constants.botRolePermBits.BYPASS_LOCK)).length) {
           x.allow &= ~bits;
