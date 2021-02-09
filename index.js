@@ -48,7 +48,7 @@ if (doWorkers) {
 }
 if (doWorkers) {
   var worker = require('worker_threads');
-  var pool = workerpool.pool(__dirname + '/worker.js', { workerType: 'thread', maxWorkers: 3 });
+  var pool = workerpool.pool(__dirname + '/worker.js', { workerType: 'process', maxWorkers: 3, forkOpts: { execArgv: ['--max_old_space_size=50'] } });
   Object.assign(global, { worker, workerpool, pool });
 } else {
   var mathVMContext = vm.createContext({ math });
@@ -75,7 +75,7 @@ var addlbotperms = {};
 var mutelist = [];
 
 
-var version = '1.5.7d';
+var version = '1.5.7e';
 global.updateStatus = async () => {
   let newStatus = props.feat.status ? props.feat.status.replace('{prefix}', defaultprefix).replace('{guilds}', client.guilds.cache.size) : null;
   let currentStatus;

@@ -189,11 +189,7 @@ format for props.saved:
     },
     users : object {
       'default' / <userid> : object {
-        calc_scope : string (math.js calc scope, serialized),
-        [EMPHEMERAL] calc_scope_working : object {
-          shared : props.saved.users.default.calc_scope,
-          ...
-        } (math.js calc scope),
+        calc_scope : string (math.js calc scope, serialized, 'shared' property added at runtime for a shared calc scope),
         [EMPHEMERAL] calc_scope_running : boolean,
       },
       ...

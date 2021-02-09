@@ -92,20 +92,6 @@ module.exports = {
         let userObj = {
           calc_scope: userIsObj ? JSON.stringify(user) : '{}',
         };
-        let scope = JSON.parse(userObj.calc_scope, math.reviver);
-        if (newObj && newObj.users && newObj.users.default)
-          Object.defineProperty(scope, 'shared', {
-            configurable: false,
-            enumerable: false,
-            writable: false,
-            value: newObj.users.default.calc_scope_working,
-          });
-        Object.defineProperty(userObj, 'calc_scope_working', {
-          configurable: true,
-          enumerable: false,
-          writable: true,
-          value: scope,
-        });
         Object.defineProperty(userObj, 'calc_scope_running', {
           configurable: true,
           enumerable: false,
@@ -375,20 +361,6 @@ module.exports = {
         let userObj = {
           calc_scope: userIsObj && typeof user.calc_scope == 'string' ? user.calc_scope : '{}',
         };
-        let scope = JSON.parse(userObj.calc_scope, math.reviver);
-        if (newObj && newObj.users && newObj.users.default)
-          Object.defineProperty(scope, 'shared', {
-            configurable: false,
-            enumerable: false,
-            writable: false,
-            value: newObj.users.default.calc_scope_working,
-          });
-        Object.defineProperty(userObj, 'calc_scope_working', {
-          configurable: true,
-          enumerable: false,
-          writable: true,
-          value: scope,
-        });
         Object.defineProperty(userObj, 'calc_scope_running', {
           configurable: true,
           enumerable: false,
@@ -508,20 +480,6 @@ module.exports = {
     let obj = {
       calc_scope: '',
     };
-    let scope = {};
-    if (guildObj && guildObj.users && guildObj.users.default)
-      Object.defineProperty(scope, 'shared', {
-        configurable: false,
-        enumerable: false,
-        writable: false,
-        value: guildObj.users.default.calc_scope_working,
-      });
-    Object.defineProperty(obj, 'calc_scope_working', {
-      configurable: true,
-      enumerable: false,
-      writable: true,
-      value: {},
-    });
     Object.defineProperty(obj, 'calc_scope_running', {
       configurable: true,
       enumerable: false,

@@ -84,43 +84,39 @@ module.exports = [
     async execute(o, msg, rawArgs) {
       if (!props.saved.feat.calc) return msg.channel.send('Calculation features are disabled');
       let expr = o.argstring, res;
-      console.debug(`calculating from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(expr)}`);
+      nonlogmsg(`calculating from ${msg.author.tag} in ${msg.guild?msg.guild.name+':'+msg.channel.name:'dms'}: ${util.inspect(expr)}`);
       let user = props.saved.users[msg.author.id];
       if (!user) {
-        user = props.saved.users[msg.author.id] = common.getEmptyUserObject(props.saved.guilds[msg.guild.id]);
-        schedulePropsSave();
+        if (rawArgs[0] == ':view' || rawArgs[1] == ':clear') return msg.channel.send('User object not created yet');
+        else {
+          user = props.saved.users[msg.author.id] = common.getEmptyUserObject(props.saved.guilds[msg.guild.id]);
+          schedulePropsSave();
+        }
       }
       
       if (rawArgs[0] == ':view') {
-        let scope = user.calc_scope_working, text;
-        if (scope) {
-          try {
-            text = user.calc_scope;
-            if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Scope', description: text } };
+        let text;
+        if (user.calc_scope.length <= 2000) {
+          text = user.calc_scope;
+          if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Scope', description: text } };
+          console.log(text);
+          return msg.channel.send(text);
+        } else {
+          let scopeVars = Reflect.ownKeys(JSON.parse(user.calc_scope)).join(', ');
+          if (scopeVars.length <= 1950) {
+            text = `Scope too big to fit in a discord message, variables:\n${scopeVars}`
+            if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Scope Variables', description: text } };
             console.log(text);
             return msg.channel.send(text);
-          } catch (e) {
-            console.error(e);
-            try {
-              text = `Scope too big to fit in a discord message, variables:\n${Reflect.ownKeys(scope).join(', ')}`
-              if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Scope Variables', description: text } };
-              console.log(text);
-              return msg.channel.send(text);
-            } catch (e) {
-              console.error(e);
-              console.log(text = `Scope variables too big to fit in a discord message, use \`!calc_scopeclear\` to wipe`);
-              return msg.channel.send(text);
-            }
+          } else {
+            console.log(text = `Scope variables too big to fit in a discord message, use \`!calc :clear\` to wipe`);
+            return msg.channel.send(text);
           }
-        } else {
-          console.log(text = `You do not have a scope created yet, one is created when \`!calc\` is run`);
-          return msg.channel.send(text);
         }
       } else if (rawArgs[0] == ':clear') {
         let text;
         if (user.calc_scope) {
           user.calc_scope = '{}';
-          Reflect.ownKeys(user.calc_scope_working).forEach(x => delete user.calc_scope_working[x]);
           schedulePropsSave();
           console.log(text = `Cleared scope successfully`);
           return msg.channel.send(text);
@@ -129,97 +125,62 @@ module.exports = [
           return msg.channel.send(text);
         }
       } else {
-        let scope = user.calc_scope_working;
-        global.calccontext = scope;
-        let promise;
-        try {
-          if (doWorkers) {
-            // shared array buffer is used to access properties of scope, due to the worker-side of the code having to be synchronous
-            let buffer = new SharedArrayBuffer(8 + 65536), obj;
-            let i32arr = new Int32Array(buffer);
-            let doLoop = true;
-            let doLoopChecker = () => doLoop;
-            let loopFunc = (async () => {
-              let obj, action;
-              while (doLoop) {
-                try { action = await common.receiveObjThruBuffer(buffer, i32arr, doLoopChecker); } catch (e) { if (e instanceof common.BreakError) return; throw e; }
-                try {
-                  switch (action.type) {
-                    case 'has':
-                      obj = common.arrayGet(scope, action.props);
-                      await common.sendObjThruBuffer(buffer, i32arr, action.prop in obj, doLoopChecker);
-                      break;
-                    case 'get':
-                      let parentobj = common.arrayGet(scope, action.props);
-                      if (!(action.prop in parentobj)) {
-                          await common.sendObjThruBuffer(buffer, i32arr, { object: false }, doLoopChecker);
-                      } else {
-                        obj = parentobj[action.prop];
-                        if (action.prop == 'toString' && typeof obj == 'function')
-                          await common.sendObjThruBuffer(buffer, i32arr, { val: parentobj.toString() }, doLoopChecker);
-                        else if (typeof obj != 'object' && typeof obj != 'function')
-                          await common.sendObjThruBuffer(buffer, i32arr, { val: obj }, doLoopChecker);
-                        else if (Object.getPrototypeOf(obj) == Object.prototype)
-                          await common.sendObjThruBuffer(buffer, i32arr, { object: true }, doLoopChecker);
-                        else
-                          await common.sendObjThruBuffer(buffer, i32arr, JSON.stringify(obj, math.replacer), doLoopChecker);
-                      }
-                      break;
-                    case 'set':
-                      obj = common.arrayGet(scope, action.props);
-                      obj[action.prop] = JSON.parse(action.val, math.reviver);
-                      await common.sendObjThruBuffer(buffer, i32arr, true, doLoopChecker);
-                      break;
-                    case 'delete':
-                      obj = common.arrayGet(scope, action.props);
-                      await common.sendObjThruBuffer(buffer, i32arr, delete obj[action.prop], doLoopChecker);
-                      break;
-                    case 'ownKeys':
-                      obj = common.arrayGet(scope, action.props);
-                      await common.sendObjThruBuffer(buffer, i32arr, Reflect.ownKeys(obj), doLoopChecker);
-                      break;
-                    case 'stop':
-                      doLoop = false;
-                      break;
-                  }
-                } catch (e) {
-                  if (e instanceof common.BreakError) {
-                    doLoop = false;
-                    Atomics.store(i32arr, 0, 0);
-                    return;
-                  }
-                  await common.sendObjThruBuffer(buffer, i32arr, e, doLoopChecker);
-                }
-              }
-            })();
-            try {
-              if (!user.calc_scope_running) {
-                try {
-                  user.calc_scope_running = true;
-                  res = await pool.exec('mathevaluate', [expr, buffer]);
-                  if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(res.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) res = { embed: { title: 'Result', description: res } };
-                  else res = `Result: ${res}`;
-                  doLoop = false;
-                  await loopFunc;
-                } catch (e) { throw e; }
-                finally {
-                  user.calc_scope_running = false;
-                }
-              } else {
-                res = await pool.exec('mathevaluate', [expr, buffer, 5]);
+        let promise, res, calc_scope_new, shared_calc_scope_new;
+        if (doWorkers) {
+          if (calccontext == null) calccontext = 1;
+          else calccontext++;
+          try {
+            if (!user.calc_scope_running) {
+              try {
+                user.calc_scope_running = true;
+                [ res, calc_scope_new, shared_calc_scope_new ] = await pool.exec('mathevaluate', [expr, user.calc_scope, props.saved.users.default ? props.saved.users.default.calc_scope : '{}']);
+                if (calc_scope_new && calc_scope_new.length > 2 ** 20) throw new Error('Calc scope size too large');
+                if (shared_calc_scope_new && shared_calc_scope_new.length > 2 ** 20) throw new Error('Shared calc scope size too large');
                 if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(res.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) res = { embed: { title: 'Result', description: res } };
                 else res = `Result: ${res}`;
-                doLoop = false;
-                await loopFunc;
+              } catch (e) { throw e; }
+              finally {
+                user.calc_scope_running = false;
               }
-            } catch (e) {
-              if (doLoop) doLoop = false;
-              throw e;
+            } else {
+              [ res, calc_scope_new, shared_calc_scope_new ] = await pool.exec('mathevaluate', [expr, user.calc_scope, props.saved.users.default ? props.saved.users.default.calc_scope : '{}', 5]);
+              if (calc_scope_new && calc_scope_new.length > 2 ** 20) throw new Error('Calc scope size too large');
+              if (shared_calc_scope_new && shared_calc_scope_new.length > 2 ** 20) throw new Error('Shared calc scope size too large');
+              if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(res.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) res = { embed: { title: 'Result', description: res } };
+              else res = `Result: ${res}`;
             }
-          } else {
+            promise = msg.channel.send(res);
+            if (calc_scope_new) user.calc_scope = calc_scope_new;
+            if (shared_calc_scope_new && props.saved.users.default) props.saved.users.default.calc_scope = shared_calc_scope_new;
+            if (calc_scope_new || shared_calc_scope_new) schedulePropsSave();
+          } catch (e) {
+            res = e.toString();
+            console.error(res);
+            if (/^Error: Script execution timed out after [0-9]+ms$/.test(res)) {
+              promise = msg.channel.send(`Error: expression timeout after ${res.slice(40, Infinity)}`);
+            } else if (/^Error: Workerpool Worker terminated Unexpectedly/.test(res)) {
+              promise = msg.channel.send(`Error: Workerpool Worker Terminated Unexpectedly (possibly an out of memory error)`);
+            } else {
+              if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(res.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) res = { embed: { title: 'Result (Error)', description: res } };
+              promise = msg.channel.send(res);
+            }
+          } finally {
+            calccontext--;
+            if (calccontext <= 0) global.calccontext = null;
+          }
+        } else {
+          let scope = JSON.parse(user.calc_scope, math.reviver);
+          Object.defineProperty(scope, 'shared', {
+            configurable: false,
+            enumerable: false,
+            writable: false,
+            value: JSON.parse(props.saved.users.default ? props.saved.users.default.calc_scope : '{}', math.reviver),
+          });
+          global.calccontext = scope;
+          try {
             mathVMContext.expr = expr;
             mathVMContext.scope = scope;
-            vm.runInContext('res = math.evaluate(expr, scope)', mathVMContext, {timeout: common.isDeveloper(msg) ? 1000 : 5});
+            vm.runInContext('res = math.evaluate(expr, scope)', mathVMContext, { timeout: common.isDeveloper(msg) ? 1000 : 5 });
             res = mathVMContext.res;
             if (res === undefined) res = 'undefined';
             else if (res === null) res = 'null';
@@ -231,34 +192,28 @@ module.exports = [
             if (res.length > 1900) res = res.slice(0, 1900) + '...';
             if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(res.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) res = { embed: { title: 'Result', description: res } };
             else res = `Result: ${res}`;
-          }
-          try {
-            console.log(res);
-            promise = await msg.channel.send(res);
-          } catch (e) {
-            promise = await msg.channel.send('Error: result too big to fit in discord message');
-          }
-        } catch (e) {
-          res = e.toString();
-          console.error(res);
-          if (/^Error: Script execution timed out after [0-9]+ms$/.test(res)) {
-            promise = msg.channel.send(`Error: expression timeout after ${res.slice(40, Infinity)}`);
-          } else {
-            if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(res.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) res = { embed: { title: 'Result (Error)', description: res } };
+            calc_scope_new = JSON.stringify(scope, math.replacer);
+            shared_calc_scope_new = JSON.stringify(scope.shared, math.replacer);
+            calc_scope_new = user.calc_scope != calc_scope_new ? calc_scope_new : null;
+            shared_calc_scope_new = (props.saved.users.default ? props.saved.users.default.calc_scope : '{}') != shared_calc_scope_new ? shared_calc_scope_new : null;
+            if (calc_scope_new && calc_scope_new.length > 2 ** 20) throw new Error('Calc scope size too large');
+            if (shared_calc_scope_new && shared_calc_scope_new.length > 2 ** 20) throw new Error('Shared calc scope size too large');
             promise = msg.channel.send(res);
+            if (calc_scope_new) user.calc_scope = calc_scope_new;
+            if (shared_calc_scope_new && props.saved.users.default) props.saved.users.default.calc_scope = shared_calc_scope_new;
+            if (calc_scope_new || shared_calc_scope_new) schedulePropsSave();
+          } catch (e) {
+            res = e.toString();
+            console.error(res);
+            if (/^Error: Script execution timed out after [0-9]+ms$/.test(res)) {
+              promise = msg.channel.send(`Error: expression timeout after ${res.slice(40, Infinity)}`);
+            } else {
+              if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(res.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) res = { embed: { title: 'Result (Error)', description: res } };
+              promise = msg.channel.send(res);
+            }
+          } finally {
+            global.calccontext = null;
           }
-        } finally {
-          global.calccontext = null;
-        }
-        let scopeSerialized = JSON.stringify(scope, math.replacer);
-        if (scopeSerialized != user.calc_scope) {
-          user.calc_scope = scopeSerialized;
-          schedulePropsSave();
-        }
-        scopeSerialized = JSON.stringify(props.saved.users.default.calc_scope_working, math.replacer);
-        if (scopeSerialized != props.saved.users.default.calc_scope) {
-          props.saved.users.default.calc_scope = scopeSerialized;
-          schedulePropsSave();
         }
         return promise;
       }
