@@ -43,6 +43,7 @@ format for props.saved:
     guilds : object {
       <guildid> : object {
         prefix : string (default <defaultprefix>),
+        confirm_kb : bool (default true),
         enabled_commands : object {
           global : bool (default true),
           categories : object {

@@ -404,15 +404,19 @@ module.exports = [
         return msg.channel.send('Error: I cannot kick someone equal or higher than me in the role hierarchy.');
       
       try {
-        let text = `Are you sure you want to kick user ${member.user.tag} (id ${member.id})${kickreason ? ' with reason ' + util.inspect(kickreason) : ''}?`;
-        if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Confirm Kick', description: text } };
-        let kickconfirm = await msg.channel.send(text);
-        let kickreacts = kickconfirm.awaitReactions((react, user) => (react.emoji.name == '✅' || react.emoji.name == '❌') && user.id == msg.author.id, { time: 60000, max: 1 });
-        await kickconfirm.react('✅');
-        await kickconfirm.react('❌');
-        kickreacts = await kickreacts;
-        if (kickreacts.keyArray().length == 0 || kickreacts.keyArray()[0] == '❌')
-          return msg.channel.send('Kick cancelled.');
+        let guilddata = props.saved.guilds[msg.guild.id];
+        if (guilddata && (guilddata.confirm_kb || guilddata.confirm_kb == null) || !guilddata) {
+          let text = `Are you sure you want to kick user ${member.user.tag} (id ${member.id})${kickreason ? ' with reason ' + util.inspect(kickreason) : ''}?`;
+          if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Confirm Kick', description: text } };
+          let kickconfirm = await msg.channel.send(text);
+          let kickreacts = kickconfirm.awaitReactions((react, user) => (react.emoji.name == '✅' || react.emoji.name == '❌') && user.id == msg.author.id, { time: 60000, max: 1 });
+          await kickconfirm.react('✅');
+          await kickconfirm.react('❌');
+          kickreacts = await kickreacts;
+          if (kickreacts.keyArray().length == 0 || kickreacts.keyArray()[0] == '❌')
+            return msg.channel.send('Kick cancelled.');
+        }
+        
         await member.kick(`[By ${msg.author.tag} (id ${msg.author.id})]${kickreason ? ' ' + kickreason : ''}`);
         return msg.channel.send(`${member.user.tag} (id ${member.id}) has been successfully kicked`);
       } catch (e) {
@@ -448,15 +452,19 @@ module.exports = [
           return msg.channel.send('Error: I do not have permission to ban members.');
         
         try {
-          let text = `Are you sure you want to ban unknown user${banreason ? ' with reason ' + util.inspect(banreason) : ''}?`;
-          if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Confirm Ban', description: text } };
-          let banconfirm = await msg.channel.send(text);
-          let banreacts = banconfirm.awaitReactions((react, user) => (react.emoji.name == '✅' || react.emoji.name == '❌') && user.id == msg.author.id, { time: 60000, max: 1 });
-          await banconfirm.react('✅');
-          await banconfirm.react('❌');
-          banreacts = await banreacts;
-          if (banreacts.keyArray().length == 0 || banreacts.keyArray()[0] == '❌')
-            return msg.channel.send('Ban cancelled.');
+          let guilddata = props.saved.guilds[msg.guild.id];
+          if (guilddata && (guilddata.confirm_kb || guilddata.confirm_kb == null) || !guilddata) {
+            let text = `Are you sure you want to ban unknown user${banreason ? ' with reason ' + util.inspect(banreason) : ''}?`;
+            if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Confirm Ban', description: text } };
+            let banconfirm = await msg.channel.send(text);
+            let banreacts = banconfirm.awaitReactions((react, user) => (react.emoji.name == '✅' || react.emoji.name == '❌') && user.id == msg.author.id, { time: 60000, max: 1 });
+            await banconfirm.react('✅');
+            await banconfirm.react('❌');
+            banreacts = await banreacts;
+            if (banreacts.keyArray().length == 0 || banreacts.keyArray()[0] == '❌')
+              return msg.channel.send('Ban cancelled.');
+          }
+          
           await msg.guild.members.ban(member, { reason: `[By ${msg.author.tag} (id ${msg.author.id})]${banreason ? ' ' + banreason : ''}` });
           return msg.channel.send(`unknown user has been successfully banned`);
         } catch (e) {
@@ -478,15 +486,19 @@ module.exports = [
           return msg.channel.send('Error: I cannot ban someone equal or higher than me in the role hierarchy.');
         
         try {
-          let text = `Are you sure you want to ban user ${member.user.tag} (id ${member.id})${banreason ? ' with reason ' + util.inspect(banreason) : ''}?`;
-          if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Confirm Ban', description: text } };
-          let banconfirm = await msg.channel.send(text);
-          let banreacts = banconfirm.awaitReactions((react, user) => (react.emoji.name == '✅' || react.emoji.name == '❌') && user.id == msg.author.id, { time: 60000, max: 1 });
-          await banconfirm.react('✅');
-          await banconfirm.react('❌');
-          banreacts = await banreacts;
-          if (banreacts.keyArray().length == 0 || banreacts.keyArray()[0] == '❌')
-            return msg.channel.send('Ban cancelled.');
+          let guilddata = props.saved.guilds[msg.guild.id];
+          if (guilddata && (guilddata.confirm_kb || guilddata.confirm_kb == null) || !guilddata) {
+            let text = `Are you sure you want to ban user ${member.user.tag} (id ${member.id})${banreason ? ' with reason ' + util.inspect(banreason) : ''}?`;
+            if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Confirm Ban', description: text } };
+            let banconfirm = await msg.channel.send(text);
+            let banreacts = banconfirm.awaitReactions((react, user) => (react.emoji.name == '✅' || react.emoji.name == '❌') && user.id == msg.author.id, { time: 60000, max: 1 });
+            await banconfirm.react('✅');
+            await banconfirm.react('❌');
+            banreacts = await banreacts;
+            if (banreacts.keyArray().length == 0 || banreacts.keyArray()[0] == '❌')
+              return msg.channel.send('Ban cancelled.');
+          }
+          
           await msg.guild.members.ban(member, { reason: `[By ${msg.author.tag} (id ${msg.author.id})]${banreason ? ' ' + banreason : ''}` });
           return msg.channel.send(`${member.user.tag} (id ${member.id}) has been successfully banned`);
         } catch (e) {
@@ -525,15 +537,19 @@ module.exports = [
         return msg.channel.send('Error: I do not have permission to unban members.');
       
       try {
-        let text = `Are you sure you want to unban user ${baninfo.user.tag} (id ${baninfo.user.id})${unbanreason ? ' with reason ' + util.inspect(unbanreason) : ''}?`;
-        if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Confirm Unban', description: text } };
-        let unbanconfirm = await msg.channel.send(text);
-        let unbanreacts = unbanconfirm.awaitReactions((react, user) => (react.emoji.name == '✅' || react.emoji.name == '❌') && user.id == msg.author.id, { time: 60000, max: 1 });
-        await unbanconfirm.react('✅');
-        await unbanconfirm.react('❌');
-        unbanreacts = await unbanreacts;
-        if (unbanreacts.keyArray().length == 0 || unbanreacts.keyArray()[0] == '❌')
-          return msg.channel.send('Unban cancelled.');
+        let guilddata = props.saved.guilds[msg.guild.id];
+        if (guilddata && (guilddata.confirm_kb || guilddata.confirm_kb == null) || !guilddata) {
+          let text = `Are you sure you want to unban user ${baninfo.user.tag} (id ${baninfo.user.id})${unbanreason ? ' with reason ' + util.inspect(unbanreason) : ''}?`;
+          if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(text.replace(new RegExp(`<@!?${msg.author.id}>`, 'g'), ''))) text = { embed: { title: 'Confirm Unban', description: text } };
+          let unbanconfirm = await msg.channel.send(text);
+          let unbanreacts = unbanconfirm.awaitReactions((react, user) => (react.emoji.name == '✅' || react.emoji.name == '❌') && user.id == msg.author.id, { time: 60000, max: 1 });
+          await unbanconfirm.react('✅');
+          await unbanconfirm.react('❌');
+          unbanreacts = await unbanreacts;
+          if (unbanreacts.keyArray().length == 0 || unbanreacts.keyArray()[0] == '❌')
+            return msg.channel.send('Unban cancelled.');
+        }
+        
         await msg.guild.members.unban(memberid, `[By ${msg.author.tag} (id ${msg.author.id})]${unbanreason ? ' ' + unbanreason : ''}`);
         return msg.channel.send(`${baninfo.user.tag} (id ${baninfo.user.id}) has been successfully unbanned`);
       } catch (e) {

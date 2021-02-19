@@ -75,7 +75,7 @@ var addlbotperms = {};
 var mutelist = [];
 
 
-var version = '1.5.7e';
+var version = '1.5.7f';
 global.updateStatus = async () => {
   let newStatus = props.feat.status ? props.feat.status.replace('{prefix}', defaultprefix).replace('{guilds}', client.guilds.cache.size) : null;
   let currentStatus;
@@ -208,12 +208,12 @@ var infomsg = function (msg, val) {
   if ((guildinfo = msg.guild ? props.saved.guilds[msg.guild.id] : undefined) && (channelid = guildinfo.logging.main) ||
     (guildinfo = props.saved.guilds['default']) && (channelid = guildinfo.logging.main)) {
     console.log(`[${new Date().toISOString()}] infomsg for ${msg.guild.name}: ${val}`);
-    return client.channels.cache.get(channelid).send(val);
+    return client.channels.cache.get(channelid).send(common.removePings(val));
   }
 };
 var logmsg = function (val) {
   console.log(`[${new Date().toISOString()}] logmsg ${val}`);
-  return client.channels.cache.get('736426551050109010').send(val);
+  return client.channels.cache.get('736426551050109010').send(common.removePings(val));
 };
 var nonlogmsg = function (val) {
   console.log(`[${new Date().toISOString()}] ${val}`);

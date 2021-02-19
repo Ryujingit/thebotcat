@@ -38,6 +38,10 @@ var stringToBoolean = str => {
   }
 };
 
+var removePings = str => {
+  return str.replace(/@/g, '@\u200b');
+};
+
 class BotError extends Error {}
 
 var { BreakError, arrayGet, sendObjThruBuffer, receiveObjThruBuffer } = require('./workerbuffer');
@@ -70,7 +74,7 @@ module.exports = {
   constants, recursiveReaddir,
   msecToHMS, msecToHMSs, fancyDateStringWD, fancyDateStringMD, fancyDateString, formatPlaybackBar,
   getBotcatUptimeMessage, getBotcatStatusMessage, getBotcatFullStatusMessage,
-  explainChannel, stringToBoolean,
+  explainChannel, stringToBoolean, removePings,
   BotError,
   BreakError, arrayGet, sendObjThruBuffer, receiveObjThruBuffer,
   isDeveloper, isConfirmDeveloper, isOwner, isAdmin, hasBotPermissions, getBotPermissions, getBotPermissionsArray, getPermissions,

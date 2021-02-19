@@ -17,6 +17,7 @@ module.exports = {
         let guildIsObj = typeof guild == 'object';
         let newGuild = {
           prefix: guildIsObj && typeof guild.prefix == 'string' ? guild.prefix : defaultprefix,
+          confirm_kb: true,
           enabled_commands: {
             global: true,
             categories: (() => {
@@ -177,6 +178,7 @@ module.exports = {
         let guildIsObj = typeof guild == 'object';
         let newGuild = {
           prefix: guildIsObj && typeof guild.prefix == 'string' ? guild.prefix : defaultprefix,
+          confirm_kb: guildIsObj && typeof guild.confirm_kb == 'boolean' ? guild.confirm_kb : true,
           enabled_commands: (() => {
             let enabledcmds = {
               _global: null,
@@ -443,8 +445,9 @@ module.exports = {
   },
   
   getEmptyGuildObject: id => {
-    return {
+    let obj = {
       prefix: defaultprefix,
+      confirm_kb: true,
       enabled_commands: {
         global: true,
         categories: (() => {
@@ -474,11 +477,18 @@ module.exports = {
         },
       },
     };
+    Object.defineProperty(obj, 'voice', {
+      configurable: true,
+      enumerable: false,
+      writable: true,
+      value: common.clientVCManager.getEmptyVoiceObject(),
+    });
+    return obj;
   },
   
   getEmptyUserObject: (guildObj) => {
     let obj = {
-      calc_scope: '',
+      calc_scope: '{}',
     };
     Object.defineProperty(obj, 'calc_scope_running', {
       configurable: true,

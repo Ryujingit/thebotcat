@@ -23,7 +23,7 @@ module.exports = [
       
       if (rawArgs.length == 0) {
         if (fullperms)
-          return msg.channel.send(`List of settings:\nprefix, badwords, logchannel, mutedrole, roles, overrides, enabledcmds`);
+          return msg.channel.send(`List of settings:\nprefix, confirmkb, badwords, logchannel, mutedrole, roles, overrides, enabledcmds`);
         else
           return msg.channel.send(`List of settings:\nprefix, badwords`);
       }
@@ -36,6 +36,27 @@ module.exports = [
             guilddata.prefix = rawArgs.slice(1).join(' ');
             schedulePropsSave();
             return msg.channel.send(`Server prefix set to: \`${guilddata.prefix}\``);
+          }
+          break;
+        
+        case 'confirmkb':
+          if (!fullperms) return silenced ? null : msg.channel.send('You do not have permission to run this command.');
+          if (rawArgs.length == 1) {
+            return msg.channel.send(`Confirmation on the kick, ban, and unban commands: ${guilddata.confirm_kb ? '✅' : '❌'}\n\`${guilddata.prefix}settings confirmkb <'true'/'yes/'false'/'no'>\` to set.`);
+          } else {
+            switch (rawArgs[1]) {
+              case 'true': case 'yes':
+                guilddata.confirm_kb = true;
+                break;
+              
+              case 'false': case 'no':
+                guilddata.confirm_kb = false;
+                break;
+              
+              default:
+                return msg.channel.send(`\`${guilddata.prefix}settings confirmkb <'true'/'yes/'false'/'no'>\` to set.`);
+            }
+            schedulePropsSave();
           }
           break;
         
