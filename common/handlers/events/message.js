@@ -102,7 +102,7 @@ module.exports = async msg => {
   if (msg.guild) {
     // this is the screening for bad words part
     let isadmin = common.isAdmin(msg);
-    let dodelete = false;
+    let dodelete = false, badwordTriggered = false;
     let badwords = props.saved.guilds[msg.guild.id] ? props.saved.guilds[msg.guild.id].basic_automod.bad_words : [];
     let word, content, bypass;
     for (var i = 0; i < badwords.length; i++) {
@@ -113,12 +113,14 @@ module.exports = async msg => {
         bypass = isadmin && word.ignore_admin || word.ignored_roles.some(x => msg.member.roles.cache.has(x));
         if (!bypass) {
           switch (word.type & 3) {
-            case 0: if (content != word.word) break; dodelete = true; break;
-            case 1: if (!content.split(/ +/g).some(x => x == word.word)) break; dodelete = true; break;
-            case 2: if (!content.includes(word.word)) break; dodelete = true; break;
+            case 0: if (content != word.word) break; badwordTriggered = true; break;
+            case 1: if (!content.split(/ +/g).some(x => x == word.word)) break; badwordTriggered = true; break;
+            case 2: if (!content.includes(word.word)) break; badwordTriggered = true; break;
           }
-          if (dodelete) {
+          if (badwordTriggered) {
+            if (!dodelete) dodelete = true;
             if (!isCommand || isCommand && command != 'settings') msg.reply(word.retaliation.replace(/\$\(rcontent\)/g, msg.content.length < 1800 ? common.removePings(util.inspect(msg.content)) : `Error: message length over 1800 characters`));
+            badwordTriggered = false;
           }
         }
       }

@@ -57,6 +57,7 @@ module.exports = [
                 return msg.channel.send(`\`${guilddata.prefix}settings confirmkb <'true'/'yes/'false'/'no'>\` to set.`);
             }
             schedulePropsSave();
+            msg.channel.send(`Confirmation on the kick, ban, and unban commands set to: ${guilddata.confirm_kb ? '✅' : '❌'}`);
           }
           break;
         
