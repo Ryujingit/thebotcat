@@ -1,11 +1,25 @@
 var starttime = new Date(), loadtime, readytime;
 
+var fs = require('fs');
+
+try {
+  fs.readFileSync('.env').toString().split(/\r?\n/g).forEach(entry => {
+    if (entry[0] == '#') return;
+    var split = entry.split(':');
+    var key = split[0].trim();
+    var value = split.slice(1).join(':').trim();
+    process.env[key] = value;
+  });
+} catch (e) {
+  console.error('Error parsing .env, thebotcat will not be able to login');
+  console.error(e);
+}
+
 var exitHandled = 0;
 
 var doWorkers = true;
 
 var https = require('https');
-var fs = require('fs');
 var util = require('util');
 var v8 = require('v8');
 var vm = require('vm');
@@ -55,27 +69,14 @@ if (doWorkers) {
   Object.assign(global, { mathVMContext });
 }
 
-//                 Ryujin                coolguy284
-var developers = ['405091324572991498', '312737536546177025'];
-var confirmdevelopers = [];
-/* format for addlbotperms:
-  addlbotperms : object {
-    <userid> : int (perms) (
-        bits:
-          0 - say
-          1 - say remote
-          2 - getting list of, getting channel for botcat's dms
-          3 - global mute and unmute (only for special guilds)
-      ),
-    ...
-  }
-*/
-var addlbotperms = {};
+try { var developers = JSON.parse(process.env.DEVELOPERS); } catch (e) { var developers = ['405091324572991498','312737536546177025']; }
+try { var confirmdevelopers = JSON.parse(process.env.CONFIRMDEVELOPERS); } catch (e) { var confirmdevelopers = []; }
+try { var addlbotperms = JSON.parse(process.env.ADDLBOTPERMS); } catch (e) { var addlbotperms = {}; }
 
 var mutelist = [];
 
 
-var version = '1.5.8';
+var version = '1.6.0';
 global.updateStatus = async () => {
   let newStatus = props.feat.status ? props.feat.status.replace('{prefix}', defaultprefix).replace('{guilds}', client.guilds.cache.size) : null;
   let currentStatus;
@@ -122,19 +123,6 @@ var props = {
 
 var defaultprefix = props.feat.version == 'normal' ? '!' : '?';
 var universalprefix = props.feat.version == 'normal' ? '!(thebotcat)' : '?(thebotcat)';
-
-try {
-  fs.readFileSync('.env').toString().split(/\r?\n/g).forEach(entry => {
-    if (entry[0] == '#') return;
-    var split = entry.split(':');
-    var key = split[0].trim();
-    var value = split.slice(1).join(':').trim();
-    process.env[key] = value;
-  });
-} catch (e) {
-  console.error('Error parsing .env, thebotcat will not be able to login');
-  console.error(e);
-}
 
 try {
   var persGuildData = (() => {

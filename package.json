@@ -1,6 +1,6 @@
 {
   "name": "Thebotcat",
-  "version": "1.5.8",
+  "version": "1.6.0",
   "description": "Thebotcat is a general purpose, highly configurable discord bot with a focus on administration and fun. (Bot Description: My discord bot just for your server used for administration and to keep your self nice n clean.)",
   "main": "index.js",
   "scripts": {
@@ -10,18 +10,15 @@
   "license": "ISC",
   "dependencies": {
     "@discordjs/opus": "^0.3.3",
-    "discord.js": "^12.5.1",
-    "workerpool": "^6.0.4",
-    "ytdl-core-discord": "^1.2.5"
-  },
-  "optionalDependencies": {
     "bufferutil": "^4.0.2",
+    "discord.js": "^12.5.1",
     "erlpack": "github:discord/erlpack",
     "sodium": "^3.0.2",
     "utf-8-validate": "^5.0.3",
+    "workerpool": "^6.1.2",
+    "ytdl-core-discord": "^1.2.5",
     "zlib-sync": "^0.1.7"
   },
-  "devDependencies": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/thebotcat/thebotcat.git"

@@ -1,3 +1,15 @@
+format for addlbotperms:
+  addlbotperms : object {
+    <userid> : int (perms) (
+        bits:
+          0 - say
+          1 - say remote
+          2 - getting list of, getting channel for botcat's dms
+          3 - global mute and unmute (only for special guilds)
+      ),
+    ...
+  }
+
 command flags property: &1=full string, &2=public, &4=servers, &8=dms
 
 format for content_commands.json:
