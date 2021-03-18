@@ -16,7 +16,7 @@ module.exports = [
           }
         });
       } else {
-        let name = o.argstring[0] == '"' || o.argstring[0] == '\'' ? rawArgs[0] : o.argstring;
+        let name = o.asOneArg;
         let cmdobj = commands.filter(x => x.name == name)[0];
         if (cmdobj && cmdobj.flags & 2) {
           if (cmdobj.description)
@@ -34,10 +34,7 @@ module.exports = [
     description: '`!version` prints the version of my code',
     flags: 14,
     execute(o, msg, rawArgs) {
-      if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(version))
-        return msg.channel.send({ embed: { title: 'Version', description: `Thebotcat is version ${version}` } });
-      else
-        return msg.channel.send(`Thebotcat is version ${version}`);
+      return msg.channel.send(`Thebotcat is version ${version}`, { allowedMentions: { parse: [] } });
     }
   },
   {
@@ -126,15 +123,15 @@ module.exports = [
       let member;
       if (rawArgs.length) {
         if (msg.guild) {
-          let potentialMember = await common.searchMember(msg.guild.members, o.argstring[0] == '"' || o.argstring[0] == '\'' ? rawArgs[0] : o.argstring);
+          let potentialMember = await common.searchMember(msg.guild.members, o.asOneArg);
           if (potentialMember) member = potentialMember;
           else {
-            let user = await common.searchUser(o.argstring[0] == '"' || o.argstring[0] == '\'' ? rawArgs[0] : o.argstring);
+            let user = await common.searchUser(o.asOneArg);
             if (user) member = { user, displayHexColor: '#000000' };
             else return msg.channel.send('User not found.');
           }
         } else {
-          let user = await common.searchUser(o.argstring[0] == '"' || o.argstring[0] == '\'' ? rawArgs[0] : o.argstring);
+          let user = await common.searchUser(o.asOneArg);
           if (user) member = { user: user, displayHexColor: '#000000' };
           else return msg.channel.send('User not found.');
         }
@@ -198,15 +195,15 @@ module.exports = [
       let user;
       if (rawArgs.length) {
         if (msg.guild) {
-          let member = await common.searchMember(msg.guild.members, o.argstring[0] == '"' || o.argstring[0] == '\'' ? rawArgs[0] : o.argstring);
+          let member = await common.searchMember(msg.guild.members, o.asOneArg);
           if (member) user = member.user;
           else {
-            let potentialUser = await common.searchUser(o.argstring[0] == '"' || o.argstring[0] == '\'' ? rawArgs[0] : o.argstring);
+            let potentialUser = await common.searchUser(o.asOneArg);
             if (potentialUser) user = potentialUser;
             else return msg.channel.send('User not found.');
           }
         } else {
-          let potentialUser = await common.searchUser(o.argstring[0] == '"' || o.argstring[0] == '\'' ? rawArgs[0] : o.argstring);
+          let potentialUser = await common.searchUser(o.asOneArg);
           if (potentialUser) user = potentialUser;
           else return msg.channel.send('User not found.');
         }
@@ -252,7 +249,7 @@ module.exports = [
     async execute(o, msg, rawArgs) {
       let member;
       if (rawArgs.length) {
-        member = await common.searchMember(msg.guild.members, o.argstring[0] == '"' || o.argstring[0] == '\'' ? rawArgs[0] : o.argstring);
+        member = await common.searchMember(msg.guild.members, o.asOneArg);
         if (!member) return msg.channel.send('Member not found in guild.');
       } else member = msg.member;
       

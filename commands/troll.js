@@ -4,6 +4,7 @@ module.exports = [
     description: '`!@_everyone members [hidden]` pings everyone ... the manual way\n`!@_everyone roles [hidden]` to ping all roles instead',
     flags: 4,
     execute(o, msg, rawArgs) {
+      if (!persGuildData.special_guilds_set.has(msg.guild.id)) return;
       if (!common.isAdmin(msg)) return;
       if (rawArgs[1]) {
         if (rawArgs[0] == 'roles') {

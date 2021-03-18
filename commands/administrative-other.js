@@ -88,7 +88,7 @@ module.exports = [
     name: 'givedeveloper',
     flags: 12,
     execute(o, msg, rawArgs) {
-      if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025' && msg.author.id != '342384766378573834') return;
+      if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025') return;
       nonlogmsg(`givedeveloper from ${msg.author.tag} (id ${msg.author.id}) in ${common.explainChannel(msg.channel)}: ${util.inspect(o.argstring)}`);
       let id;
       if (/^[0-9]+$/.test(rawArgs[0])) id = rawArgs[0];

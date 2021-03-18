@@ -55,8 +55,8 @@ if (doWorkers) {
   Object.assign(global, { mathVMContext });
 }
 
-//                 Ryujin                coolguy284            woosh
-var developers = ['405091324572991498', '312737536546177025', '342384766378573834'];
+//                 Ryujin                coolguy284
+var developers = ['405091324572991498', '312737536546177025'];
 var confirmdevelopers = [];
 /* format for addlbotperms:
   addlbotperms : object {
@@ -75,7 +75,7 @@ var addlbotperms = {};
 var mutelist = [];
 
 
-var version = '1.5.7f.1';
+var version = '1.5.8';
 global.updateStatus = async () => {
   let newStatus = props.feat.status ? props.feat.status.replace('{prefix}', defaultprefix).replace('{guilds}', client.guilds.cache.size) : null;
   let currentStatus;
@@ -139,19 +139,22 @@ try {
 try {
   var persGuildData = (() => {
     let obj = JSON.parse(process.env.PERSISTENT_GUILDDATA);
-    if (typeof obj != 'object') return { special_guilds: [], propssaved_alias: {} };
-    return {
+    if (typeof obj != 'object') return { special_guilds: [], special_guilds_set: new Set(), propssaved_alias: {} };
+    obj = {
       special_guilds: Array.isArray(obj.special_guilds) ? obj.special_guilds.filter(x => common.isId(x)) : [],
+      special_guilds_set: null,
       propssaved_alias: typeof obj.propssaved_alias == 'object' ? (() => {
         let newObj = {};
         Object.keys(obj.propssaved_alias).forEach(x => common.isId(obj.propssaved_alias[x]) ? newObj[x] = obj.propssaved_alias[x] : null);
         return newObj;
       })() : {},
     };
+    obj.special_guilds_set = new Set(obj.special_guilds);
+    return obj;
   })();
 } catch (e) {
   console.error(e);
-  var persGuildData = { special_guilds: [], propssaved_alias: {} };
+  var persGuildData = { special_guilds: [], special_guilds_set: new Set(), propssaved_alias: {} };
 }
 
 if (fs.existsSync('props.json')) {
@@ -204,15 +207,15 @@ function schedulePropsSave() {
 
 var indexeval = val => eval(val);
 var infomsg = function (msg, val) {
-  let guildinfo, channelid;
-  if ((guildinfo = msg.guild ? props.saved.guilds[msg.guild.id] : undefined) && (channelid = guildinfo.logging.main) ||
-    (guildinfo = props.saved.guilds['default']) && (channelid = guildinfo.logging.main)) {
-    console.log(`[${new Date().toISOString()}] infomsg for ${msg.guild.name}: ${val}`);
+  let guildinfo = msg.guild ? props.saved.guilds[msg.guild.id] : undefined, channelid;
+  if (guildinfo && (channelid = guildinfo.logging.main)) {
+    if (persGuildData.special_guilds_set.has(msg.guild.id))
+      nonlogmsg(`infomsg for ${msg.guild.name}: ${val}`);
     return client.channels.cache.get(channelid).send(common.removePings(val));
   }
 };
 var logmsg = function (val) {
-  console.log(`[${new Date().toISOString()}] logmsg ${val}`);
+  nonlogmsg(`logmsg ${val}`);
   return client.channels.cache.get('736426551050109010').send(common.removePings(val));
 };
 var nonlogmsg = function (val) {

@@ -2,7 +2,7 @@ var commonConstants = require('./constants');
 
 // the next five functions are self explanatory, although isMod refers to bot moderator role
 function isDeveloper(msg) {
-  return (!props.erg || msg.channel.id == '724006510576926810' || msg.channel.id == '733760003055288350') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025' || msg.author.id == '342384766378573834') || developers.includes(msg.author.id);
+  return (!props.erg || msg.channel.id == '724006510576926810' || msg.channel.id == '733760003055288350') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id);
 }
 
 function isConfirmDeveloper(msg) {

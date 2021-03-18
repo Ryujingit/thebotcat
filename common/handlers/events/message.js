@@ -37,7 +37,7 @@ module.exports = async msg => {
   
   if (msg.guild && props.saved.disallowed_guilds.includes(msg.guild.id)) return;
   
-  if (msg.guild && persGuildData.special_guilds.includes(msg.guild.id) && mutelist.includes(msg.author.id))
+  if (msg.guild && persGuildData.special_guilds_set.has(msg.guild.id) && mutelist.includes(msg.author.id))
     msg.delete();
   
   if (!msg.guild) {
@@ -89,9 +89,9 @@ module.exports = async msg => {
         commands[i].flags & 2 && (command != 'settings' &&
           props.saved.guilds[msg.guild.id] && (
             !props.saved.guilds[msg.guild.id].enabled_commands.global ||
-            !props.saved.guilds[msg.guild.id].enabled_commands.categories[commands[i].category] ||
-            !props.saved.guilds[msg.guild.id].enabled_commands.commands[command])) ||
-        !(commands[i].flags & 2) && !persGuildData.special_guilds.includes(msg.guild.id))) continue;
+            props.saved.guilds[msg.guild.id].enabled_commands.categories[commands[i].category] == false ||
+            props.saved.guilds[msg.guild.id].enabled_commands.commands[command] == false)) ||
+        !(commands[i].flags & 2) && !persGuildData.special_guilds_set.has(msg.guild.id))) continue;
       argstring = cmdstring.slice(command.length).trim();
       ({ rawArgs, args, kwargs } = common.parseArgs(argstring));
       isCommand = 2 + i;
@@ -126,7 +126,7 @@ module.exports = async msg => {
       }
     }
     if (dodelete) {
-      if (msg.content.toLowerCase() != 'heck' || !persGuildData.special_guilds.includes(msg.guild.id))
+      if (msg.content.toLowerCase() != 'heck' || !persGuildData.special_guilds_set.has(msg.guild.id))
         infomsg(msg, `user ${msg.author.tag} (id ${msg.author.id}) said ${util.inspect(msg.content)} in channel <#${msg.channel.id}> (id ${msg.channel.id})`);
       else
         logmsg(`user ${msg.author.tag} (id ${msg.author.id}) said ${util.inspect(msg.content)} in channel <#${msg.channel.id}> (id ${msg.channel.id})`);
@@ -140,21 +140,16 @@ module.exports = async msg => {
   
   if (isCommand >= 2) {
     try {
-      let cmd = commands[isCommand - 2];
-      if (cmd.constructor == Function) return cmd.execute({ msg, cmdstring, command, argstring, rawArgs, args, kwargs, command: cmd }, msg, rawArgs);
-      else return await cmd.execute({ msg, cmdstring, command, argstring, rawArgs, args, kwargs, command: cmd }, msg, rawArgs);
+      let commandObject = commands[isCommand - 2];
+      let o = { msg, cmdstring, command, argstring, rawArgs, args, kwargs, commandObject };
+      
+      Object.defineProperty(o, 'asOneArg', { configurable: true, enumerable: true, get: common.onMsgOneArgHelper.bind(null, o) });
+      
+      if (commandObject.constructor == Function) return commandObject.execute(o, msg, rawArgs);
+      else return await commandObject.execute(o, msg, rawArgs);
     } catch (e) {
       if (e instanceof common.BotError) {
-        if (/@everyone|@here|<@(?:!?|&?)[0-9]+>/g.test(e.message)) {
-          return msg.channel.send({
-            embed: {
-              title: 'Error',
-              description: `Error: ${e.message}`,
-            }
-          });
-        } else {
-          return msg.channel.send(`Error: ${e.message}`);
-        }
+        return msg.channel.send(`Error: ${e.message}`, { allowedMentions: { parse: [] } });
       } else throw e;
     }
   }
