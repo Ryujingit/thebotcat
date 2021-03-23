@@ -2,7 +2,7 @@ module.exports = [
   {
     name: 'play',
     description: '`!play <url>` to play the audio of a youtube url, like every other music bot in existence',
-    flags: 6,
+    flags: 0b010110,
     async execute(o, msg, rawArgs) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
@@ -19,12 +19,12 @@ module.exports = [
       let text = `${latestObj.desc} (${common.msecToHMS(Number(latestObj.expectedLength))}) added to queue`;
       msg.channel.send(text, { allowedMentions: { parse: [] } });
       return common.clientVCManager.startMainLoop(guilddata.voice, msg.channel);
-    }
+    },
   },
   {
     name: 'pause',
     description: '`!pause` pauses the currently playing song',
-    flags: 6,
+    flags: 0b010110,
     execute(o, msg, rawArgs) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
@@ -42,12 +42,12 @@ module.exports = [
         return msg.channel.send('Only admins and mods can pause / resume / stop, or someone who is alone with me in a voice channel.');
       common.clientVCManager.pause(guilddata.voice);
       return msg.channel.send(`Paused`);
-    }
+    },
   },
   {
     name: 'resume',
     description: '`!resume` resumes the currently paused song',
-    flags: 6,
+    flags: 0b010110,
     execute(o, msg, rawArgs) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
@@ -65,12 +65,12 @@ module.exports = [
         return msg.channel.send('Only admins and mods can pause / resume / stop, or someone who is alone with me in a voice channel.');
       common.clientVCManager.resume(guilddata.voice);
       return msg.channel.send(`Resumed`);
-    }
+    },
   },
   {
     name: 'volume',
     description: '`!volume <float>` sets my volume in a vc, with 1 being the normal volume',
-    flags: 6,
+    flags: 0b010110,
     execute(o, msg, rawArgs) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
@@ -94,12 +94,12 @@ module.exports = [
         common.clientVCManager.setVolume(guilddata.voice, wantedvolume);
         return msg.channel.send(`Set playback volume to ${wantedvolume}`);
       }
-    }
+    },
   },
   {
     name: 'loop',
     description: '`!loop` toggles whether the currently playing song will loop',
-    flags: 6,
+    flags: 0b010110,
     execute(o, msg, rawArgs) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
@@ -116,12 +116,12 @@ module.exports = [
         return msg.channel.send('Only admins and mods can toggle loop, or someone who is alone with me in a voice channel.');
       common.clientVCManager.toggleLoop(guilddata.voice);
       return msg.channel.send(`Toggled loop to ${guilddata.voice.loop ? 'enabled' : 'disabled'}`);
-    }
+    },
   },
   {
     name: 'loopqueue',
     description: '`!loopqueue` toggles whether the entire queue will loop, meaning that when a song finishes playing it is added to the end of the queue',
-    flags: 6,
+    flags: 0b010110,
     execute(o, msg, rawArgs) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
@@ -138,12 +138,12 @@ module.exports = [
         return msg.channel.send('Only admins and mods can toggle queue loop, or someone who is alone with me in a voice channel.');
       common.clientVCManager.toggleQueueLoop(guilddata.voice);
       return msg.channel.send(`Toggled queue loop to ${guilddata.voice.loop ? 'enabled' : 'disabled'}`);
-    }
+    },
   },
   {
     name: 'forceskip',
     description: '`!forceskip` skips the currently playing song',
-    flags: 6,
+    flags: 0b010110,
     execute(o, msg, rawArgs) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
@@ -160,12 +160,12 @@ module.exports = [
         return msg.channel.send('Only admins and mods can forceskip, or someone who is alone with me in a voice channel.');
       common.clientVCManager.forceSkip(guilddata.voice);
       return msg.channel.send(`Skipped`);
-    }
+    },
   },
   {
     name: 'stop',
     description: '`!stop` clears the song list and stops playing',
-    flags: 6,
+    flags: 0b010110,
     execute(o, msg, rawArgs) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
@@ -183,12 +183,12 @@ module.exports = [
         return msg.channel.send('Only admins and mods can pause / resume / stop, or someone who is alone with me in a voice channel.');
       common.clientVCManager.stopMainLoop(guilddata.voice);
       return msg.channel.send(`Stopped`);
-    }
+    },
   },
   {
     name: 'songslist',
     description: '`!songslist` to list the currently playing song and the next songs',
-    flags: 6,
+    flags: 0b010110,
     execute(o, msg, rawArgs) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
@@ -203,12 +203,12 @@ module.exports = [
         `Queue${songslist.length > 1 ? ':\n' + songslist.slice(1).map((x, i) => (i + 1) + '. ' + x.desc + ' (' + common.msecToHMS(x.expectedLength) + (x.userid ? ', requested by ' + (msg.guild.members.cache.get(x.userid) ? msg.guild.members.cache.get(x.userid).user.tag : 'null') + ', id ' + x.userid : '') + ')').join('\n') : ' empty'}\n` +
         `Status: ${guilddata.voice.dispatcher ? (guilddata.voice.dispatcher.paused ? 'Paused' : 'Playing') : ['Stopped', 'Running', 'Pending Skip', 'Pending Stop'][guilddata.voice.mainloop]}, Volume: ${guilddata.voice.volume}, Loop: ${guilddata.voice.loop ? '✅' : '❌'}, Queue Loop: ${guilddata.voice.queueloop ? '✅' : '❌'}, Self Muted: ${guilddata.voice.connection.voice.selfMute ? '✅' : '❌'}, Self Deafened: ${guilddata.voice.connection.voice.selfDeaf ? '✅' : '❌'}`;
       return msg.channel.send(text, { allowedMentions: { parse: [] } });
-    }
+    },
   },
   {
     name: 'currentsong',
     description: '`!currentsong` to list the currently playing song',
-    flags: 6,
+    flags: 0b010110,
     execute(o, msg, rawArgs) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
@@ -222,6 +222,6 @@ module.exports = [
         (guilddata.voice.dispatcher ? `Time: ${guilddata.voice.dispatcher && songslist.length ? common.formatPlaybackBar(guilddata.voice.dispatcher.streamTime / songslist[0].expectedLength) : '---'} (${guilddata.voice.dispatcher ? common.msecToHMS(guilddata.voice.dispatcher.streamTime) : '-:--.---'} / ${songslist.length ? common.msecToHMS(songslist[0].expectedLength) : '-:--.---'})\n` : '') +
         `Status: ${guilddata.voice.dispatcher ? (guilddata.voice.dispatcher.paused ? 'Paused' : 'Playing') : ['Stopped', 'Running', 'Pending Skip', 'Pending Stop'][guilddata.voice.mainloop]}, Volume: ${guilddata.voice.volume}, Loop: ${guilddata.voice.loop ? '✅' : '❌'}, Queue Loop: ${guilddata.voice.queueloop ? '✅' : '❌'}, Self Muted: ${guilddata.voice.connection.voice.selfMute ? '✅' : '❌'}, Self Deafened: ${guilddata.voice.connection.voice.selfDeaf ? '✅' : '❌'}`;
       return msg.channel.send(text, { allowedMentions: { parse: [] } });
-    }
+    },
   },
 ];

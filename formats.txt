@@ -10,7 +10,7 @@ format for addlbotperms:
     ...
   }
 
-command flags property: &1=full string, &2=public, &4=servers, &8=dms
+command flags property: &1=full string, &2=public, &4=servers, &8=dms, &16=text, &32=slash
 
 format for content_commands.json:
   content_commands : object {

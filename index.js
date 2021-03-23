@@ -76,7 +76,7 @@ try { var addlbotperms = JSON.parse(process.env.ADDLBOTPERMS); } catch (e) { var
 var mutelist = [];
 
 
-var version = '1.6.0';
+var version = require('./package.json').version;
 global.updateStatus = async () => {
   let newStatus = props.feat.status ? props.feat.status.replace('{prefix}', defaultprefix).replace('{guilds}', client.guilds.cache.size) : null;
   let currentStatus;
@@ -94,7 +94,7 @@ global.updateStatus = async () => {
   }
 };
 
-var commands = [], commandCategories = ['Information', 'Administrative', 'Interactive', 'Voice Channel', 'Music', 'Content', 'Troll'];
+var commands = [], commandColl = new Discord.Collection(), commandCategories = ['Information', 'Administrative', 'Interactive', 'Voice Channel', 'Music', 'Content', 'Troll'];
 
 var procs = [];
 
@@ -210,7 +210,7 @@ var nonlogmsg = function (val) {
   console.log(`[${new Date().toISOString()}] ${val}`);
 };
 
-Object.assign(global, { https, fs, util, v8, vm, cp, stream, Discord, ytdl, common, math, client, developers, confirmdevelopers, addlbotperms, mutelist, commands, commandCategories, persGuildData, procs, props, propsSave, schedulePropsSave, indexeval, infomsg, logmsg, nonlogmsg, addBadWord, removeBadWord, addCommand, addCommands, removeCommand, removeCommands, getCommandsCategorized });
+Object.assign(global, { https, fs, util, v8, vm, cp, stream, Discord, ytdl, common, math, client, developers, confirmdevelopers, addlbotperms, mutelist, commands, commandColl, commandCategories, persGuildData, procs, props, propsSave, schedulePropsSave, indexeval, infomsg, logmsg, nonlogmsg, addCommand, addCommands, removeCommand, removeCommands, getCommandsCategorized, updateSlashCommands, deleteSlashCommands });
 Object.defineProperties(global, {
   exitHandled: { configurable: true, enumerable: true, get: () => exitHandled, set: val => exitHandled = val },
   starttime: { configurable: true, enumerable: true, get: () => starttime, set: val => starttime = val },
@@ -227,46 +227,51 @@ Object.defineProperties(global, {
 });
 
 
-function addBadWord(word, msgreply) { badwords.push([word.toLowerCase(), msgreply]); }
-function removeBadWord(word) { badwords.splice(badwords.map(x => x[0]).indexOf(word), 1); }
-
 function addCommand(cmd, category) {
-  if (category)
-    commands.push({ category, ...cmd });
-  else
+  if (category) {
+    cmd = { category, ...cmd };
     commands.push(cmd);
+    commandColl.set(cmd.name, cmd);
+  } else {
+    commands.push(cmd);
+    commandColl.set(cmd.name, cmd);
+  }
 }
 function addCommands(cmds, category) {
-  if (category)
-    commands.push(...cmds.map(x => ({ category, ...x })));
-  else
-    commands.push(...cmds);
+  cmds.forEach(x => addCommand(x, category));
 }
 function removeCommand(cmd) {
   var index;
   while ((index = commands.indexOf(cmd)) != -1)
     commands.splice(index, 1);
+  commandColl.delete(cmd.name);
 }
 function removeCommands(cmds) {
   var index, cmd;
-  for (var i = 0; i < cmds.length; i++) {
-    cmd = cmds[i];
-    while ((index = commands.indexOf(cmd)) != -1)
-      commands.splice(index, 1);
-  }
+  cmds.forEach(x => removeCommand(x));
 }
-function getCommandsCategorized(guilddata) {
+function getCommandsCategorized(guilddata, slashContext) {
   let commandsList;
   if (guilddata == null) {
-    commandsList = commands.filter(x => x.flags & 2);
+    commandsList = commands.filter(x => x.flags & 0b000010);
   } else if (!guilddata) {
-    commandsList = commands.filter(x => (x.flags & 10) == 10);
+    if (slashContext)
+      commandsList = commands.filter(x => (x.flags & 0b100010) == 0b100010);
+    else
+      commandsList = commands.filter(x => (x.flags & 0b011010) == 0b011010);
   } else {
-    commandsList = commands.filter(x =>
-      x.flags & 2 && !(x.name != 'settings' &&
-        (!guilddata.enabled_commands.global ||
-        guilddata.enabled_commands.categories[x.category] == false ||
-        guilddata.enabled_commands.commands[x.name] == false)));
+    if (slashContext)
+      commandsList = commands.filter(x =>
+        (x.flags & 0b100010) == 0b100010 && !(x.name != 'settings' &&
+          (!guilddata.enabled_commands.global ||
+          guilddata.enabled_commands.categories[x.category] == false ||
+          guilddata.enabled_commands.commands[x.name] == false)));
+    else
+      commandsList = commands.filter(x =>
+        (x.flags & 0b010110) == 0b010110 && !(x.name != 'settings' &&
+          (!guilddata.enabled_commands.global ||
+          guilddata.enabled_commands.categories[x.category] == false ||
+          guilddata.enabled_commands.commands[x.name] == false)));
   }
   let commandsCategorized = { Uncategorized: [] };
   commandsList.forEach(x =>
@@ -279,6 +284,68 @@ function getCommandsCategorized(guilddata) {
   );
   if (commandsCategorized.Uncategorized.length == 0) delete commandsCategorized.Uncategorized;
   return [commandsList, commandsCategorized];
+}
+
+async function updateSlashCommands(endpoint) {
+  nonlogmsg(`Updating slash commands`);
+  
+  var currCmds = await endpoint.get();
+  var currCmdsObj = {};
+  currCmds.forEach(x => currCmdsObj[x.name] = x);
+  
+  var commandsToDelete = currCmds.map(x => x.name).filter(x => !commandColl.has(x) || (commandColl.get(x).flags & 0b100010) != 0b100010);
+  var commandsToUpdate = currCmds.map(x => x.name).filter(x => {
+    if (!commandColl.has(x) || (commandColl.get(x).flags & 0b100010) ^ 0b100010) return false;
+    let obj = commandColl.get(x);
+    obj = {
+      description: obj.description_slash || obj.description,
+      options: obj.options,
+    };
+    return currCmdsObj[x].description != obj.description ||
+      (currCmdsObj[x].options || []).length < (obj.options || []).length ||
+      (currCmdsObj[x].options || []).some((y, i) => {
+        return y.type != obj.options[i].type ||
+          y.name != obj.options[i].name ||
+          y.description != obj.options[i].description ||
+          y.required != obj.options[i].required;
+      });
+  });
+  var commandsToAdd = commands.map(x => x.name).filter(x => !(x in currCmdsObj) && (commandColl.get(x).flags & 0b100010) == 0b100010);
+  
+  var commandsToUpsert = [ ...commandsToUpdate, ...commandsToAdd ];
+  
+  for (var i = 0; i < commandsToDelete.length; i++) {
+    nonlogmsg(`Deleting ${commandsToDelete[i]}`);
+    await endpoint(currCmdsObj[commandsToDelete[i]].id).delete();
+    await new Promise(r => setTimeout(r, 1000));
+  }
+  
+  for (var i = 0; i < commandsToUpsert.length; i++) {
+    nonlogmsg(`Upserting ${commandsToUpsert[i]}`);
+    let obj = commandColl.get(commandsToUpsert[i]);
+    obj = {
+      name: obj.name,
+      description: obj.description_slash || obj.description,
+      options: obj.options,
+    };
+    await endpoint.post({ data: obj });
+    await new Promise(r => setTimeout(r, 1000));
+  }
+  
+  nonlogmsg(`Done updating slash commands`);
+}
+async function deleteSlashCommands(endpoint) {
+  nonlogmsg(`Deleting slash commands`);
+  
+  var currCmds = await endpoint.get();
+  
+  for (var i = 0; i < currCmds.length; i++) {
+    nonlogmsg(`Deleting ${currCmds[i].name}`);
+    await endpoint(currCmds[i].id).delete();
+    await new Promise(r => setTimeout(r, 1000));
+  }
+  
+  nonlogmsg(`Done deleting slash commands`);
 }
 
 addCommands(require('./commands/information.js'), 'Information');
@@ -345,6 +412,11 @@ client.on('ready', () => {
   
   updateStatus();
   
+  /*deleteSlashCommands(client.api.applications(client.user.id).guilds('688806155530534931').commands)
+    .then(_ => updateSlashCommands(client.api.applications(client.user.id).commands);*/
+  //deleteSlashCommands(client.api.applications(client.user.id).guilds('688806155530534931').commands);
+  updateSlashCommands(client.api.applications(client.user.id).commands);
+  
   readytime = new Date();
   
   if (props.feat.loaddms) props.saved.misc.dmchannels.forEach(x => client.channels.fetch(x));
@@ -382,6 +454,18 @@ client.on('disconnect', () => {
       console.error(e.stack);
     }
   });
+});
+
+client.ws.on('INTERACTION_CREATE', async (...args) => {
+  try {
+    if (handlers.event['INTERACTION_CREATE']) {
+      if (handlers.event['INTERACTION_CREATE'].constructor == Function) handlers.event['INTERACTION_CREATE'](...args);
+      else await handlers.event['INTERACTION_CREATE'](...args);
+    }
+  } catch (e) {
+    console.error('ERROR, something bad happened');
+    console.error(e.stack);
+  }
 });
 
 

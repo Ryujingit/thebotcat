@@ -82,7 +82,7 @@ module.exports = async msg => {
   if (isCommand) {
     for (var i = 0; i < commands.length; i++) {
       command = commands[i].name;
-      if (!(msg.guild && commands[i].flags & 4 || !msg.guild && commands[i].flags & 8)) continue;
+      if (!(msg.guild && commands[i].flags & 4 || !msg.guild && commands[i].flags & 8) || !(commands[i].flags & 16)) continue;
       if (!(commands[i].flags & 1 && command == cmdstring || !(commands[i].flags & 1) && cmdstring.startsWith(command))) continue;
       if (cmdstring[command.length] != ' ' && cmdstring[command.length] != '\n' && cmdstring.length > command.length) continue;
       if (msg.guild && (

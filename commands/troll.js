@@ -2,7 +2,7 @@ module.exports = [
   {
     name: '@_everyone',
     description: '`!@_everyone members [hidden]` pings everyone ... the manual way\n`!@_everyone roles [hidden]` to ping all roles instead',
-    flags: 4,
+    flags: 0b010100,
     execute(o, msg, rawArgs) {
       if (!persGuildData.special_guilds_set.has(msg.guild.id)) return;
       if (!common.isAdmin(msg)) return;
@@ -43,17 +43,17 @@ module.exports = [
           return Promise.allSettled(promises);
         }
       }
-    }
+    },
   },
   {
     name: '@someone',
     description: '`!@someone` pings a random person on the server',
-    flags: 6,
+    flags: 0b010110,
     execute(o, msg, rawArgs) {
       if (!(common.isAdmin(msg) || msg.guild.id == '717268211246301236')) return;
       let members = msg.guild.members.cache.array().filter(x => !x.user.bot);
       let random_member = members[Math.floor(Math.random() * members.length)];
       return msg.channel.send(`Random ping: <@!${random_member.user.id}>`);
-    }
+    },
   },
 ];

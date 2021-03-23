@@ -2,7 +2,9 @@ module.exports = [
   {
     name: 'help',
     description: '`!help` to list my commands\n`!help <command>` to print help for command',
-    flags: 14,
+    description_slash: 'help on commands',
+    options: [ { type: 3, name: 'command', description: 'the command' } ],
+    flags: 0b111110,
     execute(o, msg, rawArgs) {
       if (rawArgs.length == 0 || rawArgs[0] == 'all') {
         let [commandsList, commandsCategorized] = getCommandsCategorized(rawArgs[0] == 'all' ? null : msg.guild ? props.saved.guilds[msg.guild.id] : false);
@@ -27,44 +29,100 @@ module.exports = [
           return msg.channel.send(`Command ${name} does not exist.`);
         }
       }
-    }
+    },
+    execute_slash(o, interaction, command, args) {
+      if (args.length == 0 || args[0].value == 'all') {
+        let [commandsList, commandsCategorized] = getCommandsCategorized(args[0] && args[0].value == 'all' ? null : o.guild ? props.saved.guilds[o.guild.id] : false);
+        return client.api.interactions(interaction.id, interaction.token).callback.post({ data: {
+            type: 3,
+            data: {
+              embeds: [{
+                title: `Commands (${commandsList.length})`,
+                description: 'Run `!help <command>` for help on a specific command.',
+                fields: Object.keys(commandsCategorized).map(
+                  x => ({ name: `${x} (${commandsCategorized[x].length})`, value: commandsCategorized[x].map(y => `\`${y.name}\``).join(', ') || 'None', inline: false })
+                ),
+              }],
+              flags: 64,
+              allowed_mentions: { parse: [] },
+            },
+          } });
+      } else {
+        let name = args[0].value;
+        let cmdobj = commands.filter(x => x.name == name)[0];
+        if (cmdobj && cmdobj.flags & 2) {
+          if (cmdobj.description)
+            return client.api.interactions(interaction.id, interaction.token).callback.post({ data: {
+              type: 3,
+              data: { content: cmdobj.description, flags: 64, allowed_mentions: { parse: [] } },
+            } });
+          else
+            return client.api.interactions(interaction.id, interaction.token).callback.post({ data: {
+              type: 3,
+              data: { content: `Command ${name} has no description.`, flags: 64, allowed_mentions: { parse: [] } },
+            } });
+        } else {
+          return client.api.interactions(interaction.id, interaction.token).callback.post({ data: {
+            type: 3,
+            data: { content: `Command ${name} does not exist.`, flags: 64, allowed_mentions: { parse: [] } },
+          } });
+        }
+      }
+    },
   },
   {
     name: 'version',
     description: '`!version` prints the version of my code',
-    flags: 14,
+    description_slash: 'prints my version',
+    flags: 0b111110,
     execute(o, msg, rawArgs) {
       return msg.channel.send(`Thebotcat is version ${version}`, { allowedMentions: { parse: [] } });
-    }
+    },
+    execute_slash(o, interaction, command, args) {
+      client.api.interactions(interaction.id, interaction.token).callback.post({ data: {
+        type: 3,
+        data: { content: `Thebotcat is version ${version}`, flags: 64, allowed_mentions: { parse: [] } },
+      } });
+    },
   },
   {
     name: 'uptime',
     description: '`!uptime` to see my uptime',
-    flags: 14,
+    description_slash: 'prints my uptime',
+    flags: 0b111110,
     execute(o, msg, rawArgs) {
       msg.channel.send(common.getBotcatUptimeMessage());
-    }
+    },
+    execute_slash(o, interaction, command, args) {
+      client.api.interactions(interaction.id, interaction.token).callback.post({ data: {
+        type: 3,
+        data: { embeds: [common.getBotcatUptimeMessage().embed], flags: 64 },
+      } });
+    },
   },
   {
     name: 'status',
     description: '`!status` to see my status',
-    flags: 14,
+    description_slash: 'prints my status',
+    flags: 0b111110,
     execute(o, msg, rawArgs) {
       msg.channel.send(common.getBotcatStatusMessage());
-    }
+    },
   },
   {
     name: 'fullstatus',
     description: '`!fullstatus` to see my full status',
-    flags: 14,
+    description_slash: 'prints my fullstatus',
+    flags: 0b111110,
     execute(o, msg, rawArgs) {
       msg.channel.send(common.getBotcatFullStatusMessage());
-    }
+    },
   },
   {
     name: 'ping',
     description: '`!ping` checks my ping in the websocket, to the web, and discord',
-    flags: 14,
+    description_slash: 'prints my ping',
+    flags: 0b111110,
     execute(o, msg, rawArgs) {
       return new Promise((resolve, reject) => {
         msg.channel.send('Checking Ping').then(m => {
@@ -81,44 +139,49 @@ module.exports = [
           });
         });
       });
-    }
+    },
   },
   {
     name: 'discord',
     description: '`!discord` for a link to my Discord Server',
-    flags: 14,
+    description_slash: 'sends a link to my support server',
+    flags: 0b111110,
     execute(o, msg, rawArgs) {
       var discord = new Discord.MessageEmbed()
         .setTitle('This is my discord support server if you wanna join click the link! https://discord.gg/NamrBZc')
         .setFooter('Server for thebotcat discord bot come along and say hi!');
       return msg.channel.send(discord);
-    }
+    },
   },
   {
     name: 'github',
     description: '`!github` for a link to my GitHub repo',
-    flags: 14,
+    description_slash: 'sends a link to my github repo url',
+    flags: 0b111110,
     execute(o, msg, rawArgs) {
       var discord = new Discord.MessageEmbed()
         .setTitle('This is my github repository (its completely open source)!\nhttps://github.com/thebotcat/thebotcat')
         .setFooter('Star our GitHub repo! (If you like the code of course)\n\nAnd when they clicked "make public" they felt an evil leave their presence.');
       return msg.channel.send(discord);
-    }
+    },
   },
   {
     name: 'invite',
     description: '`!invite` for my invite link',
-    flags: 14,
+    description_slash: 'sends my server invite link',
+    flags: 0b111110,
     execute(o, msg, rawArgs) {
       var discord = new Discord.MessageEmbed()
         .setTitle('My invite link, to add me to any server!\nhttps://discord.com/api/oauth2/authorize?client_id=682719630967439378&permissions=1379265775&scope=bot');
       return msg.channel.send(discord);
-    }
+    },
   },
   {
     name: 'avatar',
     description: '`!avatar` displays your avatar\n`!avatar @someone` displays someone\'s avatar',
-    flags: 14,
+    description_slash: 'displays someone\'s avatar or yours if a user isn\'t provided',
+    flags: 0b111110,
+    options: [ { type: 6, name: 'user', description: 'a user to display the avatar of' } ],
     async execute(o, msg, rawArgs) {
       let member;
       if (rawArgs.length) {
@@ -185,12 +248,14 @@ module.exports = [
       }
       
       return msg.channel.send(avatarEmbed);
-    }
+    },
   },
   {
     name: 'userinfo',
-    description: '`!userinfo`',
-    flags: 14,
+    description: '`!userinfo [@someone]` to display information about a user',
+    description_slash: 'displays information about a user or you if a user isn\'t provided',
+    flags: 0b111110,
+    options: [ { type: 6, name: 'user', description: 'a user to display information about' } ],
     async execute(o, msg, rawArgs) {
       let user;
       if (rawArgs.length) {
@@ -240,12 +305,14 @@ module.exports = [
           ],
         }
       });
-    }
+    },
   },
   {
     name: 'memberinfo',
-    description: '`!memberinfo`',
-    flags: 6,
+    description: '`!memberinfo [@someone]` to display information about a user',
+    description_slash: 'displays information about a member or you if a member isn\'t provided',
+    flags: 0b110110,
+    options: [ { type: 6, name: 'member', description: 'a member to display information about' } ],
     async execute(o, msg, rawArgs) {
       let member;
       if (rawArgs.length) {
@@ -269,12 +336,13 @@ module.exports = [
           ],
         }
       });
-    }
+    },
   },
   {
     name: 'serverinfo',
-    description: '`!serverinfo`',
-    flags: 6,
+    description: '`!serverinfo` to view information about the current server',
+    description_slash: 'displays information about the current server',
+    flags: 0b110110,
     execute(o, msg, rawArgs) {
       let guild = msg.guild;
       
@@ -324,12 +392,14 @@ module.exports = [
             ],
           }
         });
-    }
+    },
   },
   {
     name: 'firstmsg',
     description: '`!firstmsg` for a link to the first message in this channel\n`!firstmsg #channel` for a link to the first message in #channel',
-    flags: 14,
+    description_slash: 'sends a link to the first message in this channel or a certain channel',
+    flags: 0b111110,
+    options: [ { type: 7, name: 'channel', description: 'the channel' } ],
     async execute(o, msg, rawArgs) {
       let channel;
       if (rawArgs.length == 0) {
@@ -343,12 +413,14 @@ module.exports = [
         return msg.channel.send(`First message in <#${channel.id}>: https://discord.com/channels/${msg.guild.id}/${msg.channel.id}/${msgs[0].id}`);
       else
         return msg.channel.send(`<#${channel.id}> has no messages`);
-    }
+    },
   },
   {
     name: 'dateid',
-    description: '`!dateid <id>` to get the UTC date/time of an ID in discord',
-    flags: 14,
+    description: '`!dateid <id>` to get the UTC date and time of an ID in discord',
+    description_slash: 'prints the UTC date and time of an ID in discord',
+    flags: 0b111110,
+    options: [ { type: 3, name: 'id', description: 'the id', required: true } ],
     execute(o, msg, rawArgs) {
       try {
         let id = BigInt(rawArgs[0]);
@@ -356,12 +428,14 @@ module.exports = [
       } catch (e) {
         return msg.channel.send('Invalid ID');
       }
-    }
+    },
   },
   {
     name: 'idinfo',
     description: '`!idinfo <id>` to get the fields of an ID in discord',
-    flags: 14,
+    description_slash: 'prints the fields of an ID in discord',
+    flags: 0b111110,
+    options: [ { type: 3, name: 'id', description: 'the id', required: true } ],
     execute(o, msg, rawArgs) {
       try {
         let id = BigInt(rawArgs[0]);
@@ -380,6 +454,6 @@ module.exports = [
       } catch (e) {
         return msg.channel.send('Invalid ID');
       }
-    }
+    },
   },
 ];

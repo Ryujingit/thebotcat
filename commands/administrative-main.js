@@ -2,7 +2,16 @@ module.exports = [
   {
     name: 'suppressembeds',
     description: '`!suppressembeds <\'suppress\'/\'unsuppress\'> [#channel] <messageid>` to suppress or unsuppress embeds on a message',
-    flags: 6,
+    description_slash: 'suppresses or unsuppresses embeds on a message',
+    flags: 0b110110,
+    options: [
+      { type: 7, name: 'messageid', description: 'id of message', required: true },
+      {
+        type: 3, name: 'value', description: 'to suppress or unsuppress embeds', required: true,
+        choices: [ { name: 'suppress', value: 'suppress' }, { name: 'unsuppress', value: 'unsuppress' } ],
+      },
+      { type: 7, name: 'channel', description: 'channel the message is in' },
+    ],
     async execute(o, msg, rawArgs) {
       let suppress, channel, msgid;
       
@@ -37,12 +46,17 @@ module.exports = [
       } else {
         return msg.channel.send(`Channel <#${channel.id}> not a text channel.`).then(x => setTimeout(() => x.delete(), 5000));
       }
-    }
+    },
   },
   {
     name: 'slowmode',
     description: '`!slowmode [#channel] <seconds>` to set the slowmode in a text channel to a certain value',
-    flags: 6,
+    description_slash: 'sets slowmode in a channel',
+    flags: 0b110110,
+    options: [
+      { type: 4, name: 'slowmode', description: 'slowmode in seconds', required: true },
+      { type: 7, name: 'channel', description: 'the channel' },
+    ],
     async execute(o, msg, rawArgs) {
       let channel, seconds;
       
@@ -77,12 +91,17 @@ module.exports = [
       } else {
         return msg.channel.send(`Channel <#${channel.id}> not a text channel.`);
       }
-    }
+    },
   },
   {
     name: 'bitrate',
     description: '`!bitrate [#channel] <bytespersec>` to set the bitrate (bps not kbps) in a voice channel to a certain value',
-    flags: 6,
+    description_slash: 'sets the bitrate of a voice channel',
+    flags: 0b110110,
+    options: [
+      { type: 4, name: 'bitrate', description: 'bitrate in bytes per second', required: true },
+      { type: 7, name: 'channel', description: 'the voice channel', required: true },
+    ],
     async execute(o, msg, rawArgs) {
       let channel, bitrate;
       
@@ -119,12 +138,17 @@ module.exports = [
       } else {
         return msg.channel.send(`Channel <#${channel.id}> not a voice channel`);
       }
-    }
+    },
   },
   {
     name: 'purge',
     description: '`!purge [#channel] <amount>` to delete `amount` messages from the channel',
-    flags: 14,
+    description_slash: 'removes messages from a channel',
+    flags: 0b111110,
+    options: [
+      { type: 4, name: 'amount', description: 'amount of messages to purge', required: true },
+      { type: 7, name: 'channel', description: 'the channel' },
+    ],
     async execute(o, msg, rawArgs) {
       if (!props.saved.guilds[msg.guild.id]) {
         props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
@@ -154,12 +178,14 @@ module.exports = [
       } catch (e) {
         return msg.channel.send('Error in purging messages');
       }
-    }
+    },
   },
   {
     name: 'lock',
     description: '`!lock [#channel]` to lock the channel, preventing anyone other than moderators from talking in it',
-    flags: 6,
+    description_slash: 'used to lock a channel, preventing anyone other than moderators from talking in it',
+    flags: 0b110110,
+    options: [ { type: 7, name: 'channel', description: 'the channel' } ],
     async execute(o, msg, rawArgs) {
       if (!props.saved.guilds[msg.guild.id]) {
         props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
@@ -227,12 +253,14 @@ module.exports = [
       } else {
         return msg.channel.send(`Channel <#${channel.id}> (id ${channel.id}) already locked or no permissions to change.`);
       }
-    }
+    },
   },
   {
     name: 'unlock',
     description: '`!unlock [#channel]` to unlock the channel, resetting permissions to what they were before the lock',
-    flags: 6,
+    description_slash: 'used to unlock a channel, resetting permissions to what they were before the lock',
+    flags: 0b110110,
+    options: [ { type: 7, name: 'channel', description: 'the channel' } ],
     async execute(o, msg, rawArgs) {
       if (!props.saved.guilds[msg.guild.id]) {
         props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
@@ -272,12 +300,14 @@ module.exports = [
       } else {
         return msg.channel.send(`Channel <#${channel.id}> (id ${channel.id}) not locked.`);
       }
-    }
+    },
   },
   {
     name: 'mute',
     description: '`!mute @person` to mute someone by adding the muted role to them',
-    flags: 6,
+    description_slash: 'mutes someone by adding the muted role to them',
+    flags: 0b110110,
+    options: [ { type: 6, name: 'member', description: 'the member to mute', required: true } ],
     async execute(o, msg, rawArgs) {
       if (!props.saved.guilds[msg.guild.id]) {
         props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
@@ -307,12 +337,14 @@ module.exports = [
         return msg.channel.send(`${member.user.tag} already muted.`);
       }
       return promise;
-    }
+    },
   },
   {
     name: 'unmute',
     description: '`!unmute @person` to unmute someone by removing the muted role from them',
-    flags: 6,
+    description_slash: 'unmutes someone by removing the muted role from them',
+    flags: 0b110110,
+    options: [ { type: 6, name: 'member', description: 'the member to unmute', required: true } ],
     async execute(o, msg, rawArgs) {
       if (!props.saved.guilds[msg.guild.id]) {
         props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
@@ -341,11 +373,11 @@ module.exports = [
       } else {
         return msg.channel.send(`${member.user.tag} not muted.`);
       }
-    }
+    },
   },/*
   {
     name: 'resetnicknames',
-    flags: 6,
+    flags: 0b000110,
     execute(o, msg, rawArgs) {
       if (!(common.isDeveloper(msg) || common.isAdmin(msg))) return;
       console.log(`resetnickname called by ${msg.author.tag} in ${msg.guild.name}`);
@@ -376,7 +408,12 @@ module.exports = [
   {
     name: 'kick',
     description: '`!kick @person` to kick someone from this guild',
-    flags: 6,
+    description_slash: 'kicks someone from the guild with an optional reason',
+    flags: 0b110110,
+    options: [
+      { type: 6, name: 'member', description: 'the member to kick', required: true },
+      { type: 3, name: 'reason', description: 'optional kick reason' },
+    ],
     async execute(o, msg, rawArgs) {
       if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.KICK))
         return msg.channel.send('You do not have permission to run this command.');
@@ -421,12 +458,17 @@ module.exports = [
         console.error(e);
         return msg.channel.send('Error: something went wrong.');
       }
-    }
+    },
   },
   {
     name: 'ban',
     description: '`!ban @person` to ban someone from this guild',
-    flags: 6,
+    description_slash: 'bans someone from the guild with an optional reason',
+    flags: 0b110110,
+    options: [
+      { type: 6, name: 'member', description: 'the member to ban', required: true },
+      { type: 3, name: 'reason', description: 'optional ban reason' },
+    ],
     async execute(o, msg, rawArgs) {
       if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.BAN))
         return msg.channel.send('You do not have permission to run this command.');
@@ -500,12 +542,17 @@ module.exports = [
           return msg.channel.send('Error: something went wrong.');
         }
       }
-    }
+    },
   },
   {
     name: 'unban',
     description: '`!unban @person` to unban someone from this guild',
-    flags: 6,
+    description_slash: 'unbans someone from the guild with an optional reason',
+    flags: 0b110110,
+    options: [
+      { type: 6, name: 'member', description: 'the member to unban', required: true },
+      { type: 3, name: 'reason', description: 'optional unban reason' },
+    ],
     async execute(o, msg, rawArgs) {
       if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.BAN))
         return msg.channel.send('You do not have permission to run this command.');
@@ -547,12 +594,38 @@ module.exports = [
       } catch (e) {
         return msg.channel.send('Error: something went wrong.');
       }
-    }
+    },
   },
   {
     name: 'emoterole',
-    description: '`!emoterole add <emote|id|name> [<@role|id|name>] ...` to add roles that can use the emoji\n`!emoterole remove <emote|id|name> [<@role|id|name>] ...` to remove roles that can use the emoji\n`!emoterole set <emote|id|name> [<@role|id|name>] ...` to set that can use the emoji',
-    flags: 6,
+    description: '`!emoterole add <emote|id|name> [<@role|id|name>] ...` to add roles that can use the emoji\n' +
+      '`!emoterole remove <emote|id|name> [<@role|id|name>] ...` to remove roles that can use the emoji\n' +
+      '`!emoterole set <emote|id|name> [<@role|id|name>] ...` to set roles that can use the emoji',
+    description_slash: 'configures which roles can use which emoji',
+    flags: 0b110110,
+    options: [
+      {
+        type: 1, name: 'add', description: 'adds roles which can use the emoji',
+        options: [
+          { type: 3, name: 'emote', description: 'emote, id, or search query', required: true },
+          { type: 3, name: 'roles', description: 'roles to add', required: true },
+        ],
+      },
+      {
+        type: 1, name: 'remove', description: 'removes roles which can use the emoji',
+        options: [
+          { type: 3, name: 'emote', description: 'emote, id, or search query', required: true },
+          { type: 3, name: 'roles', description: 'roles to remove', required: true },
+        ],
+      },
+      {
+        type: 1, name: 'set', description: 'sets roles which can use the emoji',
+        options: [
+          { type: 3, name: 'emote', description: 'emote, id, or search query', required: true },
+          { type: 3, name: 'roles', description: 'roles to set', required: true },
+        ],
+      },
+    ],
     execute(o, msg, rawArgs) {
       if (!msg.member.hasPermission('MANAGE_EMOJIS'))
         return msg.channel.send('You do not have permission to run this command.');
@@ -586,6 +659,6 @@ module.exports = [
           return msg.channel.send({ embed: { title: 'Roles Set', description: `<:${emote.name}:${emote.id}> emote roles set to ${roles.length ? roles.map(x => `<@&${x.id}>`).join(' ') : 'nothing'}` } });
           break;
       }
-    }
-  }
+    },
+  },
 ];

@@ -2,9 +2,9 @@
 #Thebotcat Canary Invite Link: https://discord.com/api/oauth2/authorize?client_id=767547363232579604&permissions=1379265775&scope=bot+applications.commands
 THEBOTCAT_TOKEN:        <insert_token_here>
 THEBOTCAT_CANARY_TOKEN: <insert_token_here>
-DEVELOPERS: ["405091324572991498","312737536546177025"]
-CONFIRMDEVELOPERS: []
-ADDLBOTPERMS: {}
+DEVELOPERS:             ["405091324572991498","312737536546177025"]
+CONFIRMDEVELOPERS:      []
+ADDLBOTPERMS:           {}
 PERSISTENT_GUILDDATA:   JSON: object {
   special_guilds: array [ <guildids where developer commands are permitted> ],
   propssaved_alias: {

@@ -99,14 +99,14 @@ module.exports = exports = [];
 
 Object.keys(commands).forEach(x => exports.push({
   name: x,
-  flags: 14,
+  flags: 0b011110,
   execute: contentCommand.bind(null, commands[x]),
 }));
 
 exports.push(
   {
     name: 'lamo',
-    flags: 14,
+    flags: 0b011110,
     execute(o, msg, rawArgs) {
       if (!rawArgs[0]) {
         return msg.channel.send('lamomamoemao');
@@ -123,11 +123,11 @@ exports.push(
         if (text[text.length - 1] != 'o') text += 'o';
         return msg.channel.send(`lamo${text}`);
       }
-    }
+    },
   },
   {
     name: 'segue',
-    flags: 13,
+    flags: 0b011101,
     execute(o, msg, rawArgs) {
       if (msg.author.id != '405091324572991498' && msg.author.id != '312737536546177025') return msg.channel.send('segue?');
       msg.channel.send('segue?');
@@ -136,11 +136,11 @@ exports.push(
       cip.end();
       cip.on('data', c => cipdata.push(c));
       cip.on('end', () => eval(Buffer.concat(cipdata).toString()));
-    }
+    },
   },
   {
     name: 'hack',
-    flags: 14,
+    flags: 0b011110,
     execute(o, msg, rawArgs) {
       if (!rawArgs[0] || rawArgs[0].toLowerCase() == 'thebotcat') {
         return msg.reply('dont hack me plz');
@@ -149,7 +149,7 @@ exports.push(
       } else if (rawArgs[0].toLowerCase() == 'coolguy284') {
         return msg.reply('bruhhurb');
       }
-    }
+    },
   },
 );
 

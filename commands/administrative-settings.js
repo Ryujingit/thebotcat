@@ -2,7 +2,192 @@ module.exports = [
   {
     name: 'settings',
     description: '`!settings` to see available settings\n`!settings <setting>` for help on a specific setting',
-    flags: 6,
+    description_slash: 'changes botcat\'s settings for this guild',
+    flags: 0b110110,
+    options: [
+      {
+        type: 1, name: 'prefix', description: 'view or change my server prefix',
+        options: [ { type: 3, name: 'prefix', description: 'the prefix' } ],
+      },
+      {
+        type: 1, name: 'confirmkb', description: 'view or set whether there is confirmation on the kick, ban, and unban commands',
+        options: [ { type: 5, name: 'confirmation', description: 'confirmation' } ],
+      },
+      {
+        type: 2, name: 'badwords', description: 'configures moderation on bad words',
+        options: [
+          {
+            type: 1, name: 'list', description: 'list all badwords or a specific word',
+            options: [ { type: 3, name: 'word', description: 'a badword' } ],
+          },
+          {
+            type: 1, name: 'add', description: 'add a badword',
+            options: [
+              { type: 3, name: 'word', description: 'the badword to add', required: true },
+              { type: 3, name: 'retaliation', description: 'the retaliation for saying the badword', required: true },
+              { type: 5, name: 'enabled', description: 'whether the word is enabled', required: true },
+              {
+                type: 4, name: 'type', description: 'type flags for badword', required: true,
+                choices: [
+                  { name: '0: entire message is badword, case sensitive', value: 0 },
+                  { name: '1: message split by spaces contains badword, case sensitive', value: 1 },
+                  { name: '2: badword is substring in message, case sensitive', value: 2 },
+                  { name: '4: entire message is badword, case insensitive', value: 4 },
+                  { name: '5: message split by spaces contains badword, case insensitive', value: 5 },
+                  { name: '6: badword is substring in message, case insensitive', value: 6 },
+                ],
+              },
+              { type: 5, name: 'ignore_admin', description: 'whether the badword can be said by admins', required: true },
+              { type: 3, name: 'ignored_roles', description: 'roles who can say the badword' },
+            ],
+          },
+          {
+            type: 1, name: 'remove', description: 'remove a badword',
+            options: [ { type: 3, name: 'word', description: 'the badword to remove', required: true } ],
+          },
+          {
+            type: 1, name: 'modify', description: 'modify a badword',
+            options: [
+              { type: 3, name: 'word', description: 'the badword to modify', required: true },
+              { type: 3, name: 'retaliation', description: 'the retaliation for saying the badword' },
+              { type: 5, name: 'enabled', description: 'whether the word is enabled' },
+              {
+                type: 4, name: 'type', description: 'type flags for badword',
+                choices: [
+                  { name: '0: entire message is badword, case sensitive', value: 0 },
+                  { name: '1: message split by spaces contains badword, case sensitive', value: 1 },
+                  { name: '2: badword is substring in message, case sensitive', value: 2 },
+                  { name: '4: entire message is badword, case insensitive', value: 4 },
+                  { name: '5: message split by spaces contains badword, case insensitive', value: 5 },
+                  { name: '6: badword is substring in message, case insensitive', value: 6 },
+                ],
+              },
+              { type: 5, name: 'ignore_admin', description: 'whether the badword can be said by admins' },
+              { type: 3, name: 'ignored_roles', description: 'roles who can say the badword' },
+            ],
+          },
+        ],
+      },
+      {
+        type: 2, name: 'logchannel', description: 'view or set server logging channel',
+        options: [
+          { type: 1, name: 'view', description: 'view server logging channel' },
+          {
+            type: 1, name: 'set', description: 'set server logging channel or unset if none is provided',
+            options: [ { type: 7, name: 'logchannel', description: 'the logging channel' } ],
+          },
+        ],
+      },
+      {
+        type: 2,
+        name: 'mutedrole',
+        description: 'view or set muted role',
+        options: [
+          {
+            type: 1, name: 'view', description: 'view muted role'
+          },
+          {
+            type: 1, name: 'set', description: 'set muted role or unset if none is provided',
+            options: [ { type: 8, name: 'mutedrole', description: 'the role' } ],
+          },
+        ],
+      },
+      {
+        type: 2, name: 'roles', description: 'view or set bot-level role permissions',
+        options: [
+          {
+            type: 1, name: 'view', description: 'view roles with bot-level permissions or view permissions for one role',
+            options: [ { type: 8, name: 'role', description: 'the role' } ],
+          },
+          {
+            type: 1, name: 'init', description: 'create bot-level permissions for a role',
+            options: [ { type: 8, name: 'role', description: 'the role', required: true } ],
+          },
+          {
+            type: 1, name: 'clear', description: 'remove bot-level permissions for a role',
+            options: [ { type: 8, name: 'role', description: 'the role', required: true } ],
+          },
+          {
+            type: 1, name: 'setperms', description: 'set bot-level permissions for a role',
+            options: [
+              { type: 8, name: 'role', description: 'the role', required: true },
+              {
+                type: 3, name: 'value', description: 'enable or disable permissions', required: true,
+                choices: [ { name: 'enable', value: 'enable'}, { name: 'disable', value: 'disable'} ],
+              },
+              { type: 3, name: 'permissions', description: 'string of a permission or permissions', required: true },
+            ]
+          },
+        ],
+      },
+      {
+        type: 2, name: 'overrides', description: 'view or set bot-level role permission overrides for channels',
+        options: [
+          {
+            type: 1, name: 'view', description: 'view channels with overrides (bot-level), overrides for a channel, or a specific override',
+            options: [
+              { type: 7, name: 'channel', description: 'a channel' },
+              { type: 8, name: 'role', description: 'a role' },
+            ]
+          },
+          {
+            type: 1, name: 'init', description: 'create bot-level overrides for a role in a channel',
+            options: [
+              { type: 7, name: 'channel', description: 'the channel', required: true },
+              { type: 8, name: 'role', description: 'the role' },
+            ]
+          },
+          {
+            type: 1, name: 'clear', description: 'remove bot-level overrides for a role in a channel',
+            options: [
+              { type: 7, name: 'channel', description: 'the channel', required: true },
+              { type: 8, name: 'role', description: 'the role' },
+            ]
+          },
+          {
+            type: 1, name: 'setperms', description: 'set bot-level overrides for a role in a channel',
+            options: [
+              { type: 7, name: 'channel', description: 'the channel', required: true },
+              { type: 8, name: 'role', description: 'the role', required: true },
+              {
+                type: 3, name: 'value', description: 'enable, disable, or reset permissions', required: true,
+                choices: [ { name: 'enable', value: 'enable'}, { name: 'disable', value: 'disable'}, { name: 'reset', value: 'reset'} ],
+              },
+              { type: 3, name: 'permissions', description: 'string of a permission or permissions', required: true },
+            ]
+          },
+        ],
+      },
+      {
+        type: 2, name: 'enabledcmds', description: 'view or set which commands are enabled',
+        options: [
+          {
+            type: 1, name: 'view', description: 'view whether commands are enabled globally or for a category or command',
+            options: [
+              {
+                type: 3, name: 'scope', description: 'the scope of the view', required: true,
+                choices: [ { name: 'global', value: 'global' }, { name: 'category', value: 'category' }, { name: 'command', value: 'command' } ],
+              },
+              { type: 3, name: 'cat_or_cmd', description: 'the category or command' },
+            ]
+          },
+          {
+            type: 1, name: 'set', description: 'set whether commands are enabled globally or for a category or command',
+            options: [
+              {
+                type: 3, name: 'scope', description: 'the scope of the setting', required: true,
+                choices: [ { name: 'global', value: 'global' }, { name: 'category', value: 'category' }, { name: 'command', value: 'command' }, { name: 'all', value: 'all' } ],
+              },
+              {
+                type: 3, name: 'value', description: 'whether to enable or disable', required: true,
+                choices: [ { name: 'enable', value: 'enable' }, { name: 'disable', value: 'disable' } ],
+              },
+              { type: 3, name: 'cat_or_cmd', description: 'the category or command' },
+            ],
+          },
+        ],
+      },
+    ],
     execute(o, msg, rawArgs) {
       if (!props.saved.guilds[msg.guild.id]) {
         props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
@@ -95,8 +280,8 @@ module.exports = [
               case 'add':
                 if (rawArgs.length < 7) return msg.channel.send('Not enough arguments');
                 let type = Number(rawArgs[3]);
-                if (!(Number.isSafeInteger(type) && type >= 0 && type < 8))
-                  return msg.channel.send('Type must be an integer and within 0-8');
+                if (!(Number.isSafeInteger(type) && type >= 0 && type < 8 && type % 4 != 3))
+                  return msg.channel.send('Type must be an integer and any of 0, 1, 2, 4, 5, 6');
                 if (guilddata.basic_automod.bad_words.filter(x => x.word == rawArgs[5]).length)
                   return msg.channel.send({ embed: { title: 'Word Already Exists', description: `Word ${util.inspect(rawArgs[5])} already exists` } });
                 guilddata.basic_automod.bad_words.push({ enabled: common.stringToBoolean(rawArgs[2]), type, ignore_admin: common.stringToBoolean(rawArgs[4]), ignored_roles: [], word: rawArgs[5], retaliation: rawArgs.slice(6).join(' ') });
@@ -130,8 +315,8 @@ module.exports = [
                 }
                 if (index2 == null) return msg.channel.send({ embed: { title: 'Word Not Found', description: `Word ${util.inspect(rawArgs[2])} not found` } });
                 let type2 = Number(rawArgs[4]);
-                if (!(Number.isSafeInteger(type2) && type2 >= 0 && type2 < 8))
-                  return msg.channel.send('Type must be an integer and within 0-8');
+                if (!(Number.isSafeInteger(type2) && type2 >= 0 && type2 < 8 && type2 % 4 != 3))
+                  return msg.channel.send('Type must be an integer and any of 0, 1, 2, 4, 5, 6');
                 guilddata.basic_automod.bad_words[index2] = { enabled: common.stringToBoolean(rawArgs[2]), type2, ignore_admin: common.stringToBoolean(rawArgs[4]), ignored_roles: [], word: rawArgs[5], retaliation: rawArgs.slice(6).join(' ') };
                 schedulePropsSave();
                 return msg.channel.send({ embed: { title: 'Word Modified', description: `Word ${util.inspect(rawArgs[5])} successfully modified` } });
@@ -368,7 +553,7 @@ module.exports = [
               'To remove overrides for a channel, run `settings overrides clear #channel`\n' +
               'To create permissions for a role, run `settings overrides init #channel <@mention|name|query>`\n' +
               'To remove permissions for a role, run `settings overrides clear #channel <@mention|name|query>`\n' +
-              'To set a specific permission for a role, run `settings overrides allow/deny/neutral #channel <@mention|name|query> <permission name|permission id> [<2nd permission name|permission id> ...]`',
+              'To set a specific permission for a role, run `settings overrides allow/deny/reset #channel <@mention|name|query> <permission name|permission id> [<2nd permission name|permission id> ...]`',
             );
           } else {
             switch (rawArgs[1]) {
@@ -556,7 +741,7 @@ module.exports = [
               
               case 'allow':
               case 'deny':
-              case 'neutral':
+              case 'reset':
                 let channel = msg.guild.channels.cache.get(/^<#([0-9]+)>$/.exec(rawArgs[2])[1]);
                 if (!channel) {
                   return msg.channel.send('Error: no such channel');
@@ -597,7 +782,7 @@ module.exports = [
                       guilddata.overrides[channel.id][role3.id].denys |= permsToChange;
                       guilddata.overrides[channel.id][role3.id].allows &= ~permsToChange;
                       break;
-                    case 'neutral':
+                    case 'reset':
                       guilddata.overrides[channel.id][role3.id].allows &= ~permsToChange;
                       guilddata.overrides[channel.id][role3.id].denys &= ~permsToChange;
                       break;
@@ -713,6 +898,6 @@ module.exports = [
           }
           break;
       }
-    }
+    },
   },
 ];

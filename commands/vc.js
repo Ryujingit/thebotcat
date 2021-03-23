@@ -2,7 +2,9 @@ module.exports = [
   {
     name: 'join',
     description: '`!join` for me to join the voice channel you are in\n`!join #channel` for me to join a voice channel',
-    flags: 6,
+    description_slash: 'for me to join a voice channel, defaults to the one you\'re in',
+    flags: 0b110110,
+    options: [ { type: 7, name: 'channel', description: 'the voice channel' } ],
     async execute(o, msg, rawArgs) {
       if (!(props.saved.feat.audio & 1)) return msg.channel.send('Voice Channel features are disabled.');
       let guilddata = props.saved.guilds[msg.guild.id];
@@ -38,12 +40,13 @@ module.exports = [
         console.error(e);
         return msg.channel.send(`Error in joining channel <#${channel.id}>`);
       }
-    }
+    },
   },
   {
     name: 'leave',
     description: '`!leave` for me to leave the voice channel I am in',
-    flags: 6,
+    description_slash: 'for me to leave the voice channel I am in',
+    flags: 0b110110,
     async execute(o, msg, rawArgs) {
       if (!(props.saved.feat.audio & 1)) return msg.channel.send('Voice Channel features are disabled.');
       let guilddata = props.saved.guilds[msg.guild.id];
@@ -67,12 +70,13 @@ module.exports = [
       } else {
         return msg.channel.send('You do not have permission to get me to leave the voice channel.');
       }
-    }
+    },
   },
   {
     name: 'toggleselfmute',
     description: '`!toggleselfmute` for me to toggle my selfmute status',
-    flags: 6,
+    description_slash: 'for me to toggle my selfmute status',
+    flags: 0b110110,
     async execute(o, msg, rawArgs) {
       if (!(props.saved.feat.audio & 1)) return msg.channel.send('Voice Channel features are disabled.');
       let guilddata = props.saved.guilds[msg.guild.id];
@@ -92,12 +96,13 @@ module.exports = [
       } else {
         return msg.channel.send('You do not have permission to get me to toggle my selfmute status.');
       }
-    }
+    },
   },
   {
     name: 'toggleselfdeaf',
     description: '`!toggleselfdeaf` for me to toggle my selfdeafen status',
-    flags: 6,
+    description_slash: 'for me to toggle my selfdeafen status',
+    flags: 0b110110,
     async execute(o, msg, rawArgs) {
       if (!(props.saved.feat.audio & 1)) return msg.channel.send('Voice Channel features are disabled.');
       let guilddata = props.saved.guilds[msg.guild.id];
@@ -117,6 +122,6 @@ module.exports = [
       } else {
         return msg.channel.send('You do not have permission to get me to toggle my selfdeaf status.');
       }
-    }
+    },
   },
 ];
