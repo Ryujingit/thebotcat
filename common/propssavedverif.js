@@ -5,16 +5,21 @@ function isId(val) {
   return typeof val == 'string' && /[0-9]{16,20}/.test(val);
 }
 
+// cause js typeof is sus
+function isObject(val) {
+  return val instanceof Object;
+}
+
 module.exports = {
-  isId,
+  isId, isObject,
   
   propsSavedCreateVerifiedCopy: function propsSavedCreateVerifiedCopy(obj) {
-    if (typeof obj != 'object') obj = {};
+    if (!isObject(obj)) obj = {};
     if (!Number.isSafeInteger(obj.version) || obj.version == 1) {
-      let featIsObj = typeof obj.feat == 'object';
-      let guildsIsObj = typeof obj.guilds == 'object';
+      let featIsObj = isObject(obj.feat);
+      let guildsIsObj = isObject(obj.guilds);
       let perGuildFunc = (guild, id) => {
-        let guildIsObj = typeof guild == 'object';
+        let guildIsObj = isObject(guild);
         let newGuild = {
           prefix: guildIsObj && typeof guild.prefix == 'string' ? guild.prefix : defaultprefix,
           confirm_kb: true,
@@ -55,13 +60,13 @@ module.exports = {
           temp: {
             stashed: {
               channeloverrides: (() => {
-                if (!guildIsObj || typeof guild.savedperms != 'object') return {};
+                if (!guildIsObj || !isObject(guild.savedperms)) return {};
                 let overrides = guild.savedperms;
                 let overObj = {};
                 Object.keys(overrides).forEach(x => {
                   if (!Array.isArray(overrides[x])) return;
                   overObj[x] = overrides[x].map(y => {
-                    if (typeof y != 'object' ||
+                    if (!isObject(y) ||
                       typeof y.id != 'string' ||
                       y.type != 'role' && y.type != 'member' ||
                       !Number.isSafeInteger(y.allow) ||
@@ -89,7 +94,7 @@ module.exports = {
       };
       let newObj;
       let perUserFunc = user => {
-        let userIsObj = typeof user == 'object';
+        let userIsObj = isObject(user);
         let userObj = {
           calc_scope: userIsObj ? JSON.stringify(user) : '{}',
         };
@@ -110,7 +115,7 @@ module.exports = {
           lamt: featIsObj && Number.isSafeInteger(obj.feat.lamt) ? obj.feat.lamt : 0,
         },
         guilds: { default: perGuildFunc(guildsIsObj ? obj.guilds.default : null) },
-        users: { default: perUserFunc(typeof obj.calc_scopes == 'object' ? obj.calc_scopes.shared : null) },
+        users: { default: perUserFunc(isObject(obj.calc_scopes) ? obj.calc_scopes.shared : null) },
         disallowed_guilds: [],
         misc: {
           dmchannels: Array.isArray(obj.dmchannels) ? obj.dmchannels.filter(x => isId(x)) : [],
@@ -168,14 +173,14 @@ module.exports = {
             });
         }
       }
-      if (typeof obj.calc_scopes == 'object')
+      if (isObject(obj.calc_scopes))
         Object.keys(obj.calc_scopes).forEach(x => x != 'shared' && isId(x) ? newObj.users[x] = perUserFunc(obj.calc_scopes[x]) : null);
       return newObj;
     } else if (obj.version == 2) {
-      let featIsObj = typeof obj.feat == 'object';
-      let guildsIsObj = typeof obj.guilds == 'object';
+      let featIsObj = isObject(obj.feat);
+      let guildsIsObj = isObject(obj.guilds);
       let perGuildFunc = (guild, id) => {
-        let guildIsObj = typeof guild == 'object';
+        let guildIsObj = isObject(guild);
         let newGuild = {
           prefix: guildIsObj && typeof guild.prefix == 'string' ? guild.prefix : defaultprefix,
           confirm_kb: guildIsObj && typeof guild.confirm_kb == 'boolean' ? guild.confirm_kb : true,
@@ -184,7 +189,7 @@ module.exports = {
               _global: null,
               global: null,
               categories: (() => {
-                let ecco = guildIsObj && typeof guild.enabled_commands == 'object' && typeof guild.enabled_commands.categories == 'object';
+                let ecco = guildIsObj && isObject(guild.enabled_commands) && isObject(guild.enabled_commands.categories);
                 let catObj = {};
                 commandCategories.forEach(x => {
                   if (x == 'Voice Channel') {
@@ -228,7 +233,7 @@ module.exports = {
                 return catObj;
               })(),
               commands: (() => {
-                let ecco = guildIsObj && typeof guild.enabled_commands == 'object' && typeof guild.enabled_commands.commands == 'object';
+                let ecco = guildIsObj && isObject(guild.enabled_commands) && isObject(guild.enabled_commands.commands);
                 let cmdObj = {};
                 commands.forEach(x => {
                   if (x.flags & 0b000110 != 0b000110) return;
@@ -261,7 +266,7 @@ module.exports = {
                 configurable: true,
                 enumerable: false,
                 writable: true,
-                value: guildIsObj && typeof guild.enabled_commands == 'object' && typeof guild.enabled_commands.global == 'boolean' ? guild.enabled_commands.global : true,
+                value: guildIsObj && isObject(guild.enabled_commands) && typeof guild.enabled_commands.global == 'boolean' ? guild.enabled_commands.global : true,
               },
               global: {
                 configurable: true,
@@ -276,11 +281,11 @@ module.exports = {
             return enabledcmds;
           })(),
           logging: {
-            main: guildIsObj && typeof guild.logging == 'object' && isId(guild.logging.main) ? guild.logging.main : null,
+            main: guildIsObj && isObject(guild.logging) && isId(guild.logging.main) ? guild.logging.main : null,
           },
           perms: (() => {
             let includesEveryone = false;
-            let obj = (guildIsObj && typeof guild.perms == 'object' ? guild.perms : {}), newObj = {};
+            let obj = (guildIsObj && isObject(guild.perms) ? guild.perms : {}), newObj = {};
             Object.keys(obj)
               .forEach(x => {
                 if (!isId(x)) return;
@@ -291,13 +296,13 @@ module.exports = {
             return newObj;
           })(),
           overrides: (() => {
-            if (!guildIsObj || typeof guild.overrides != 'object') return {};
+            if (!guildIsObj || !isObject(guild.overrides)) return {};
             let overObj = {};
             Object.keys(guild.overrides).forEach(x => {
               let obj = guild.overrides[x], newObj = {};
               Object.keys(obj)
                 .forEach(x => {
-                  if (!isId(x) || typeof obj[x] != 'object') return;
+                  if (!isId(x) || !isObject(obj[x])) return;
                   newObj[x] = {
                     allows: Number.isSafeInteger(obj[x].allows) ? obj[x].allows : 0,
                     denys: Number.isSafeInteger(obj[x].denys) ? obj[x].denys : 0,
@@ -309,8 +314,8 @@ module.exports = {
           })(),
           mutedrole: guildIsObj && isId(guild.mutedrole) ? guild.mutedrole : null,
           basic_automod: {
-            bad_words: guildIsObj && typeof guild.basic_automod == 'object' && Array.isArray(guild.basic_automod.bad_words) ? guild.basic_automod.bad_words.map(x => {
-              if (typeof x != 'object' || typeof x.word != 'string' || typeof x.retaliation != 'string') return null;
+            bad_words: guildIsObj && isObject(guild.basic_automod) && Array.isArray(guild.basic_automod.bad_words) ? guild.basic_automod.bad_words.map(x => {
+              if (!isObject(x) || typeof x.word != 'string' || typeof x.retaliation != 'string') return null;
               return {
                 enabled: typeof x.enabled == 'boolean' ? x.enabled : false,
                 type: Number.isSafeInteger(x.type) && x.type >= 0 && x.type < 7 ? x.type : 0,
@@ -325,13 +330,13 @@ module.exports = {
           temp: {
             stashed: {
               channeloverrides: (() => {
-                if (!guildIsObj || typeof guild.temp != 'object' || typeof guild.temp.stashed != 'object' || typeof guild.temp.stashed.channeloverrides != 'object') return {};
+                if (!guildIsObj || !isObject(guild.temp) || !isObject(guild.temp.stashed) || !isObject(guild.temp.stashed.channeloverrides)) return {};
                 let overrides = guild.temp.stashed.channeloverrides;
                 let overObj = {};
                 Object.keys(overrides).forEach(x => {
                   if (!Array.isArray(overrides[x])) return;
                   overObj[x] = overrides[x].map(y => {
-                    if (typeof y != 'object' ||
+                    if (!isObject(y) ||
                       typeof y.id != 'string' ||
                       y.type != 'role' && y.type != 'member' ||
                       !Number.isSafeInteger(y.allow) ||
@@ -359,7 +364,7 @@ module.exports = {
       };
       let newObj;
       let perUserFunc = user => {
-        let userIsObj = typeof user == 'object';
+        let userIsObj = isObject(user);
         let userObj = {
           calc_scope: userIsObj && typeof user.calc_scope == 'string' ? user.calc_scope : '{}',
         };
@@ -380,11 +385,11 @@ module.exports = {
           lamt: featIsObj && Number.isSafeInteger(obj.feat.lamt) ? obj.feat.lamt : 0,
         },
         guilds: { default: perGuildFunc(guildsIsObj ? obj.guilds.default : null) },
-        users: { default: perUserFunc(typeof obj.users == 'object' ? obj.users.default : null) },
+        users: { default: perUserFunc(isObject(obj.users) ? obj.users.default : null) },
         disallowed_guilds: Array.isArray(obj.disallowed_guilds) ? obj.disallowed_guilds.filter(x => isId(x)) : [],
         misc: {
-          dmchannels: typeof obj.misc == 'object' && Array.isArray(obj.misc.dmchannels) ? obj.misc.dmchannels.filter(x => typeof x == 'string') : [],
-          sendmsgid: typeof obj.misc == 'object' && typeof obj.misc.sendmsgid == 'string' ? obj.misc.sendmsgid : '1',
+          dmchannels: isObject(obj.misc) && Array.isArray(obj.misc.dmchannels) ? obj.misc.dmchannels.filter(x => typeof x == 'string') : [],
+          sendmsgid: isObject(obj.misc) && typeof obj.misc.sendmsgid == 'string' ? obj.misc.sendmsgid : '1',
         },
       };
       Object.defineProperties(newObj.feat, {
@@ -438,7 +443,7 @@ module.exports = {
             });
         }
       }
-      if (typeof obj.users == 'object')
+      if (isObject(obj.users))
         Object.keys(obj.users).forEach(x => x != 'default' && isId(x) ? newObj.users[x] = perUserFunc(obj.users[x]) : null);
       return newObj;
     }

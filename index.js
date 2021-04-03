@@ -124,6 +124,11 @@ var props = {
 var defaultprefix = props.feat.version == 'normal' ? '!' : '?';
 var universalprefix = props.feat.version == 'normal' ? '!(thebotcat)' : '?(thebotcat)';
 
+Object.defineProperties(global, {
+  defaultprefix: { configurable: true, enumerable: true, get: () => defaultprefix, set: val => defaultprefix = val },
+  universalprefix: { configurable: true, enumerable: true, get: () => universalprefix, set: val => universalprefix = val },
+});
+
 try {
   var persGuildData = (() => {
     let obj = JSON.parse(process.env.PERSISTENT_GUILDDATA);
@@ -153,7 +158,8 @@ if (fs.existsSync('props.json')) {
 }
 
 if (!props.saved) {
-  props.saved = JSON.parse(fs.readFileSync('props-backup.json').toString());
+  props.saved = {};
+  cleanPropsSaved();
   propsSave();
 }
 
@@ -170,10 +176,10 @@ Object.defineProperty(props.saved.guilds.default, 'prefix', {
   configurable: true, enumerable: false, get: () => defaultprefix, set: val => defaultprefix = val,
 });
 
-global.cleanPropsSaved = () => {
+function cleanPropsSaved() {
   props.saved = common.propsSavedCreateVerifiedCopy(props.saved);
   propsSave();
-};
+}
 
 function propsSave() {
   let val;
@@ -210,15 +216,13 @@ var nonlogmsg = function (val) {
   console.log(`[${new Date().toISOString()}] ${val}`);
 };
 
-Object.assign(global, { https, fs, util, v8, vm, cp, stream, Discord, ytdl, common, math, client, developers, confirmdevelopers, addlbotperms, mutelist, commands, commandColl, commandCategories, persGuildData, procs, props, propsSave, schedulePropsSave, indexeval, infomsg, logmsg, nonlogmsg, addCommand, addCommands, removeCommand, removeCommands, getCommandsCategorized, updateSlashCommands, deleteSlashCommands });
+Object.assign(global, { https, fs, util, v8, vm, cp, stream, Discord, ytdl, common, math, client, developers, confirmdevelopers, addlbotperms, mutelist, commands, commandColl, commandCategories, persGuildData, procs, props, cleanPropsSaved, propsSave, schedulePropsSave, indexeval, infomsg, logmsg, nonlogmsg, addCommand, addCommands, removeCommand, removeCommands, getCommandsCategorized, updateSlashCommands, deleteSlashCommands });
 Object.defineProperties(global, {
   exitHandled: { configurable: true, enumerable: true, get: () => exitHandled, set: val => exitHandled = val },
   starttime: { configurable: true, enumerable: true, get: () => starttime, set: val => starttime = val },
   loadtime: { configurable: true, enumerable: true, get: () => loadtime, set: val => loadtime = val },
   readytime: { configurable: true, enumerable: true, get: () => readytime, set: val => readytime = val },
   doWorkers: { configurable: true, enumerable: true, get: () => doWorkers, set: val => doWorkers = val },
-  defaultprefix: { configurable: true, enumerable: true, get: () => defaultprefix, set: val => defaultprefix = val },
-  universalprefix: { configurable: true, enumerable: true, get: () => universalprefix, set: val => universalprefix = val },
   version: { configurable: true, enumerable: true, get: () => version, set: val => version = val },
   messageHandler: { configurable: true, enumerable: true, get: () => handlers.event.message, set: val => handlers.event.message = val },
   messageHandlers: { configurable: true, enumerable: true, get: () => handlers.extra.message, set: val => handlers.extra.message = val },
@@ -289,7 +293,7 @@ function getCommandsCategorized(guilddata, slashContext) {
 async function updateSlashCommands(endpoint) {
   nonlogmsg(`Updating slash commands`);
   
-  var currCmds = await endpoint.get();
+  var currCmds = await endpoint().get();
   var currCmdsObj = {};
   currCmds.forEach(x => currCmdsObj[x.name] = x);
   
@@ -316,7 +320,7 @@ async function updateSlashCommands(endpoint) {
   
   for (var i = 0; i < commandsToDelete.length; i++) {
     nonlogmsg(`Deleting ${commandsToDelete[i]}`);
-    await endpoint(currCmdsObj[commandsToDelete[i]].id).delete();
+    await endpoint()(currCmdsObj[commandsToDelete[i]].id).delete();
     await new Promise(r => setTimeout(r, 1000));
   }
   
@@ -328,7 +332,7 @@ async function updateSlashCommands(endpoint) {
       description: obj.description_slash || obj.description,
       options: obj.options,
     };
-    await endpoint.post({ data: obj });
+    await endpoint().post({ data: obj });
     await new Promise(r => setTimeout(r, 1000));
   }
   
@@ -337,11 +341,11 @@ async function updateSlashCommands(endpoint) {
 async function deleteSlashCommands(endpoint) {
   nonlogmsg(`Deleting slash commands`);
   
-  var currCmds = await endpoint.get();
+  var currCmds = await endpoint().get();
   
   for (var i = 0; i < currCmds.length; i++) {
     nonlogmsg(`Deleting ${currCmds[i].name}`);
-    await endpoint(currCmds[i].id).delete();
+    await endpoint()(currCmds[i].id).delete();
     await new Promise(r => setTimeout(r, 1000));
   }
   
@@ -412,10 +416,10 @@ client.on('ready', () => {
   
   updateStatus();
   
-  /*deleteSlashCommands(client.api.applications(client.user.id).guilds('688806155530534931').commands)
-    .then(_ => updateSlashCommands(client.api.applications(client.user.id).commands);*/
-  //deleteSlashCommands(client.api.applications(client.user.id).guilds('688806155530534931').commands);
-  updateSlashCommands(client.api.applications(client.user.id).commands);
+  /*deleteSlashCommands(() => client.api.applications(client.user.id).guilds('688806155530534931').commands)
+    .then(_ => updateSlashCommands(() => client.api.applications(client.user.id).commands);*/
+  //deleteSlashCommands(() => client.api.applications(client.user.id).guilds('688806155530534931').commands);
+  updateSlashCommands(() => client.api.applications(client.user.id).commands);
   
   readytime = new Date();
   

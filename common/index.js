@@ -55,6 +55,20 @@ var onMsgOneArgHelper = function onMsgOneArgHelper(o) {
   return oneArg;
 };
 
+var slashCmdResp = function slashCmdResp(interaction, emphemeral, content) {
+  if (typeof content == 'object') {
+    return client.api.interactions(interaction.id, interaction.token).callback.post({ data: {
+      type: 4,
+      data: { embeds: [content], flags: emphemeral ? 64 : 0 },
+    } });
+  } else {
+    return client.api.interactions(interaction.id, interaction.token).callback.post({ data: {
+      type: 4,
+      data: { content, flags: emphemeral ? 64 : 0, allowed_mentions: { parse: [] } },
+    } });
+  }
+};
+
 class BotError extends Error {}
 
 var { BreakError, arrayGet, sendObjThruBuffer, receiveObjThruBuffer } = require('./workerbuffer');
@@ -79,7 +93,7 @@ var clientVCManager = require('./clientvcmanager');
 
 var handlers = require('./handlers/index');
 
-var { isId, propsSavedCreateVerifiedCopy, getEmptyGuildObject, getEmptyUserObject } = require('./propssavedverif');
+var { isId, isObject, propsSavedCreateVerifiedCopy, getEmptyGuildObject, getEmptyUserObject } = require('./propssavedverif');
 
 // module.exports is the default object that a node.js module uses to export functions and such, when you do require(), you get this object
 // also an interesting way to make js cleaner is by shortening { e: e } to { e }, and the compiler still understands
@@ -87,7 +101,7 @@ module.exports = {
   constants, recursiveReaddir,
   msecToHMS, msecToHMSs, fancyDateStringWD, fancyDateStringMD, fancyDateString, formatPlaybackBar,
   getBotcatUptimeMessage, getBotcatStatusMessage, getBotcatFullStatusMessage,
-  explainChannel, stringToBoolean, removePings, onMsgOneArgHelper,
+  explainChannel, stringToBoolean, removePings, onMsgOneArgHelper, slashCmdResp,
   BotError,
   BreakError, arrayGet, sendObjThruBuffer, receiveObjThruBuffer,
   isDeveloper, isConfirmDeveloper, isOwner, isAdmin, hasBotPermissions, getBotPermissions, getBotPermissionsArray, getPermissions,
@@ -102,5 +116,5 @@ module.exports = {
   BufferStream,
   clientVCManager,
   handlers,
-  isId, propsSavedCreateVerifiedCopy, getEmptyGuildObject, getEmptyUserObject,
+  isId, isObject, propsSavedCreateVerifiedCopy, getEmptyGuildObject, getEmptyUserObject,
 };

@@ -899,5 +899,8 @@ module.exports = [
           break;
       }
     },
+    execute_slash(o, interaction, command, args) {
+      common.slashCmdResp(interaction, true, 'work in progess');
+    },
   },
 ];

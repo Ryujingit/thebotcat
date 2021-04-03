@@ -3,7 +3,10 @@ module.exports = [
     name: 'help',
     description: '`!help` to list my commands\n`!help <command>` to print help for command',
     description_slash: 'help on commands',
-    options: [ { type: 3, name: 'command', description: 'the command' } ],
+    options: [
+      { type: 3, name: 'command', description: 'the command' },
+      { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' },
+    ],
     flags: 0b111110,
     execute(o, msg, rawArgs) {
       if (rawArgs.length == 0 || rawArgs[0] == 'all') {
@@ -24,48 +27,33 @@ module.exports = [
           if (cmdobj.description)
             return msg.channel.send(cmdobj.description);
           else
-            return msg.channel.send(`Command ${name} has no description.`);
+            return msg.channel.send(`Command \`${name}\` has no description.`);
         } else {
-          return msg.channel.send(`Command ${name} does not exist.`);
+          return msg.channel.send(`Command \`${name}\` does not exist.`);
         }
       }
     },
     execute_slash(o, interaction, command, args) {
-      if (args.length == 0 || args[0].value == 'all') {
-        let [commandsList, commandsCategorized] = getCommandsCategorized(args[0] && args[0].value == 'all' ? null : o.guild ? props.saved.guilds[o.guild.id] : false);
-        return client.api.interactions(interaction.id, interaction.token).callback.post({ data: {
-            type: 3,
-            data: {
-              embeds: [{
-                title: `Commands (${commandsList.length})`,
-                description: 'Run `!help <command>` for help on a specific command.',
-                fields: Object.keys(commandsCategorized).map(
-                  x => ({ name: `${x} (${commandsCategorized[x].length})`, value: commandsCategorized[x].map(y => `\`${y.name}\``).join(', ') || 'None', inline: false })
-                ),
-              }],
-              flags: 64,
-              allowed_mentions: { parse: [] },
-            },
-          } });
+      let emphemeral = args[1] ? (args[1].value ? true : false) : true;
+      if (!args[0] || args[0].value == 'all') {
+        let [commandsList, commandsCategorized] = getCommandsCategorized(args[0] && args[0].value == 'all' ? null : o.guild ? props.saved.guilds[o.guild.id] : false, true);
+        return common.slashCmdResp(interaction, emphemeral,
+          `Commands (${commandsList.length})\n` +
+          'Run `!help <command>` for help on a specific command.\n\n' +
+          Object.keys(commandsCategorized).map(
+            x => (`${x} (${commandsCategorized[x].length})\n` +
+              commandsCategorized[x].map(y => `\`${y.name}\``).join(', ') || 'None')
+          ).join('\n\n'));
       } else {
         let name = args[0].value;
         let cmdobj = commands.filter(x => x.name == name)[0];
         if (cmdobj && cmdobj.flags & 2) {
           if (cmdobj.description)
-            return client.api.interactions(interaction.id, interaction.token).callback.post({ data: {
-              type: 3,
-              data: { content: cmdobj.description, flags: 64, allowed_mentions: { parse: [] } },
-            } });
+            return common.slashCmdResp(interaction, emphemeral, cmdobj.description);
           else
-            return client.api.interactions(interaction.id, interaction.token).callback.post({ data: {
-              type: 3,
-              data: { content: `Command ${name} has no description.`, flags: 64, allowed_mentions: { parse: [] } },
-            } });
+            return common.slashCmdResp(interaction, emphemeral, `Command \`${name}\` has no description.`);
         } else {
-          return client.api.interactions(interaction.id, interaction.token).callback.post({ data: {
-            type: 3,
-            data: { content: `Command ${name} does not exist.`, flags: 64, allowed_mentions: { parse: [] } },
-          } });
+          return common.slashCmdResp(interaction, emphemeral, `Command \`${name}\` does not exist.`);
         }
       }
     },
@@ -75,14 +63,13 @@ module.exports = [
     description: '`!version` prints the version of my code',
     description_slash: 'prints my version',
     flags: 0b111110,
+    options: [ { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' } ],
     execute(o, msg, rawArgs) {
       return msg.channel.send(`Thebotcat is version ${version}`, { allowedMentions: { parse: [] } });
     },
     execute_slash(o, interaction, command, args) {
-      client.api.interactions(interaction.id, interaction.token).callback.post({ data: {
-        type: 3,
-        data: { content: `Thebotcat is version ${version}`, flags: 64, allowed_mentions: { parse: [] } },
-      } });
+      let emphemeral = args[0] ? (args[0].value ? true : false) : true;
+      return common.slashCmdResp(interaction, emphemeral, `Thebotcat is version ${version}`);
     },
   },
   {
@@ -90,14 +77,13 @@ module.exports = [
     description: '`!uptime` to see my uptime',
     description_slash: 'prints my uptime',
     flags: 0b111110,
+    options: [ { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' } ],
     execute(o, msg, rawArgs) {
       msg.channel.send(common.getBotcatUptimeMessage());
     },
     execute_slash(o, interaction, command, args) {
-      client.api.interactions(interaction.id, interaction.token).callback.post({ data: {
-        type: 3,
-        data: { embeds: [common.getBotcatUptimeMessage().embed], flags: 64 },
-      } });
+      let emphemeral = args[0] ? (args[0].value ? true : false) : true;
+      common.slashCmdResp(interaction, emphemeral, common.getBotcatUptimeMessage(false));
     },
   },
   {
@@ -105,8 +91,13 @@ module.exports = [
     description: '`!status` to see my status',
     description_slash: 'prints my status',
     flags: 0b111110,
+    options: [ { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' } ],
     execute(o, msg, rawArgs) {
       msg.channel.send(common.getBotcatStatusMessage());
+    },
+    execute_slash(o, interaction, command, args) {
+      let emphemeral = args[0] ? (args[0].value ? true : false) : true;
+      common.slashCmdResp(interaction, emphemeral, common.getBotcatStatusMessage(false));
     },
   },
   {
@@ -114,15 +105,21 @@ module.exports = [
     description: '`!fullstatus` to see my full status',
     description_slash: 'prints my fullstatus',
     flags: 0b111110,
+    options: [ { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' } ],
     execute(o, msg, rawArgs) {
       msg.channel.send(common.getBotcatFullStatusMessage());
+    },
+    execute_slash(o, interaction, command, args) {
+      let emphemeral = args[0] ? (args[0].value ? true : false) : true;
+      common.slashCmdResp(interaction, emphemeral, common.getBotcatFullStatusMessage(false));
     },
   },
   {
     name: 'ping',
     description: '`!ping` checks my ping in the websocket, to the web, and discord',
-    description_slash: 'prints my ping',
+    description_slash: 'checks my ping in the websocket, to the web, and discord',
     flags: 0b111110,
+    options: [ { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' } ],
     execute(o, msg, rawArgs) {
       return new Promise((resolve, reject) => {
         msg.channel.send('Checking Ping').then(m => {
@@ -140,17 +137,40 @@ module.exports = [
         });
       });
     },
+    execute_slash(o, interaction, command, args) {
+      let emphemeral = args[0] ? (args[0].value ? true : false) : true;
+      return new Promise((resolve, reject) => {
+        common.slashCmdResp(interaction, emphemeral, 'Checking Ping').then(v => {
+          let beforerequest = Date.now(), afterrequest;
+          https.get('https://example.com', res => {
+            afterrequest = Date.now();
+            res.socket.destroy();
+            
+            var botPing = afterrequest - beforerequest;
+            var apiPing = BigInt(beforerequest) - (BigInt(interaction.id) >> 22n) - BigInt(new Date('2015').getTime());
+            var wsPing = client.ws.ping;
+            
+            resolve(client.api.webhooks(client.user.id, interaction.token).messages['@original'].patch({ data: { content: `*Bot Ping:* **${botPing}**ms\n*WS Ping:* **${wsPing}**ms\n*API Ping:* **${apiPing}**ms (inaccurate for slash commands)` } }));
+          });
+        });
+      });
+    },
   },
   {
     name: 'discord',
     description: '`!discord` for a link to my Discord Server',
     description_slash: 'sends a link to my support server',
     flags: 0b111110,
+    options: [ { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' } ],
     execute(o, msg, rawArgs) {
       var discord = new Discord.MessageEmbed()
         .setTitle('This is my discord support server if you wanna join click the link! https://discord.gg/NamrBZc')
         .setFooter('Server for thebotcat discord bot come along and say hi!');
       return msg.channel.send(discord);
+    },
+    execute_slash(o, interaction, command, args) {
+      let emphemeral = args[0] ? (args[0].value ? true : false) : true;
+      common.slashCmdResp(interaction, emphemeral, 'Support server: https://discord.gg/NamrBZc');
     },
   },
   {
@@ -158,11 +178,16 @@ module.exports = [
     description: '`!github` for a link to my GitHub repo',
     description_slash: 'sends a link to my github repo url',
     flags: 0b111110,
+    options: [ { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' } ],
     execute(o, msg, rawArgs) {
       var discord = new Discord.MessageEmbed()
         .setTitle('This is my github repository (its completely open source)!\nhttps://github.com/thebotcat/thebotcat')
         .setFooter('Star our GitHub repo! (If you like the code of course)\n\nAnd when they clicked "make public" they felt an evil leave their presence.');
       return msg.channel.send(discord);
+    },
+    execute_slash(o, interaction, command, args) {
+      let emphemeral = args[0] ? (args[0].value ? true : false) : true;
+      common.slashCmdResp(interaction, emphemeral, 'Github Repository: https://github.com/thebotcat/thebotcat');
     },
   },
   {
@@ -170,18 +195,26 @@ module.exports = [
     description: '`!invite` for my invite link',
     description_slash: 'sends my server invite link',
     flags: 0b111110,
+    options: [ { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' } ],
     execute(o, msg, rawArgs) {
       var discord = new Discord.MessageEmbed()
-        .setTitle('My invite link, to add me to any server!\nhttps://discord.com/api/oauth2/authorize?client_id=682719630967439378&permissions=1379265775&scope=bot');
+        .setTitle('My invite link, to add me to any server!\nhttps://discord.com/api/oauth2/authorize?client_id=682719630967439378&permissions=1379265775&scope=bot+applications.commands');
       return msg.channel.send(discord);
+    },
+    execute_slash(o, interaction, command, args) {
+      let emphemeral = args[0] ? (args[0].value ? true : false) : true;
+      common.slashCmdResp(interaction, emphemeral, 'Bot Invite Link: <https://discord.com/api/oauth2/authorize?client_id=682719630967439378&permissions=1379265775&scope=bot+applications.commands>');
     },
   },
   {
     name: 'avatar',
     description: '`!avatar` displays your avatar\n`!avatar @someone` displays someone\'s avatar',
     description_slash: 'displays someone\'s avatar or yours if a user isn\'t provided',
-    flags: 0b111110,
-    options: [ { type: 6, name: 'user', description: 'a user to display the avatar of' } ],
+    flags: 0b011110,
+    options: [
+      { type: 6, name: 'user', description: 'a user to display the avatar of' },
+      { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' },
+    ],
     async execute(o, msg, rawArgs) {
       let member;
       if (rawArgs.length) {
@@ -254,8 +287,11 @@ module.exports = [
     name: 'userinfo',
     description: '`!userinfo [@someone]` to display information about a user',
     description_slash: 'displays information about a user or you if a user isn\'t provided',
-    flags: 0b111110,
-    options: [ { type: 6, name: 'user', description: 'a user to display information about' } ],
+    flags: 0b011110,
+    options: [
+      { type: 6, name: 'user', description: 'a user to display information about' },
+      { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' },
+    ],
     async execute(o, msg, rawArgs) {
       let user;
       if (rawArgs.length) {
@@ -311,8 +347,11 @@ module.exports = [
     name: 'memberinfo',
     description: '`!memberinfo [@someone]` to display information about a user',
     description_slash: 'displays information about a member or you if a member isn\'t provided',
-    flags: 0b110110,
-    options: [ { type: 6, name: 'member', description: 'a member to display information about' } ],
+    flags: 0b010110,
+    options: [
+      { type: 6, name: 'member', description: 'a member to display information about' },
+      { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' },
+    ],
     async execute(o, msg, rawArgs) {
       let member;
       if (rawArgs.length) {
@@ -342,7 +381,8 @@ module.exports = [
     name: 'serverinfo',
     description: '`!serverinfo` to view information about the current server',
     description_slash: 'displays information about the current server',
-    flags: 0b110110,
+    flags: 0b010110,
+    options: [ { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' } ],
     execute(o, msg, rawArgs) {
       let guild = msg.guild;
       
@@ -399,10 +439,13 @@ module.exports = [
     description: '`!firstmsg` for a link to the first message in this channel\n`!firstmsg #channel` for a link to the first message in #channel',
     description_slash: 'sends a link to the first message in this channel or a certain channel',
     flags: 0b111110,
-    options: [ { type: 7, name: 'channel', description: 'the channel' } ],
+    options: [
+      { type: 7, name: 'channel', description: 'the channel' },
+      { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' },
+    ],
     async execute(o, msg, rawArgs) {
       let channel;
-      if (rawArgs.length == 0) {
+      if (!rawArgs[0] || !msg.guild) {
         channel = msg.channel;
       } else if (/<#[0-9]+>/.test(rawArgs[0])) {
         channel = msg.guild.channels.cache.get(rawArgs[0].slice(2, -1));
@@ -410,9 +453,24 @@ module.exports = [
       }
       let msgs = (await channel.messages.fetch({ after: 0, limit: 1 })).array();
       if (msgs.length == 1)
-        return msg.channel.send(`First message in <#${channel.id}>: https://discord.com/channels/${msg.guild.id}/${msg.channel.id}/${msgs[0].id}`);
+        return msg.channel.send(`First message in <#${channel.id}>: https://discord.com/channels/${msg.guild ? msg.guild.id : '@me'}/${channel.id}/${msgs[0].id}`);
       else
         return msg.channel.send(`<#${channel.id}> has no messages`);
+    },
+    async execute_slash(o, interaction, command, args) {
+      let channel;
+      if (!args[0] || !o.guild) {
+        channel = o.channel;
+      } else {
+        channel = o.guild.channels.cache.get(args[0].value);
+        if (!channel || !channel.permissionsFor(o.member).has('VIEW_CHANNEL')) channel = o.channel;
+      }
+      let msgs = (await channel.messages.fetch({ after: 0, limit: 1 })).array();
+      let emphemeral = args[1] ? (args[1].value ? true : false) : true;
+      if (msgs.length == 1)
+        return common.slashCmdResp(interaction, emphemeral, `First message in <#${channel.id}>: https://discord.com/channels/${o.guild ? o.guild.id : '@me'}/${channel.id}/${msgs[0].id}`);
+      else
+        return common.slashCmdResp(interaction, emphemeral, `<#${channel.id}> has no messages`);
     },
   },
   {
@@ -420,7 +478,10 @@ module.exports = [
     description: '`!dateid <id>` to get the UTC date and time of an ID in discord',
     description_slash: 'prints the UTC date and time of an ID in discord',
     flags: 0b111110,
-    options: [ { type: 3, name: 'id', description: 'the id', required: true } ],
+    options: [
+      { type: 3, name: 'id', description: 'the id', required: true },
+      { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' },
+    ],
     execute(o, msg, rawArgs) {
       try {
         let id = BigInt(rawArgs[0]);
@@ -429,13 +490,25 @@ module.exports = [
         return msg.channel.send('Invalid ID');
       }
     },
+    execute_slash(o, interaction, command, args) {
+      let emphemeral = args[1] ? (args[1].value ? true : false) : true;
+      try {
+        let id = BigInt(args[0].value);
+        return common.slashCmdResp(interaction, emphemeral, `Date: ${new Date(new Date('2015-01-01T00:00:00.000Z').getTime() + Number(id >> 22n)).toISOString()}`);
+      } catch (e) {
+        return common.slashCmdResp(interaction, emphemeral, 'Invalid ID');
+      }
+    },
   },
   {
     name: 'idinfo',
     description: '`!idinfo <id>` to get the fields of an ID in discord',
     description_slash: 'prints the fields of an ID in discord',
     flags: 0b111110,
-    options: [ { type: 3, name: 'id', description: 'the id', required: true } ],
+    options: [
+      { type: 3, name: 'id', description: 'the id', required: true },
+      { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' },
+    ],
     execute(o, msg, rawArgs) {
       try {
         let id = BigInt(rawArgs[0]);
@@ -453,6 +526,20 @@ module.exports = [
         });
       } catch (e) {
         return msg.channel.send('Invalid ID');
+      }
+    },
+    execute_slash(o, interaction, command, args) {
+      let emphemeral = args[1] ? (args[1].value ? true : false) : true;
+      try {
+        let id = BigInt(args[0].value);
+        return common.slashCmdResp(interaction, emphemeral,
+          `ID Info for ${id}:\n\n` +
+          `Date: ${new Date(new Date('2015-01-01T00:00:00.000Z').getTime() + Number(id >> 22n)).toISOString()}\n` +
+          `Worker ID: ${(id & 0x3E0000n) >> 17n}\n` +
+          `Process ID: ${(id & 0x1F000n) >> 12n}\n` +
+          `Increment: ${id & 0xFFFn}`);
+      } catch (e) {
+        return common.slashCmdResp(interaction, emphemeral, 'Invalid ID');
       }
     },
   },

@@ -1,6 +1,7 @@
 var commonConstants = require('./constants');
 
 // the next five functions are self explanatory, although isMod refers to bot moderator role
+// msg can either be a message object or an interactions object
 function isDeveloper(msg) {
   return (!props.erg || msg.channel.id == '724006510576926810' || msg.channel.id == '733760003055288350') && (msg.author.id == '405091324572991498' || msg.author.id == '312737536546177025') || developers.includes(msg.author.id);
 }
@@ -20,7 +21,7 @@ function isAdmin(msg) {
     return msg.member.hasPermission('ADMINISTRATOR');
   } catch (e) {
     console.error(e);
-    msg.fetch();
+    if (msg instanceof Discord.Message) msg.fetch();
     return false;
   }
 }

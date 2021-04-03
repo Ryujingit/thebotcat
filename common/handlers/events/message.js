@@ -33,7 +33,7 @@ module.exports = async msg => {
     }
   }
   
-  if (msg.author.bot) return;
+  if (msg.author.id == client.user.id) return;
   
   if (msg.guild && props.saved.disallowed_guilds.includes(msg.guild.id)) return;
   
@@ -43,6 +43,7 @@ module.exports = async msg => {
   if (!msg.guild) {
     if (props.feat.savedms && !props.saved.misc.dmchannels.includes(msg.channel.id)) {
       props.saved.misc.dmchannels.push(msg.channel.id);
+      schedulePropsSave();
     }
   }
   
@@ -72,9 +73,7 @@ module.exports = async msg => {
   }
   
   if (!msg.guild) {
-    if (isCommand)
-      nonlogmsg(`dm from ${msg.author.tag} (channel ${msg.channel.id}) with contents ${util.inspect(msg.content)}`);
-    else
+    if (!(isCommand || msg.content && (msg.content.startsWith('</') || msg.content.startsWith('/'))))
       logmsg(`dm from ${msg.author.tag} (channel ${msg.channel.id}) with contents ${util.inspect(msg.content)}`);
   }
   
