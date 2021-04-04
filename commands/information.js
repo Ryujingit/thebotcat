@@ -210,7 +210,7 @@ module.exports = [
     name: 'avatar',
     description: '`!avatar` displays your avatar\n`!avatar @someone` displays someone\'s avatar',
     description_slash: 'displays someone\'s avatar or yours if a user isn\'t provided',
-    flags: 0b011110,
+    flags: 0b111110,
     options: [
       { type: 6, name: 'user', description: 'a user to display the avatar of' },
       { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' },
@@ -237,21 +237,20 @@ module.exports = [
       }
       
       let avatarURL = member.user.displayAvatarURL({ dynamic: true });
-      let animated = member.user.avatar && member.user.avatar.startsWith('a_'), avatarEmbed;
+      let animated = member.user.avatar && member.user.avatar.startsWith('a_');
       if (member.user.avatar == null) {
-        let url = member.user.defaultAvatarURL;
-        avatarEmbed = new Discord.MessageEmbed()
+        return msg.channel.send(new Discord.MessageEmbed()
           .setTitle(`Avatar for ${member.user.tag}`)
           .setDescription(
             `userid: ${member.user.id}\n` +
             `links: [default](${avatarURL}) (avatar is default)`
             )
-          .setImage(url)
-          .setColor(member.displayHexColor);
+          .setImage(avatarURL)
+          .setColor(member.displayHexColor));
       } else {
         let baseurl = `https://cdn.discordapp.com/avatars/${member.user.id}/${member.user.avatar}`;
         if (animated)
-          avatarEmbed = new Discord.MessageEmbed()
+          return msg.channel.send(new Discord.MessageEmbed()
             .setTitle(`Avatar for ${member.user.tag}`)
             .setDescription(
               `userid: ${member.user.id}\n` +
@@ -264,9 +263,9 @@ module.exports = [
               `[big\xa0gif](${baseurl}.gif?size=4096)`
               )
             .setImage(`${baseurl}.gif?size=4096`)
-            .setColor(member.displayHexColor);
+            .setColor(member.displayHexColor));
         else
-          avatarEmbed = new Discord.MessageEmbed()
+          return msg.channel.send(new Discord.MessageEmbed()
             .setTitle(`Avatar for ${member.user.tag}`)
             .setDescription(
               `userid: ${member.user.id}\n` +
@@ -277,17 +276,160 @@ module.exports = [
               `[big\xa0webp](${baseurl}.webp?size=4096)`
               )
             .setImage(`${baseurl}.png?size=4096`)
-            .setColor(member.displayHexColor);
+            .setColor(member.displayHexColor));
+      }
+    },
+    async execute_slash(o, interaction, command, args) {
+      let emphemeral = args[1] ? (args[1].value ? true : false) : true;
+      
+      let member;
+      if (args[0]) {
+        if (o.guild) {
+          try {
+            let potentialMember = await o.guild.members.fetch(args[0].value);
+            member = potentialMember;
+          } catch (e) {
+            let user = await client.users.fetch(args[0].value);
+            if (user) member = { user, displayHexColor: '#000000' };
+            else return common.slashCmdResp(interaction, emphemeral, 'User not found.');
+          }
+        } else {
+          let user = await client.users.fetch(args[0].value);
+          if (user) member = { user: user, displayHexColor: '#000000' };
+          else return common.slashCmdResp(interaction, emphemeral, 'User not found.');
+        }
+      } else {
+        if (o.guild) member = o.member;
+        else member = { user: o.author, displayHexColor: '#000000' };
       }
       
-      return msg.channel.send(avatarEmbed);
+      let avatarURL = member.user.displayAvatarURL({ dynamic: true });
+      let animated = member.user.avatar && member.user.avatar.startsWith('a_'), avatarEmbed;
+      if (member.user.avatar == null) {
+        return common.slashCmdResp(interaction, emphemeral,
+          `**Avatar for ${member.user.tag}**\n` +
+          `userid: ${member.user.id}, color: ${member.displayHexColor}\n` +
+          `links: [default](<${avatarURL}>) (avatar is default)\n` +
+          `[\[for\xa0embed\]]( ${avatarURL} )`);
+      } else {
+        let baseurl = `https://cdn.discordapp.com/avatars/${member.user.id}/${member.user.avatar}`;
+        if (animated)
+          return common.slashCmdResp(interaction, emphemeral,
+            `**Avatar for ${member.user.tag}**\n` +
+            `userid: ${member.user.id}, color: ${member.displayHexColor}\n` +
+            `links: [default](<${avatarURL}>), ` +
+            `[normal\xa0png](<${baseurl}.png>), ` +
+            `[normal\xa0webp](<${baseurl}.webp>), ` +
+            `[normal\xa0gif](<${baseurl}.gif>)\n` +
+            `big links: [big png](<${baseurl}.png?size=4096>), ` +
+            `[big\xa0webp](<${baseurl}.webp?size=4096>), ` +
+            `[big\xa0gif](<${baseurl}.gif?size=4096>)\n` +
+            `[\[for\xa0embed\]]( ${baseurl}.gif?size=4096 )`);
+        else
+          return common.slashCmdResp(interaction, emphemeral,
+            `**Avatar for ${member.user.tag}**\n` +
+            `userid: ${member.user.id}, color: ${member.displayHexColor}\n` +
+            `links: [default](<${avatarURL}>), ` +
+            `[normal\xa0png](<${baseurl}.png>), ` +
+            `[normal\xa0webp](<${baseurl}.webp>), ` +
+            `[big\xa0png](<${baseurl}.png?size=4096>), ` +
+            `[big\xa0webp](<${baseurl}.webp?size=4096>)\n` +
+            `[\[for\xa0embed\]]( ${baseurl}.png?size=4096 )`);
+      }
+    },
+  },
+  {
+    name: 'icon',
+    description: '`!icon` to view the server\'s icon',
+    description_slash: 'displays the server\'s icon',
+    flags: 0b110110,
+    options: [ { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' } ],
+    execute(o, msg, rawArgs) {
+      let guild = msg.guild;
+      
+      let iconURL = guild.iconURL({ dynamic: true });
+      let animated = guild.icon && guild.icon.startsWith('a_');
+      if (guild.icon == null) {
+        return msg.channel.send(new Discord.MessageEmbed()
+          .setTitle(`Icon for ${guild.name}`)
+          .setDescription(
+            `serverid: ${guild.id}\n` +
+            `Server icon is default`
+            ));
+      } else {
+        let baseurl = `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}`;
+        if (animated)
+          return msg.channel.send(new Discord.MessageEmbed()
+            .setTitle(`Icon for ${guild.name}`)
+            .setDescription(
+              `serverid: ${guild.id}\n` +
+              `links: [default](${iconURL}), ` +
+              `[normal\xa0png](${baseurl}.png), ` +
+              `[normal\xa0webp](${baseurl}.webp), ` +
+              `[normal\xa0gif](${baseurl}.gif)\n` +
+              `big links: [big png](${baseurl}.png?size=4096), ` +
+              `[big\xa0webp](${baseurl}.webp?size=4096), ` +
+              `[big\xa0gif](${baseurl}.gif?size=4096)`
+              )
+            .setImage(`${baseurl}.gif?size=4096`));
+        else
+          return msg.channel.send(new Discord.MessageEmbed()
+            .setTitle(`Icon for ${guild.name}`)
+            .setDescription(
+              `serverid: ${guild.id}\n` +
+              `links: [default](${iconURL}), ` +
+              `[normal\xa0png](${baseurl}.png), ` +
+              `[normal\xa0webp](${baseurl}.webp), ` +
+              `[big\xa0png](${baseurl}.png?size=4096), ` +
+              `[big\xa0webp](${baseurl}.webp?size=4096)`
+              )
+            .setImage(`${baseurl}.png?size=4096`));
+      }
+    },
+    execute_slash(o, interaction, command, args) {
+      let emphemeral = args[0] ? (args[0].value ? true : false) : true;
+      
+      let guild = o.guild;
+      
+      let iconURL = guild.iconURL({ dynamic: true });
+      let animated = guild.icon && guild.icon.startsWith('a_');
+      if (guild.icon == null) {
+        return common.slashCmdResp(interaction, emphemeral,
+          `**Icon for ${guild.name}**\n` +
+          `serverid: ${guild.id}\n` +
+          `Server icon is default`);
+      } else {
+        let baseurl = `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}`;
+        if (animated)
+          return common.slashCmdResp(interaction, emphemeral,
+            `**Icon for ${guild.name}**\n` +
+            `serverid: ${guild.id}\n` +
+            `links: [default](<${iconURL}>), ` +
+            `[normal\xa0png](<${baseurl}.png>), ` +
+            `[normal\xa0webp](<${baseurl}.webp>), ` +
+            `[normal\xa0gif](<${baseurl}.gif>)\n` +
+            `big links: [big png](<${baseurl}.png?size=4096>), ` +
+            `[big\xa0webp](<${baseurl}.webp?size=4096>), ` +
+            `[big\xa0gif](<${baseurl}.gif?size=4096>)\n` +
+            `[\[for\xa0embed\]]( ${baseurl}.gif?size=4096 )`);
+        else
+          return common.slashCmdResp(interaction, emphemeral,
+            `**Icon for ${guild.name}**\n` +
+            `serverid: ${guild.id}\n` +
+            `links: [default](<${iconURL}>), ` +
+            `[normal\xa0png](<${baseurl}.png>), ` +
+            `[normal\xa0webp](<${baseurl}.webp>), ` +
+            `[big\xa0png](<${baseurl}.png?size=4096>), ` +
+            `[big\xa0webp](<${baseurl}.webp?size=4096>)\n` +
+            `[\[for\xa0embed\]]( ${baseurl}.png?size=4096 )`);
+      }
     },
   },
   {
     name: 'userinfo',
     description: '`!userinfo [@someone]` to display information about a user',
     description_slash: 'displays information about a user or you if a user isn\'t provided',
-    flags: 0b011110,
+    flags: 0b111110,
     options: [
       { type: 6, name: 'user', description: 'a user to display information about' },
       { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' },
@@ -336,18 +478,58 @@ module.exports = [
           thumbnail: { url: user.displayAvatarURL() + '?size=64' },
           fields: [
             { name: 'Created At', value: `${createdDate.toISOString()} (${common.msecToHMSs(Date.now() - createdDate.getTime())} ago)`, inline: false },
-            { name: 'Flags', value: user.flags && user.flags.toArray().length ? user.flags.toArray().join(' ') : 'None', inline: false },
+            { name: 'Flags', value: user.flags && user.flags.toArray().length ? user.flags.toArray().join(', ') : 'None', inline: false },
             { name: 'Avatar', value: avatarStr, inline: false },
           ],
         }
       });
+    },
+    async execute_slash(o, interaction, command, args) {
+      let emphemeral = args[1] ? (args[1].value ? true : false) : true;
+      
+      let user;
+      if (args[0]) {
+        let potentialUser = await client.users.fetch(args[0].value);
+        if (potentialUser) user = potentialUser;
+        else return common.slashCmdResp(interaction, emphemeral, 'User not found.');
+      } else user = o.author;
+      
+      let createdDate = new Date(new Date('2015-01-01T00:00:00.000Z').getTime() + Number(BigInt(user.id) >> 22n));
+      let avatarURL = user.displayAvatarURL({ dynamic: true });
+      let animated = user.avatar && user.avatar.startsWith('a_');
+      let baseurl = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}`;
+      let avatarStr = user.avatar == null ?
+        `[default](<${avatarURL} ) (avatar is default)\n` +
+        `[\[for\xa0embed\]]( ${avatarURL}?size=64 )` :
+          (animated ?
+          `[default](<${avatarURL}>), ` +
+          `[normal\xa0png](<${baseurl}.png>), ` +
+          `[normal\xa0webp](<${baseurl}.webp>), ` +
+          `[normal\xa0gif](<${baseurl}.gif>), ` +
+          `[big\xa0png](<${baseurl}.png?size=4096>), ` +
+          `[big\xa0webp](<${baseurl}.webp?size=4096>), ` +
+          `[big\xa0gif](<${baseurl}.gif?size=4096>)\n` +
+          `[\[for\xa0embed\]]( ${avatarURL}?size=64 )` :
+          `[default](<${avatarURL}>), ` +
+          `[normal\xa0png](<${baseurl}.png>), ` +
+          `[normal\xa0webp](<${baseurl}.webp>), ` +
+          `[big\xa0png](<${baseurl}.png?size=4096>), ` +
+          `[big\xa0webp](<${baseurl}.webp?size=4096>)\n` +
+          `[\[for\xa0embed\]]( ${avatarURL}?size=64 )`);
+      
+      return common.slashCmdResp(interaction, emphemeral,
+        `**User Info for ${user.tag}**\n` +
+        `**ID: ${user.id}, Bot: ${user.bot ? 'Yes' : 'No'}**\n` +
+        `Created At: ${createdDate.toISOString()} (${common.msecToHMSs(Date.now() - createdDate.getTime())} ago)\n` +
+        `Flags: ${user.flags && user.flags.toArray().length ? user.flags.toArray().join(', ') : 'None'}\n` +
+        `Avatar: ${avatarStr}`);
     },
   },
   {
     name: 'memberinfo',
     description: '`!memberinfo [@someone]` to display information about a user',
     description_slash: 'displays information about a member or you if a member isn\'t provided',
-    flags: 0b010110,
+    flags: 0b110110,
     options: [
       { type: 6, name: 'member', description: 'a member to display information about' },
       { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' },
@@ -376,13 +558,39 @@ module.exports = [
         }
       });
     },
+    async execute_slash(o, interaction, command, args) {
+      let emphemeral = args[1] ? (args[1].value ? true : false) : true;
+      
+      let member;
+      if (args[0]) {
+        try {
+          member = await o.guild.members.fetch(args[0].value);
+        } catch (e) {
+          return common.slashCmdResp(interaction, emphemeral, 'Member not found in guild.');
+        }
+      } else member = o.member;
+      
+      let createdDate = new Date(new Date('2015-01-01T00:00:00.000Z').getTime() + Number(BigInt(member.id) >> 22n));
+      let joinedDate = new Date(member.joinedAt);
+      
+      return common.slashCmdResp(interaction, emphemeral,
+        `**Member Info for ${member.user.tag}**\n` +
+        `**ID: ${member.id}, Color: ${member.displayHexColor}**\n` +
+        `Created At: ${createdDate.toISOString()} (${common.msecToHMSs(Date.now() - createdDate.getTime())} ago)\n` +
+        `Joined At: ${joinedDate.toISOString()} (${common.msecToHMSs(Date.now() - joinedDate.getTime())} ago)\n` +
+        `Roles: ${member.roles.cache.array().sort((a, b) => a.position > b.position ? -1 : 1).map(x => `<@&${x.id}>`).join(' ')}\n` +
+        `[\[for\xa0embed\]]( ${member.user.displayAvatarURL()}?size=64 )`);
+    },
   },
   {
     name: 'serverinfo',
     description: '`!serverinfo` to view information about the current server',
     description_slash: 'displays information about the current server',
-    flags: 0b010110,
-    options: [ { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' } ],
+    flags: 0b110110,
+    options: [
+      { type: 5, name: 'all', description: 'show all server info' },
+      { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' },
+    ],
     execute(o, msg, rawArgs) {
       let guild = msg.guild;
       
@@ -410,7 +618,7 @@ module.exports = [
           embed: {
             title: `Information for ${guild.name}`,
             description: `**ID: ${guild.id}**`,
-            thumbnail: { url: guild.iconURL() + '?size=64' },
+            thumbnail: { url: iconURL ? iconURL + '?size=64' : null },
             fields: [
               { name: 'Created At', value: `${createdDate.toISOString()} (${common.msecToHMSs(Date.now() - createdDate.getTime())} ago)`, inline: false },
               { name: 'Icon', value: iconStr, inline: false },
@@ -424,7 +632,7 @@ module.exports = [
           embed: {
             title: `Information for ${guild.name}`,
             description: `**ID: ${guild.id}**`,
-            thumbnail: { url: guild.iconURL() + '?size=64' },
+            thumbnail: { url: iconURL ? iconURL + '?size=64' : null },
             fields: [
               { name: 'Created At', value: `${createdDate.toISOString()} (${common.msecToHMSs(Date.now() - createdDate.getTime())} ago)`, inline: false },
               { name: 'Icon', value: iconStr, inline: false },
@@ -432,6 +640,48 @@ module.exports = [
             ],
           }
         });
+    },
+    execute_slash(o, interaction, command, args) {
+      let emphemeral = args[1] ? (args[1].value ? true : false) : true;
+      
+      let guild = o.guild;
+      
+      let createdDate = new Date(new Date('2015-01-01T00:00:00.000Z').getTime() + Number(BigInt(guild.id) >> 22n));
+      let iconURL = guild.iconURL();
+      let animated = guild.icon && guild.icon.startsWith('a_');
+      let baseurl = `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}`;
+      let iconStr = guild.icon == null ? `Server icon is default` :
+        (animated ?
+        `[default](<${iconURL}>), ` +
+        `[normal\xa0png](<${baseurl}.png>), ` +
+        `[normal\xa0webp](<${baseurl}.webp>), ` +
+        `[normal\xa0gif](<${baseurl}.gif>), ` +
+        `[big\xa0png](<${baseurl}.png?size=4096>), ` +
+        `[big\xa0webp](<${baseurl}.webp?size=4096>), ` +
+        `[big\xa0gif](<${baseurl}.gif?size=4096>)` :
+        `[default](<${iconURL}>), ` +
+        `[normal\xa0png](<${baseurl}.png>), ` +
+        `[normal\xa0webp](<${baseurl}.webp>), ` +
+        `[big\xa0png](<${baseurl}.png?size=4096>), ` +
+        `[big\xa0webp](<${baseurl}.webp?size=4096>)`);
+      
+      if (args[0] && args[0].value)
+        return common.slashCmdResp(interaction, emphemeral,
+          `**Information for ${guild.name}**\n` +
+          `**ID: ${guild.id}**\n` +
+          `Created At: ${createdDate.toISOString()} (${common.msecToHMSs(Date.now() - createdDate.getTime())} ago)\n` +
+          `Icon: ${iconStr}\n` +
+          `Members: ${guild.memberCount}\n` +
+          `Member Cap: ${guild.maximumMembers}` +
+          (iconURL ? `\n[\[for\xa0embed\]]( ${iconURL}?size=64 )` : ''));
+      else
+        return common.slashCmdResp(interaction, emphemeral,
+          `**Information for ${guild.name}**\n` +
+          `**ID: ${guild.id}**\n` +
+          `Created At: ${createdDate.toISOString()} (${common.msecToHMSs(Date.now() - createdDate.getTime())} ago)\n` +
+          `Icon: ${iconStr}\n` +
+          `Members: ${guild.memberCount}` +
+          (iconURL ? `\n[\[for\xa0embed\]]( ${iconURL}?size=64 )` : ''));
     },
   },
   {
