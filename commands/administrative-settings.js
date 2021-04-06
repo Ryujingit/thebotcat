@@ -25,7 +25,6 @@ module.exports = [
             options: [
               { type: 3, name: 'word', description: 'the badword to add', required: true },
               { type: 3, name: 'retaliation', description: 'the retaliation for saying the badword', required: true },
-              { type: 5, name: 'enabled', description: 'whether the word is enabled', required: true },
               {
                 type: 4, name: 'type', description: 'type flags for badword', required: true,
                 choices: [
@@ -37,7 +36,8 @@ module.exports = [
                   { name: '6: badword is substring in message, case insensitive', value: 6 },
                 ],
               },
-              { type: 5, name: 'ignore_admin', description: 'whether the badword can be said by admins', required: true },
+              { type: 5, name: 'enabled', description: 'whether the word is enabled' },
+              { type: 5, name: 'ignore_admin', description: 'whether the badword can be said by admins' },
               { type: 3, name: 'ignored_roles', description: 'roles who can say the badword' },
             ],
           },
@@ -50,7 +50,6 @@ module.exports = [
             options: [
               { type: 3, name: 'word', description: 'the badword to modify', required: true },
               { type: 3, name: 'retaliation', description: 'the retaliation for saying the badword' },
-              { type: 5, name: 'enabled', description: 'whether the word is enabled' },
               {
                 type: 4, name: 'type', description: 'type flags for badword',
                 choices: [
@@ -62,6 +61,7 @@ module.exports = [
                   { name: '6: badword is substring in message, case insensitive', value: 6 },
                 ],
               },
+              { type: 5, name: 'enabled', description: 'whether the word is enabled' },
               { type: 5, name: 'ignore_admin', description: 'whether the badword can be said by admins' },
               { type: 3, name: 'ignored_roles', description: 'roles who can say the badword' },
             ],
@@ -73,9 +73,10 @@ module.exports = [
         options: [
           { type: 1, name: 'view', description: 'view server logging channel' },
           {
-            type: 1, name: 'set', description: 'set server logging channel or unset if none is provided',
-            options: [ { type: 7, name: 'logchannel', description: 'the logging channel' } ],
+            type: 1, name: 'set', description: 'set server logging channel',
+            options: [ { type: 7, name: 'logchannel', description: 'the logging channel or this channel if one isn\'t provided' } ],
           },
+          { type: 1, name: 'clear', description: 'clear server logging channel' },
         ],
       },
       {
@@ -227,7 +228,7 @@ module.exports = [
         case 'confirmkb':
           if (!fullperms) return silenced ? null : msg.channel.send('You do not have permission to run this command.');
           if (rawArgs.length == 1) {
-            return msg.channel.send(`Confirmation on the kick, ban, and unban commands: ${guilddata.confirm_kb ? '✅' : '❌'}\n\`${guilddata.prefix}settings confirmkb <'true'/'yes/'false'/'no'>\` to set.`);
+            return msg.channel.send(`Confirmation on the kick, ban, and unban commands: ${guilddata.confirm_kb ? '✅' : '❌'}\n\`${guilddata.prefix}settings confirmkb <'true'/'yes'/'false'/'no'>\` to set.`);
           } else {
             switch (rawArgs[1]) {
               case 'true': case 'yes':
@@ -242,7 +243,7 @@ module.exports = [
                 return msg.channel.send(`\`${guilddata.prefix}settings confirmkb <'true'/'yes/'false'/'no'>\` to set.`);
             }
             schedulePropsSave();
-            msg.channel.send(`Confirmation on the kick, ban, and unban commands set to: ${guilddata.confirm_kb ? '✅' : '❌'}`);
+            return msg.channel.send(`Confirmation on the kick, ban, and unban commands set to: ${guilddata.confirm_kb ? '✅' : '❌'}`);
           }
           break;
         
@@ -251,9 +252,9 @@ module.exports = [
             return msg.channel.send(
               'To list badwords run `settings badwords list`.\n' +
               'To list info about one badword run `settings badwords list <word>`.\n' +
-              'To add badword run `settings badwords add <enabled> <type> <ignore_admin> [<ignored_role> ...] <word> <retaliation>`.\n' +
-              'To remove badword run `settings badwords remove <word>`.\n' +
-              'To modify badword run `settings badwords modify <word> <enabled> <type> <ignore_admin> [<ignored_role> ...] <retaliation>`.'
+              'To add a badword run `settings badwords add <word> <retaliation> <type> <enabled> <ignore_admin> [<ignored_role> ...]`.\n' +
+              'To remove a badword run `settings badwords remove <word>`.\n' +
+              'To modify a badword run `settings badwords modify <word> <retaliation> <type> <enabled> <ignore_admin> [<ignored_role> ...]`.'
             );
           } else {
             switch (rawArgs[1]) {
@@ -262,15 +263,15 @@ module.exports = [
                   return msg.channel.send({ embed: { title: 'List of badwords', description: guilddata.basic_automod.bad_words.map(x => x.word).join(', ') } });
                 } else {
                   let word = guilddata.basic_automod.bad_words.filter(x => x.word == rawArgs[2])[0];
-                  if (!word) return msg.channel.send({ embed: { title: 'Error', description: 'Word ${rawArgs[2]} not found' } });
+                  if (!word) return msg.channel.send({ embed: { title: 'Error', description: `Word ${util.inspect(rawArgs[2])} not found` } });
                   return msg.channel.send({
                     embed: {
                       title: `Information for badword ${util.inspect(word.word)}`,
                       fields: [
+                        { name: 'Retailiation', value: `${word.retaliation}`, inline: false },
                         { name: 'Enabled', value: `${word.enabled}`, inline: true },
                         { name: 'Ignore Admin', value: `${word.ignore_admin}`, inline: true },
                         { name: 'Ignored Roles', value: `${word.ignored_roles.length ? word.ignored_roles.map(x => `<@&#{x}>`).join(' ') : 'None'}`, inline: false },
-                        { name: 'Retailiation', value: `${word.retaliation}`, inline: false },
                       ],
                     }
                   });
@@ -278,15 +279,22 @@ module.exports = [
                 break;
               
               case 'add':
-                if (rawArgs.length < 7) return msg.channel.send('Not enough arguments');
-                let type = Number(rawArgs[3]);
+                if (rawArgs.length < 8) return msg.channel.send('Not enough arguments');
+                let type = Number(rawArgs[5]);
                 if (!(Number.isSafeInteger(type) && type >= 0 && type < 8 && type % 4 != 3))
                   return msg.channel.send('Type must be an integer and any of 0, 1, 2, 4, 5, 6');
-                if (guilddata.basic_automod.bad_words.filter(x => x.word == rawArgs[5]).length)
+                if (guilddata.basic_automod.bad_words.filter(x => x.word == rawArgs[2]).length)
                   return msg.channel.send({ embed: { title: 'Word Already Exists', description: `Word ${util.inspect(rawArgs[5])} already exists` } });
-                guilddata.basic_automod.bad_words.push({ enabled: common.stringToBoolean(rawArgs[2]), type, ignore_admin: common.stringToBoolean(rawArgs[4]), ignored_roles: [], word: rawArgs[5], retaliation: rawArgs.slice(6).join(' ') });
+                guilddata.basic_automod.bad_words.push({
+                  enabled: common.stringToBoolean(rawArgs[4]),
+                  type,
+                  ignore_admin: common.stringToBoolean(rawArgs[6]),
+                  ignored_roles: rawArgs[7].split(' ').map(x => common.searchRole(o.guild.roles, x)).filter(x => x),
+                  word: rawArgs[2],
+                  retaliation: rawArgs[3],
+                });
                 schedulePropsSave();
-                return msg.channel.send({ embed: { title: 'Word Added', description: `Word ${util.inspect(rawArgs[5])} successfully added` } });
+                return msg.channel.send({ embed: { title: 'Word Added', description: `Word ${util.inspect(rawArgs[2])} successfully added` } });
                 break;
               
               case 'remove':
@@ -298,14 +306,14 @@ module.exports = [
                     break;
                   }
                 }
-                if (index == null) return msg.channel.send({ embed: { title: 'Word Not Found', description: `Word ${util.inspect(rawArgs[5])} not found` } });
+                if (index == null) return msg.channel.send({ embed: { title: 'Word Not Found', description: `Word ${util.inspect(rawArgs[2])} not found` } });
                 guilddata.basic_automod.bad_words.splice(index, 1);
                 schedulePropsSave();
-                return msg.channel.send({ embed: { title: 'Word Removed', description: `Word ${util.inspect(rawArgs[5])} successfully removed` } });
+                return msg.channel.send({ embed: { title: 'Word Removed', description: `Word ${util.inspect(rawArgs[2])} successfully removed` } });
                 break;
               
               case 'modify':
-                if (rawArgs.length < 7) return msg.channel.send('Not enough arguments');
+                if (rawArgs.length < 8) return msg.channel.send('Not enough arguments');
                 let index2 = null;
                 for (var i = 0; i < guilddata.basic_automod.bad_words.length; i++) {
                   if (guilddata.basic_automod.bad_words[i].word == rawArgs[2]) {
@@ -314,12 +322,19 @@ module.exports = [
                   }
                 }
                 if (index2 == null) return msg.channel.send({ embed: { title: 'Word Not Found', description: `Word ${util.inspect(rawArgs[2])} not found` } });
-                let type2 = Number(rawArgs[4]);
+                let type2 = Number(rawArgs[5]);
                 if (!(Number.isSafeInteger(type2) && type2 >= 0 && type2 < 8 && type2 % 4 != 3))
                   return msg.channel.send('Type must be an integer and any of 0, 1, 2, 4, 5, 6');
-                guilddata.basic_automod.bad_words[index2] = { enabled: common.stringToBoolean(rawArgs[2]), type2, ignore_admin: common.stringToBoolean(rawArgs[4]), ignored_roles: [], word: rawArgs[5], retaliation: rawArgs.slice(6).join(' ') };
+                guilddata.basic_automod.bad_words[index2] = {
+                  enabled: common.stringToBoolean(rawArgs[4]),
+                  type: type2,
+                  ignore_admin: common.stringToBoolean(rawArgs[6]),
+                  ignored_roles: rawArgs[7].split(' ').map(x => common.searchRole(o.guild.roles, x)).filter(x => x),
+                  word: rawArgs[2],
+                  retaliation: rawArgs[3],
+                };
                 schedulePropsSave();
-                return msg.channel.send({ embed: { title: 'Word Modified', description: `Word ${util.inspect(rawArgs[5])} successfully modified` } });
+                return msg.channel.send({ embed: { title: 'Word Modified', description: `Word ${util.inspect(rawArgs[2])} successfully modified` } });
                 break;
             }
           }
@@ -331,21 +346,21 @@ module.exports = [
             return msg.channel.send(
               `The current logging channel is ` + (guilddata.logging.main ? `<#${guilddata.logging.main}> (id ${guilddata.logging.main})` : `none`) + '.\n' +
               'To set logging channel to this channel run `settings logchannel set`.\n' +
-              'To set logging channel to a channel run `settings logchannel <#channel>`.\n' +
-              'To turn of logging run `settings logchannel null`.'
+              'To set logging channel to a channel run `settings logchannel set <#channel>`.\n' +
+              'To turn off logging run `settings logchannel clear`.'
             );
           } else {
             let logchannel = rawArgs.slice(1).join(' ');
-            if (logchannel == 'null') {
+            if (logchannel == 'clear') {
               guilddata.logging.main = null;
               schedulePropsSave();
-              return msg.channel.send('Logging channel disabled.');
-            } else if (logchannel == 'set' || logchannel == 'this') {
+              return msg.channel.send('Logging disabled.');
+            } else if (logchannel == 'set') {
               guilddata.logging.main = msg.channel.id;
               schedulePropsSave();
               return msg.channel.send(`Logging channel set to <#${msg.channel.id}> (id ${msg.channel.id}).`);
-            } else if (/<#[0-9]+>/.test(logchannel)) {
-              logchannel = logchannel.slice(2, logchannel.length - 1);
+            } else if (/^set <#[0-9]+>$/.test(logchannel)) {
+              logchannel = logchannel.slice(6, logchannel.length - 1);
               if (msg.guild.channels.cache.get(logchannel)) {
                 guilddata.logging.main = logchannel;
                 schedulePropsSave();
@@ -357,8 +372,8 @@ module.exports = [
               return msg.channel.send(
                 'Argument not a valid channel.\n' +
                 'To set logging channel to this channel run `settings logchannel set`.\n' +
-                'To set logging channel to a channel run `settings logchannel <#channel>`.\n' +
-                'To turn of logging run `settings logchannel null`.'
+                'To set logging channel to a channel run `settings logchannel set <#channel>`.\n' +
+                'To turn off logging run `settings logchannel clear`.'
               );
             }
           }
@@ -371,31 +386,33 @@ module.exports = [
               embed: {
                 title: 'Muted Role',
                 description: `The muted role is currently set to: ${guilddata.mutedrole ? '<@&' + guilddata.mutedrole + '>' : 'nothing'}\n` +
-                  `To change, run \`settings mutedrole set <@mention|id|name|query>\`.\nTo reset, run \`settings mutedrole reset\`.`,
+                  `To change, run \`settings mutedrole set <@mention|id|name|query>\`.\nTo reset, run \`settings mutedrole set\`.`,
               }
             });
           } else {
             if (rawArgs[1] == 'set') {
-              let role = common.searchRoles(msg.guild.roles, rawArgs.slice(2).join(' '));
-              if (Array.isArray(role)) {
-                return msg.channel.send({
-                  embed: { title: 'Not Specific Enough', description: `Your query narrows it down to these roles:\n${roles.map(x => '<@&' + x.id + '>').join(' ')}` }
-                });
+              if (rawArgs.length == 2) {
+                if (guilddata.mutedrole) {
+                  guilddata.mutedrole = null;
+                  schedulePropsSave();
+                  return msg.channel.send('Muted role reset.');
+                } else {
+                  return msg.channel.send('Muted role not set in the first place.');
+                }
               } else {
-                guilddata.mutedrole = role.id;
-                schedulePropsSave();
-                return msg.channel.send({ embed: { title: 'Muted Role', description: `<@&${role.id}> set as muted role.` } });
-              }
-            } else if (rawArgs[1] == 'reset') {
-              if (guilddata.mutedrole) {
-                guilddata.mutedrole = null;
-                schedulePropsSave();
-                return msg.channel.send('Muted role reset.');
-              } else {
-                return msg.channel.send('Muted role not set in the first place.');
+                let role = common.searchRoles(msg.guild.roles, rawArgs.slice(2).join(' '));
+                if (Array.isArray(role)) {
+                  return msg.channel.send({
+                    embed: { title: 'Not Specific Enough', description: `Your query narrows it down to these roles:\n${roles.map(x => '<@&' + x.id + '>').join(' ')}` }
+                  });
+                } else {
+                  guilddata.mutedrole = role.id;
+                  schedulePropsSave();
+                  return msg.channel.send({ embed: { title: 'Muted Role', description: `<@&${role.id}> set as muted role.` } });
+                }
               }
             } else {
-              return msg.channel.send('Invalid option. To change, run `settings mutedrole set <@mention|id|name|query>`.\nTo reset, run `settings mutedrole reset`.');
+              return msg.channel.send('Invalid option. To change, run `settings mutedrole set <@mention|id|name|query>`.\nTo reset, run `settings mutedrole set`.');
             }
           }
           break;
@@ -409,7 +426,7 @@ module.exports = [
               'To view the permissions for one role, run `settings roles view <@mention|name|query>`\n' +
               'To create permissions for a role, run `settings roles init <@mention|name|query>`\n' +
               'To remove permissions for a role, run `settings roles clear <@mention|name|query>`\n' +
-              'To set a specific permission for a role, run `settings roles enable/disable <@mention|name|query> <permission name|permission id> [<2nd permission name|permission id> ...]`',
+              'To set a specific permission for a role, run `settings roles setperms <@mention|name|query> enable/disable [<permission name|permission id> ...]`',
             );
           } else {
             switch (rawArgs[1]) {
@@ -499,8 +516,10 @@ module.exports = [
                 }
                 break;
               
-              case 'enable':
-              case 'disable':
+              case 'setperms':
+                if (rawArgs[3] != 'enable' && rawArgs[3] != 'disable')
+                  return msg.channel.send('Invalid option. Run `settings roles` to view options.');
+                
                 let role3 = common.searchRoles(msg.guild.roles, rawArgs[2]);
                 if (Array.isArray(role3)) {
                   return msg.channel.send({
@@ -515,12 +534,12 @@ module.exports = [
                       }
                     });
                   let changedPerms = [];
-                  let permsToChange = rawArgs.slice(3).map(perm => {
+                  let permsToChange = rawArgs.slice(4).map(perm => {
                     let nperm = Number(perm);
                     if (nperm == nperm) return Number.isSafeInteger(nperm) && nperm > 0 ? nperm : null;
                     else return common.constants.botRolePermBits[perm];
                   }).filter(x => x != null).reduce((a, c) => (changedPerms.push(common.constants.botRolePermBitsInv[c]), a + c), 0) & common.constants.botRolePermAll;
-                  if (rawArgs[1] == 'enable')
+                  if (rawArgs[3] == 'enable')
                     guilddata.perms[role3.id] |= permsToChange;
                   else
                     guilddata.perms[role3.id] &= ~permsToChange;
@@ -528,7 +547,7 @@ module.exports = [
                   return msg.channel.send({
                     embed: {
                       title: 'Permissions Updated',
-                      description: `Permissions ${changedPerms.map(x => `\'${x}\'`).join(', ')} ${rawArgs[1] == 'enable' ? 'enabled' : 'disabled'} for role <@&${role3.id}>.`
+                      description: `Permissions ${changedPerms.map(x => `\'${x}\'`).join(', ')} ${rawArgs[2] == 'enable' ? 'enabled' : 'disabled'} for role <@&${role3.id}>.`
                     }
                   });
                 }
@@ -553,7 +572,7 @@ module.exports = [
               'To remove overrides for a channel, run `settings overrides clear #channel`\n' +
               'To create permissions for a role, run `settings overrides init #channel <@mention|name|query>`\n' +
               'To remove permissions for a role, run `settings overrides clear #channel <@mention|name|query>`\n' +
-              'To set a specific permission for a role, run `settings overrides allow/deny/reset #channel <@mention|name|query> <permission name|permission id> [<2nd permission name|permission id> ...]`',
+              'To set a specific permission for a role, run `settings overrides setperms #channel <@mention|name|query> enable/disable/reset [<permission name|permission id> ...]`',
             );
           } else {
             switch (rawArgs[1]) {
@@ -714,34 +733,35 @@ module.exports = [
                       }
                     });
                   }
-                  let role2 = common.searchRoles(msg.guild.roles, rawArgs.slice(3).join(' '));
-                  if (Array.isArray(role2)) {
+                  let role = common.searchRoles(msg.guild.roles, rawArgs.slice(3).join(' '));
+                  if (Array.isArray(role)) {
                     return msg.channel.send({
-                      embed: { title: 'Not Specific Enough', description: `Your query narrows it down to these roles:\n${role2.map(x => '<@&' + x.id + '>').join(' ')}` }
+                      embed: { title: 'Not Specific Enough', description: `Your query narrows it down to these roles:\n${role.map(x => '<@&' + x.id + '>').join(' ')}` }
                     });
                   } else {
-                    if (!guilddata.overrides[channel.id][role2.id])
+                    if (!guilddata.overrides[channel.id][role.id])
                       return msg.channel.send({
                         embed: {
                           title: 'Overrides Do Not Exist',
-                          description: `Bot-level overrides do not exist in channel <#${channel.id}> for role <@&${role2.id}>.`
+                          description: `Bot-level overrides do not exist in channel <#${channel.id}> for role <@&${role.id}>.`
                         }
                       });
-                    delete guilddata.overrides[channel.id][role2.id];
+                    delete guilddata.overrides[channel.id][role.id];
                     schedulePropsSave();
                     return msg.channel.send({
                       embed: {
                         title: 'Overrides Cleared',
-                        description: `Overrides cleared in channel <#${channel.id}> for role <@&${role2.id}>.`
+                        description: `Overrides cleared in channel <#${channel.id}> for role <@&${role.id}>.`
                       }
                     });
                   }
                 }
                 break;
               
-              case 'allow':
-              case 'deny':
-              case 'reset':
+              case 'setperms':
+                if (rawArgs[4] != 'enable' && rawArgs[4] != 'disable' && rawArgs[4] != 'reset')
+                  return msg.channel.send('Invalid option. Run `settings overrides` to view options.');
+                
                 let channel = msg.guild.channels.cache.get(/^<#([0-9]+)>$/.exec(rawArgs[2])[1]);
                 if (!channel) {
                   return msg.channel.send('Error: no such channel');
@@ -768,17 +788,17 @@ module.exports = [
                       }
                     });
                   let changedPerms = [];
-                  let permsToChange = rawArgs.slice(4).map(perm => {
+                  let permsToChange = rawArgs.slice(5).map(perm => {
                     let nperm = Number(perm);
                     if (nperm == nperm) return Number.isSafeInteger(nperm) && nperm > 0 ? nperm : null;
                     else return common.constants.botRolePermBits[perm];
                   }).filter(x => x != null).reduce((a, c) => (changedPerms.push(common.constants.botRolePermBitsInv[c]), a + c), 0) & common.constants.botRolePermAll;
-                  switch (rawArgs[1]) {
-                    case 'allow':
+                  switch (rawArgs[4]) {
+                    case 'enable':
                       guilddata.overrides[channel.id][role3.id].allows |= permsToChange;
                       guilddata.overrides[channel.id][role3.id].denys &= ~permsToChange;
                       break;
-                    case 'deny':
+                    case 'disable':
                       guilddata.overrides[channel.id][role3.id].denys |= permsToChange;
                       guilddata.overrides[channel.id][role3.id].allows &= ~permsToChange;
                       break;
@@ -791,7 +811,7 @@ module.exports = [
                   return msg.channel.send({
                     embed: {
                       title: 'Overrides Updated',
-                      description: `Overrides ${changedPerms.map(x => `\'${x}\'`).join(', ')} ${rawArgs[1] == 'allow' ? 'allowed' : rawArgs[1] == 'deny' ? 'denied' : 'neutralized'} in channel <#${channel.id}> for role <@&${role3.id}>.`
+                      description: `Overrides ${changedPerms.map(x => `\'${x}\'`).join(', ')} ${rawArgs[1] == 'enable' ? 'enabled' : rawArgs[1] == 'disable' ? 'disabled' : 'reset'} in channel <#${channel.id}> for role <@&${role3.id}>.`
                     }
                   });
                 }
@@ -811,9 +831,9 @@ module.exports = [
               'This command configures which commands are enabled.\n\n' +
               'To view whether commands are enabled globally, run `settings enabledcmds view global`.\n' +
               'To view whether a particular command or category is enabled, run `settings enabledcmds view <\'category\'/\'command\'> <command/category>`.\n' +
-              'To turn on or off commands globally, run `settings enabledcmds <\'enable\'/\'disable\'> global`.\n' +
-              'To turn on or off a particular command or category, run `settings enabledcmds <\'enable\'/\'disable\'> <\'category\'/\'command\'> <command/category>`.\n' +
-              'To enable or disable everything, run `settings enabledcmds <\'enable\'/\'disable\'> all`.',
+              'To turn on or off commands globally, run `settings enabledcmds set global <\'enable\'/\'disable\'>`.\n' +
+              'To turn on or off a particular command or category, run `settings enabledcmds set <\'category\'/\'command\'> <\'enable\'/\'disable\'> <command/category>`.\n' +
+              'To enable or disable everything, run `settings enabledcmds set all <\'enable\'/\'disable\'>`.',
             );
           } else {
             switch (rawArgs[1]) {
@@ -828,7 +848,7 @@ module.exports = [
                     if (category != null) {
                       return msg.channel.send(`The category '${rawArgs.slice(3).join(' ')}' is ${category ? 'enabled' : 'disabled'}.`);
                     } else {
-                      return msg.channel.send(`The category '${ rawArgs.slice(3).join(' ')}' does not exist.`);
+                      return msg.channel.send(`The category '${rawArgs.slice(3).join(' ')}' does not exist.`);
                     }
                     break;
                   
@@ -847,39 +867,38 @@ module.exports = [
                 }
                 break;
               
-              case 'enable':
-              case 'disable':
+              case 'set':
                 switch (rawArgs[2]) {
                   case 'global':
-                    guilddata.enabled_commands.global = rawArgs[1] == 'enable';
+                    guilddata.enabled_commands.global = rawArgs[3] == 'enable';
                     schedulePropsSave();
-                    return msg.channel.send(`Global commands have been successfully ${rawArgs[1] == 'enable' ? 'enabled' : 'disabled'}.`);
+                    return msg.channel.send(`Global commands have been successfully ${rawArgs[3] == 'enable' ? 'enabled' : 'disabled'}.`);
                     break;
                   
                   case 'category':
-                    let category = guilddata.enabled_commands.categories[rawArgs.slice(3).join(' ')];
+                    let category = guilddata.enabled_commands.categories[rawArgs[4]];
                     if (category != null) {
-                      guilddata.enabled_commands.categories[rawArgs.slice(3).join(' ')] = rawArgs[1] == 'enable';
+                      guilddata.enabled_commands.categories[rawArgs[4]] = rawArgs[3] == 'enable';
                       schedulePropsSave();
-                      return msg.channel.send(`The category '${rawArgs.slice(3).join(' ')}' has been successfully ${rawArgs[1] == 'enable' ? 'enabled' : 'disabled'}.`);
+                      return msg.channel.send(`The category '${rawArgs[4]}' has been successfully ${rawArgs[3] == 'enable' ? 'enabled' : 'disabled'}.`);
                     } else {
-                      return msg.channel.send(`The category '${rawArgs.slice(3).join(' ')}' does not exist.`);
+                      return msg.channel.send(`The category '${rawArgs[4]}' does not exist.`);
                     }
                     break;
                   
                   case 'command':
-                    let command = guilddata.enabled_commands.commands[rawArgs.slice(3).join(' ')];
+                    let command = guilddata.enabled_commands.commands[rawArgs[4]];
                     if (command != null) {
-                      guilddata.enabled_commands.commands[rawArgs.slice(3).join(' ')] = rawArgs[1] == 'enable';
+                      guilddata.enabled_commands.commands[rawArgs[4]] = rawArgs[3] == 'enable';
                       schedulePropsSave();
-                      return msg.channel.send(`The command '${rawArgs.slice(3).join(' ')}' has been successfully ${rawArgs[1] == 'enable' ? 'enabled' : 'disabled'}.`);
+                      return msg.channel.send(`The command '${rawArgs[4]}' has been successfully ${rawArgs[3] == 'enable' ? 'enabled' : 'disabled'}.`);
                     } else {
-                      return msg.channel.send(`The command '${rawArgs.slice(3).join(' ')}' does not exist.`);
+                      return msg.channel.send(`The command '${rawArgs[4]}' does not exist.`);
                     }
                     break;
                   
                   case 'all':
-                    let val = rawArgs[1] == 'enable';
+                    let val = rawArgs[3] == 'enable';
                     guilddata.enabled_commands.global = val;
                     Object.keys(guilddata.enabled_commands.categories)
                       .forEach(x => guilddata.enabled_commands.categories[x] = val);
@@ -900,7 +919,416 @@ module.exports = [
       }
     },
     execute_slash(o, interaction, command, args) {
-      common.slashCmdResp(interaction, true, 'work in progess');
+      if (!props.saved.guilds[o.guild.id]) {
+        props.saved.guilds[o.guild.id] = common.getEmptyGuildObject(o.guild.id);
+        schedulePropsSave();
+      }
+      
+      let guilddata = props.saved.guilds[o.guild.id];
+      
+      let silenced = !guilddata.enabled_commands.global ||
+        !guilddata.enabled_commands.categories.Administrative ||
+        !guilddata.enabled_commands.commands.settings;
+      
+      let perms = common.hasBotPermissions(o, common.constants.botRolePermBits.MANAGE_BOT | common.constants.botRolePermBits.MANAGE_BOT_FULL);
+      
+      let basicperms = perms & common.constants.botRolePermBits.MANAGE_BOT, fullperms = perms & common.constants.botRolePermBits.MANAGE_BOT_FULL;
+      
+      if (!basicperms) return silenced ? null : common.slashCmdResp(interaction, true, 'You do not have permission to run this command.');
+      
+      switch (args[0].name) {
+        case 'prefix':
+          if (!args[0].options) {
+            return common.slashCmdResp(interaction, true, `The current server prefix is: \`${guilddata.prefix}\``);
+          } else {
+            guilddata.prefix = args[0].options[0].value;
+            schedulePropsSave();
+            return common.slashCmdResp(interaction, false, `Server prefix set to: \`${guilddata.prefix}\``);
+          }
+          break;
+        
+        case 'confirmkb':
+          if (!fullperms) return silenced ? null : common.slashCmdResp(interaction, true, 'You do not have permission to run this command.');
+          if (!args[0].options) {
+            return common.slashCmdResp(interaction, true, `Confirmation on the kick, ban, and unban commands: ${guilddata.confirm_kb ? '✅' : '❌'}.`);
+          } else {
+            guilddata.confirm_kb = args[0].options[0].value;
+            schedulePropsSave();
+            return common.slashCmdResp(interaction, false, `Confirmation on the kick, ban, and unban commands set to: ${guilddata.confirm_kb ? '✅' : '❌'}`);
+          }
+          break;
+        
+        case 'badwords':
+          switch (args[0].options[0].name) {
+            case 'list':
+              if (!args[0].options[0].options) {
+                return common.slashCmdResp(interaction, true, 'Badwords: ' + guilddata.basic_automod.bad_words.map(x => x.word).join(', '));
+              } else {
+                let word = guilddata.basic_automod.bad_words.filter(x => x.word == args[0].options[0].options[0].value)[0];
+                if (!word) return common.slashCmdResp(interaction, true, `Word ${util.inspect(args[0].options[0].options[0].value)} not found`);
+                return common.slashCmdResp(interaction, true,
+                  `Information for badword ${util.inspect(word.word)}:\n` +
+                  `Retailiation: ${word.retaliation}\n` +
+                  `Enabled: ${word.enabled}\n` +
+                  `Ignore Admin: ${word.ignore_admin}\n` +
+                  `Ignored Roles: ${word.ignored_roles.length ? word.ignored_roles.map(x => `<@&#{x}>`).join(' ') : 'None'}`);
+              }
+              break;
+            
+            case 'add':
+              if (guilddata.basic_automod.bad_words.filter(x => x.word == args[0].options[0].options[0].value).length)
+                return common.slashCmdResp(interaction, true, `Word ${util.inspect(args[0].options[0].options[0].value)} already exists`);
+              guilddata.basic_automod.bad_words.push({
+                enabled: args[0].options[0].options.filter(x => x.name == 'enabled')[0]?.value ?? true,
+                type: Number(args[0].options[0].options[2].value),
+                ignore_admin: args[0].options[0].options.filter(x => x.name == 'ignore_admin')[0]?.value ?? false,
+                ignored_roles: (args[0].options[0].options.filter(x => x.name == 'ignore_admin')[0]?.value || '').split(' ').map(x => common.searchRole(o.guild.roles, x)).filter(x => x),
+                word: args[0].options[0].options[0].value,
+                retaliation: args[0].options[0].options[1].value,
+              });
+              schedulePropsSave();
+              return common.slashCmdResp(interaction, false, `Word ${util.inspect(args[0].options[0].options[0].value)} successfully added`);
+              break;
+            
+            case 'remove':
+              let index = null;
+              for (var i = 0; i < guilddata.basic_automod.bad_words.length; i++) {
+                if (guilddata.basic_automod.bad_words[i].word == args[0].options[0].options[0].value) {
+                  index = i;
+                  break;
+                }
+              }
+              if (index == null) return common.slashCmdResp(interaction, true, `Word ${util.inspect(args[0].options[0].options[0].value)} not found`);
+              guilddata.basic_automod.bad_words.splice(index, 1);
+              schedulePropsSave();
+              return common.slashCmdResp(interaction, false, `Word ${util.inspect(args[0].options[0].options[0].value)} successfully removed`);
+              break;
+            
+            case 'modify':
+              let index2 = null;
+              for (var i = 0; i < guilddata.basic_automod.bad_words.length; i++) {
+                if (guilddata.basic_automod.bad_words[i].word == args[0].options[0].options[0].value) {
+                  index2 = i;
+                  break;
+                }
+              }
+              if (index2 == null) return common.slashCmdResp(interaction, true, `Word ${util.inspect(args[0].options[0].options[0].value)} not found`);
+              guilddata.basic_automod.bad_words[index2] = {
+                enabled: args[0].options[0].options.filter(x => x.name == 'enabled')[0]?.value ?? guilddata.basic_automod.bad_words[index2].enabled,
+                type: Number(args[0].options[0].options.filter(x => x.name == 'type')[0]?.value ?? guilddata.basic_automod.bad_words[index2].type),
+                ignore_admin: args[0].options[0].options.filter(x => x.name == 'ignore_admin')[0]?.value ?? guilddata.basic_automod.bad_words[index2].ignore_admin,
+                ignored_roles: (() => {
+                  let val = args[0].options[0].options.filter(x => x.name == 'ignored_roles')[0]?.value;
+                  return val ? val.split(' ').map(x => common.searchRole(o.guild.roles, x)).filter(x => x) : guilddata.basic_automod.bad_words[index2].ignored_roles;
+                })(),
+                word: args[0].options[0].options[0].value,
+                retaliation: args[0].options[0].options.filter(x => x.name == 'retaliation')[0]?.value ?? guilddata.basic_automod.bad_words[index2].retaliation,
+              };
+              schedulePropsSave();
+              return common.slashCmdResp(interaction, false, `Word ${util.inspect(args[0].options[0].options[0].value)} successfully modified`);
+              break;
+          }
+          break;
+        
+        case 'logchannel':
+          if (!fullperms) return silenced ? null : common.slashCmdResp(interaction, false, 'You do not have permission to run this command.');
+          switch (args[0].options[0].name) {
+            case 'view':
+              return common.slashCmdResp(interaction, true, `The current logging channel is ` + (guilddata.logging.main ? `<#${guilddata.logging.main}> (id ${guilddata.logging.main})` : `none`) + '.');
+              break;
+            
+            case 'set':
+              if (!args[0].options[0].options) {
+                guilddata.logging.main = o.channel.id;
+                schedulePropsSave();
+                return common.slashCmdResp(interaction, false, `Logging channel set to <#${o.channel.id}> (id ${o.channel.id}).`);
+              } else {
+                if (o.guild.channels.cache.get(args[0].options[0].options[0].value)) {
+                  guilddata.logging.main = args[0].options[0].options[0].value;
+                  schedulePropsSave();
+                  return common.slashCmdResp(interaction, false, `Logging channel set to <#${args[0].options[0].options[0].value}> (id ${args[0].options[0].options[0].value}).`);
+                } else {
+                  return common.slashCmdResp(interaction, true, 'Channel nonexistent or not in this server.');
+                }
+              }
+              break;
+            
+            case 'clear':
+              guilddata.logging.main = null;
+              schedulePropsSave();
+              return common.slashCmdResp(interaction, false, 'Logging disabled.');
+              break;
+          }
+          break;
+        
+        case 'mutedrole':
+          if (!fullperms) return silenced ? null : common.slashCmdResp(interaction, true, 'You do not have permission to run this command.');
+          switch (args[0].options[0].name) {
+            case 'view':
+              return common.slashCmdResp(interaction, true, `The muted role is currently set to: ${guilddata.mutedrole ? '<@&' + guilddata.mutedrole + '>' : 'nothing'}`);
+              break;
+            
+            case 'set':
+              if (!args[0].options[0].options) {
+                if (guilddata.mutedrole) {
+                  guilddata.mutedrole = null;
+                  schedulePropsSave();
+                  return common.slashCmdResp(interaction, false, 'Muted role reset.');
+                } else {
+                  return common.slashCmdResp(interaction, false, 'Muted role not set in the first place.');
+                }
+              } else {
+                guilddata.mutedrole = args[0].options[0].options[0].value;
+                schedulePropsSave();
+                return common.slashCmdResp(interaction, false, `<@&${args[0].options[0].options[0].value}> set as muted role.`);
+              }
+              break;
+          }
+          break;
+        
+        case 'roles':
+          if (!fullperms) return silenced ? null : common.slashCmdResp(interaction, true, 'You do not have permission to run this command.');
+          switch (args[0].options[0].name) {
+            case 'view':
+              if (!args[0].options[0].options) {
+                return common.slashCmdResp(interaction, true, 'Roles with bot-level permissions:\n' + Object.keys(guilddata.perms).map(x => `<@&${x}>`));
+              } else {
+                let roleid = args[0].options[0].options[0].value;
+                if (!guilddata.perms[roleid])
+                  return common.slashCmdResp(interaction, true, `No bot-level permissions for role <@&${roleid}>.`);
+                return common.slashCmdResp(interaction, true, `Permissions for <@&${roleid}>:\n` + 
+                  common.getBotPermissionsArray(guilddata.perms[roleid]).map(x => `${x[1] ? '🟩' : '🟥'} ${x[0]}`).join('\n'));
+              }
+              break;
+            
+            case 'init':
+              let roleid = args[0].options[0].options[0].value;
+              if (guilddata.perms[roleid])
+                return common.slashCmdResp(interaction, false, `Bot-level permissions already exist for role <@&${roleid}>.`);
+              guilddata.perms[roleid] = guilddata.perms[o.guild.id];
+              schedulePropsSave();
+              return common.slashCmdResp(interaction, false, `Permissions created for role <@&${roleid}>.`);
+              break;
+            
+            case 'clear':
+              let roleid2 = args[0].options[0].options[0].value;
+              if (!guilddata.perms[roleid2])
+                return common.slashCmdResp(interaction, false, `Bot-level permissions do not exist for role <@&${roleid2}>.`);
+              if (roleid2 != o.guild.id)
+                delete guilddata.perms[roleid2];
+              else
+                guilddata.perms[roleid2] = common.constants.botRolePermDef;
+              schedulePropsSave();
+              return common.slashCmdResp(interaction, false, `Permissions cleared for role <@&${roleid2}>.`);
+              break;
+            
+            case 'setperms':
+              let roleid3 = args[0].options[0].options[0].value;
+              if (!guilddata.perms[roleid3])
+                return common.slashCmdResp(interaction, false, `Bot-level permissions do not exist for role <@&${roleid3}>.`);
+              let changedPerms = [];
+              let permsToChange = args[0].options[0].options[2].value.split(' ').map(perm => {
+                let nperm = Number(perm);
+                if (nperm == nperm) return Number.isSafeInteger(nperm) && nperm > 0 ? nperm : null;
+                else return common.constants.botRolePermBits[perm];
+              }).filter(x => x != null).reduce((a, c) => (changedPerms.push(common.constants.botRolePermBitsInv[c]), a + c), 0) & common.constants.botRolePermAll;
+              if (args[0].options[0].options[1].value == 'enable')
+                guilddata.perms[roleid3] |= permsToChange;
+              else
+                guilddata.perms[roleid3] &= ~permsToChange;
+              schedulePropsSave();
+              return common.slashCmdResp(interaction, false, `Permissions ${changedPerms.map(x => `\'${x}\'`).join(', ')} ${args[0].options[0].options[1].value == 'enable' ? 'enabled' : 'disabled'} for role <@&${roleid3}>.`);
+              break;
+          }
+          break;
+        
+        case 'overrides':
+          if (!fullperms) return silenced ? null : common.slashCmdResp(interaction, true, 'You do not have permission to run this command.');
+          switch (args[0].options[0].name) {
+            case 'view':
+              if (!args[0].options[0].options) {
+                return common.slashCmdResp(interaction, true, 'Channels with bot-level permission overrides:\n' + Object.keys(guilddata.overrides).map(x => `<#${x}>`));
+              } else if (args[0].options[0].options.length == 1) {
+                if (args[0].options[0].options[0].name != 'channel')
+                  return common.slashCmdResp(interaction, true, `Role parameter by itself cannot be specified`);
+                let channelid = args[0].options[0].options[0].value;
+                if (!guilddata.overrides[channelid]) {
+                  return common.slashCmdResp(interaction, true, `No bot-level overrides for channel <#${channelid}>.`);
+                }
+                return common.slashCmdResp(interaction, true, `Roles with bot-level permission overrides for <#${channelid}>:\n` + Object.keys(guilddata.overrides[channelid]).map(x => `<@&${x}>`));
+              } else {
+                let channelid = args[0].options[0].options[0].value;
+                if (!guilddata.overrides[channelid]) {
+                  return common.slashCmdResp(interaction, true, `No bot-level overrides for channel <#${channelid}>.`);
+                }
+                let roleid = args[0].options[0].options[1].value;
+                if (!guilddata.overrides[channelid][roleid])
+                  return common.slashCmdResp(interaction, true,  `No bot-level overrides in channel <#${channelid}> for role <@&${roleid}>.`);
+                return common.slashCmdResp(interaction, true, `Permissions for <@&${roleid}>:\n` + 
+                  common.getBotPermissionsArray(guilddata.overrides[channelid][roleid], true).map(x => `${x[1] > 0 ? '🟩' : x[1] < 0 ? '🟥' : '⬛'} ${x[0]}`).join('\n'));
+              }
+              break;
+            
+            case 'init':
+              if (args[0].options[0].options.length == 1) {
+                let channelid = args[0].options[0].options[0].value;
+                if (guilddata.overrides[channelid])
+                  return common.slashCmdResp(interaction, false, `Bot-level overrides already exist for channel <#${channelid}>.`);
+                guilddata.overrides[channelid] = {};
+                schedulePropsSave();
+                return common.slashCmdResp(interaction, false, `Overrides created for channel <#${channelid}>.`);
+              } else {
+                let channelid = args[0].options[0].options[0].value;
+                if (!guilddata.overrides[channelid]) {
+                  return common.slashCmdResp(interaction, false, `No bot-level overrides for channel <#${channelid}>.`);
+                }
+                let roleid = args[0].options[0].options[1].value;
+                if (guilddata.overrides[channelid][roleid])
+                  return common.slashCmdResp(interaction, false, `Bot-level overrides already exist in channel <#${channelid}> for role <@&${roleid}>.`);
+                guilddata.overrides[channelid][roleid] = { allows: 0, denys: 0 };
+                schedulePropsSave();
+                return common.slashCmdResp(interaction, false, `Overrides created in channel <#${channelid}> for role <@&${roleid}>.`);
+              }
+              break;
+            
+            case 'clear':
+              if (args[0].options[0].options.length == 1) {
+                let channelid = args[0].options[0].options[0].value;
+                if (!guilddata.overrides[channelid])
+                  return common.slashCmdResp(interaction, false, `Bot-level overrides do not exist for channel <#${channelid}>.`);
+                delete guilddata.overrides[channelid];
+                schedulePropsSave();
+                return common.slashCmdResp(interaction, false, `Overrides cleared for channel <#${channelid}>.`);
+              } else {
+                let channelid = args[0].options[0].options[0].value;
+                if (!guilddata.overrides[channelid]) {
+                  return common.slashCmdResp(interaction, false, `No bot-level overrides for channel <#${channelid}>.`);
+                }
+                let roleid = args[0].options[0].options[1].value;
+                if (!guilddata.overrides[channelid][roleid])
+                  return common.slashCmdResp(interaction, false, `Bot-level overrides do not exist in channel <#${channelid}> for role <@&${roleid}>.`);
+                delete guilddata.overrides[channelid][roleid];
+                schedulePropsSave();
+                return common.slashCmdResp(interaction, false, `Overrides cleared in channel <#${channelid}> for role <@&${roleid}>.`);
+              }
+              break;
+            
+            case 'setperms':
+              let channelid = args[0].options[0].options[0].value;
+              if (!guilddata.overrides[channelid]) {
+                return common.slashCmdResp(interaction, false, `No bot-level overrides for channel <#${channelid}>.`);
+              }
+              let roleid = args[0].options[0].options[1].value;
+              if (!guilddata.overrides[channelid][roleid])
+                return common.slashCmdResp(interaction, false, `Bot-level overrides do not exist in channel <#${channelid}> for role <@&${roleid}>.`);
+              let changedPerms = [];
+              let permsToChange = args[0].options[0].options[3].value.split(' ').map(perm => {
+                let nperm = Number(perm);
+                if (nperm == nperm) return Number.isSafeInteger(nperm) && nperm > 0 ? nperm : null;
+                else return common.constants.botRolePermBits[perm];
+              }).filter(x => x != null).reduce((a, c) => (changedPerms.push(common.constants.botRolePermBitsInv[c]), a + c), 0) & common.constants.botRolePermAll;
+              switch (args[0].options[0].options[2].value) {
+                case 'enable':
+                  guilddata.overrides[channelid][roleid].allows |= permsToChange;
+                  guilddata.overrides[channelid][roleid].denys &= ~permsToChange;
+                  break;
+                case 'disable':
+                  guilddata.overrides[channelid][roleid].denys |= permsToChange;
+                  guilddata.overrides[channelid][roleid].allows &= ~permsToChange;
+                  break;
+                case 'reset':
+                  guilddata.overrides[channelid][roleid].allows &= ~permsToChange;
+                  guilddata.overrides[channelid][roleid].denys &= ~permsToChange;
+                  break;
+              }
+              schedulePropsSave();
+              return common.slashCmdResp(interaction, false,  `Overrides ${changedPerms.map(x => `\'${x}\'`).join(', ')} ${args[0].options[0].options[2].value == 'enable' ? 'enabled' : args[0].options[0].options[2].value == 'disable' ? 'disabled' : 'reset'} in channel <#${channelid}> for role <@&${roleid}>.`);
+              break;
+          }
+          break;
+        
+        case 'enabledcmds':
+          if (!fullperms) return silenced ? null : common.slashCmdResp(interaction, true, 'You do not have permission to run this command.');
+          switch (args[0].options[0].name) {
+            case 'view':
+              switch (args[0].options[0].options[0].value) {
+                case 'global':
+                  return common.slashCmdResp(interaction, true, `Commands are globally ${guilddata.enabled_commands.global ? 'enabled' : 'disabled'}.`);
+                  break;
+                
+                case 'category':
+                  if (!args[0].options[0].options[1])
+                    return common.slashCmdResp(interaction, true, `Category must be specified.`);
+                  let category = guilddata.enabled_commands.categories[args[0].options[0].options[1].value];
+                  if (category != null) {
+                    return common.slashCmdResp(interaction, true, `The category '${args[0].options[0].options[1]?.value}' is ${category ? 'enabled' : 'disabled'}.`);
+                  } else {
+                    return common.slashCmdResp(interaction, true, `The category '${args[0].options[0].options[1]?.value}' does not exist.`);
+                  }
+                  break;
+                
+                case 'command':
+                  if (!args[0].options[0].options[1])
+                    return common.slashCmdResp(interaction, true, `Command must be specified.`);
+                  let command = guilddata.enabled_commands.commands[args[0].options[0].options[1].value];
+                  if (command != null) {
+                    return common.slashCmdResp(interaction, true, `The command '${args[0].options[0].options[1]?.value}' is ${command ? 'enabled' : 'disabled'}.`);
+                  } else {
+                    return common.slashCmdResp(interaction, true, `The command '${args[0].options[0].options[1]?.value}' does not exist.`);
+                  }
+                  break;
+              }
+              break;
+            
+            case 'set':
+              switch (args[0].options[0].options[0].value) {
+                case 'global':
+                  guilddata.enabled_commands.global = args[0].options[0].options[1].value == 'enable';
+                  schedulePropsSave();
+                  return common.slashCmdResp(interaction, false, `Global commands have been successfully ${args[0].options[0].options[1].value == 'enable' ? 'enabled' : 'disabled'}.`);
+                  break;
+                
+                case 'category':
+                  if (!args[0].options[0].options[2])
+                    return common.slashCmdResp(interaction, true, `Category must be specified.`);
+                  let category = guilddata.enabled_commands.categories[args[0].options[0].options[2].value];
+                  if (category != null) {
+                    guilddata.enabled_commands.categories[args[0].options[0].options[2].value] = args[0].options[0].options[1].value == 'enable';
+                    schedulePropsSave();
+                    return common.slashCmdResp(interaction, false, `The category '${args[0].options[0].options[2].value}' has been successfully ${args[0].options[0].options[1].value == 'enable' ? 'enabled' : 'disabled'}.`);
+                  } else {
+                    return common.slashCmdResp(interaction, false, `The category '${args[0].options[0].options[2].value}' does not exist.`);
+                  }
+                  break;
+                
+                case 'command':
+                  if (!args[0].options[0].options[2])
+                    return common.slashCmdResp(interaction, true, `Command must be specified.`);
+                  let command = guilddata.enabled_commands.commands[args[0].options[0].options[2].value];
+                  if (command != null) {
+                    guilddata.enabled_commands.commands[args[0].options[0].options[2].value] = args[0].options[0].options[1].value == 'enable';
+                    schedulePropsSave();
+                    return common.slashCmdResp(interaction, false, `The command '${args[0].options[0].options[2].value}' has been successfully ${args[0].options[0].options[1].value == 'enable' ? 'enabled' : 'disabled'}.`);
+                  } else {
+                    return common.slashCmdResp(interaction, false, `The command '${args[0].options[0].options[2].value}' does not exist.`);
+                  }
+                  break;
+                
+                case 'all':
+                  let val = args[0].options[0].options[1].value == 'enable';
+                  guilddata.enabled_commands.global = val;
+                  Object.keys(guilddata.enabled_commands.categories)
+                    .forEach(x => guilddata.enabled_commands.categories[x] = val);
+                  Object.keys(guilddata.enabled_commands.commands)
+                    .forEach(x => guilddata.enabled_commands.commands[x] = val);
+                  schedulePropsSave();
+                  return common.slashCmdResp(interaction, false, `All commands and categories have been ${val ? 'enabled' : 'disabled'}.`);
+                  break;
+              }
+              break;
+          }
+          break;
+      }
     },
   },
 ];

@@ -13,6 +13,8 @@ module.exports = async interaction => {
         member: null,
       };
       
+      if (!(o.cmd.flags & 0b000010)) return;
+      
       if (Array.isArray(o.cmd.options) && o.cmd.options.length) {
         if (o.cmd.options[0].type > 2) 
           o.args = o.cmd.options.map(x => interaction.data.options ? interaction.data.options.filter(y => y.name == x.name)[0] : null);
@@ -40,10 +42,18 @@ module.exports = async interaction => {
       }
       
       if (o.cmd.execute_slash) {
-        if (o.guild ? o.cmd.flags & 0b000100 : o.cmd.flags & 0b001000)
+        if (o.guild ? o.cmd.flags & 0b000100 : o.cmd.flags & 0b001000) {
+          if (o.guild && o.command != 'settings' &&
+            props.saved.guilds[o.guild.id] && (
+              !props.saved.guilds[o.guild.id].enabled_commands.global ||
+              props.saved.guilds[o.guild.id].enabled_commands.categories[o.cmd.category] == false ||
+              props.saved.guilds[o.guild.id].enabled_commands.commands[o.command] == false))
+            return common.slashCmdResp(interaction, true, 'Command is disabled in this server.');
+          
           return o.cmd.execute_slash(o, interaction, o.command, o.args);
-        else
-          return common.slashCmdResp(interaction, true, o.guild ? 'Command not for guilds' : 'Command not for dms');
+        } else {
+          return common.slashCmdResp(interaction, true, o.guild ? 'Command not for guilds.' : 'Command not for dms.');
+        }
       }
       break;
   }

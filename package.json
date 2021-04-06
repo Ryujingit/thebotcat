@@ -1,6 +1,6 @@
 {
   "name": "Thebotcat",
-  "version": "1.6.1-beta4",
+  "version": "1.6.1-beta5",
   "description": "Thebotcat is a general purpose, highly configurable discord bot with a focus on administration and fun. (Bot Description: My discord bot just for your server used for administration and to keep your self nice n clean.)",
   "main": "index.js",
   "scripts": {
