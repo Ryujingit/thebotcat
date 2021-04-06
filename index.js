@@ -306,13 +306,27 @@ async function updateSlashCommands(endpoint) {
       options: obj.options,
     };
     return currCmdsObj[x].description != obj.description ||
-      (currCmdsObj[x].options || []).length < (obj.options || []).length ||
-      (currCmdsObj[x].options || []).some((y, i) => {
-        return y.type != obj.options[i].type ||
-          y.name != obj.options[i].name ||
-          y.description != obj.options[i].description ||
-          y.required != obj.options[i].required;
-      });
+      Array.isArray(currCmdsObj[x].options) - Array.isArray(obj.options) ||
+      Array.isArray(currCmdsObj[x].options) && currCmdsObj[x].options.some((y, i) =>
+        y.type != obj.options[i].type ||
+        y.name != obj.options[i].name ||
+        y.description != obj.options[i].description ||
+        y.required !== obj.options[i].required ||
+        Array.isArray(y.options) - Array.isArray(obj.options[i].options) ||
+        Array.isArray(y.options) && y.options.some((z, j) =>
+          z.type != obj.options[i].options[j].type ||
+          z.name != obj.options[i].options[j].name ||
+          z.description != obj.options[i].options[j].description ||
+          z.required !== obj.options[i].options[j].required ||
+          Array.isArray(z.options) - Array.isArray(obj.options[i].options[j].options) ||
+          Array.isArray(z.options) && z.options.some((w, k) =>
+            w.type != obj.options[i].options[j].options[k].type ||
+            w.name != obj.options[i].options[j].options[k].name ||
+            w.description != obj.options[i].options[j].options[k].description ||
+            w.required !== obj.options[i].options[j].options[k].required
+          )
+        )
+      );
   });
   var commandsToAdd = commands.map(x => x.name).filter(x => !(x in currCmdsObj) && (commandColl.get(x).flags & 0b100010) == 0b100010);
   

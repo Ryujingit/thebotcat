@@ -13,10 +13,14 @@ module.exports = async interaction => {
         member: null,
       };
       
-      if (o.cmd.options)
-        o.args = o.cmd.options.map(x => interaction.data.options ? interaction.data.options.filter(y => y.name == x.name)[0] : null);
-      else
+      if (Array.isArray(o.cmd.options) && o.cmd.options.length) {
+        if (o.cmd.options[0].type > 2) 
+          o.args = o.cmd.options.map(x => interaction.data.options ? interaction.data.options.filter(y => y.name == x.name)[0] : null);
+        else
+          o.args = interaction.data.options;
+      } else {
         o.args = [];
+      }
       
       if (interaction.member) {
         o.author = await client.users.fetch(interaction.member.user.id);
