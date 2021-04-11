@@ -15,9 +15,11 @@ RUN [ "mkfifo", "/home/thebotcat/dpipe" ]
 
 COPY ./math.min.js /home/thebotcat/math.min.js
 
-COPY ./package.json /home/thebotcat/package.json
-COPY ./package-lock.json /home/thebotcat/package-lock.json
+# copy package.json in but only the dependencies at first
+COPY ./package-basic.json /home/thebotcat/package.json
 RUN npm install -f
+
+COPY ./package.json /home/thebotcat/package.json
 
 COPY ./.env /home/thebotcat/.env
 

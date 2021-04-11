@@ -13,15 +13,17 @@ module.exports = async interaction => {
         member: null,
       };
       
-      if (!(o.cmd.flags & 0b000010)) return;
-      
-      if (Array.isArray(o.cmd.options) && o.cmd.options.length) {
-        if (o.cmd.options[0].type > 2) 
-          o.args = o.cmd.options.map(x => interaction.data.options ? interaction.data.options.filter(y => y.name == x.name)[0] : null);
-        else
-          o.args = interaction.data.options;
+      if (o.cmd) {
+        if (Array.isArray(o.cmd.options) && o.cmd.options.length) {
+          if (o.cmd.options[0].type > 2) 
+            o.args = o.cmd.options.map(x => interaction.data.options ? interaction.data.options.filter(y => y.name == x.name)[0] : null);
+          else
+            o.args = interaction.data.options;
+        } else {
+          o.args = [];
+        }
       } else {
-        o.args = [];
+        o.args = interaction.data.options;
       }
       
       if (interaction.member) {
@@ -40,6 +42,8 @@ module.exports = async interaction => {
           if (res === 0) return;
         }
       }
+      
+      if (!(o.cmd && o.cmd.flags & 0b000010)) return;
       
       if (o.cmd.execute_slash) {
         if (o.guild ? o.cmd.flags & 0b000100 : o.cmd.flags & 0b001000) {
