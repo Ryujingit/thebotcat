@@ -6,11 +6,11 @@ module.exports = [
     flags: 0b111110,
     options: [ { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' } ],
     execute(o, msg, rawArgs) {
-      return msg.channel.send(`I\'m flipping a coin, and the result is...: ${Math.random() >= 0.5 ? 'heads' : 'tails'}!`);
+      return msg.channel.send(`I\'m flipping a coin, and the result is...: ${common.randInt(0, 2) ? 'heads' : 'tails'}!`);
     },
     execute_slash(o, interaction, command, args) {
       let emphemeral = args[0] ? (args[0].value ? true : false) : true;
-      return common.slashCmdResp(interaction, emphemeral, `I\'m flipping a coin, and the result is...: ${Math.random() >= 0.5 ? 'heads' : 'tails'}!`);
+      return common.slashCmdResp(interaction, emphemeral, `I\'m flipping a coin, and the result is...: ${common.randInt(0, 2) ? 'heads' : 'tails'}!`);
     },
   },
   {
@@ -35,14 +35,14 @@ module.exports = [
       } else return msg.channel.send('Invalid arguments.');
       let result = 0;
       for (var i = 0; i < times; i++)
-        result += 1 + Math.floor(Math.random() * sides);
+        result += 1 + common.randInt(0, sides);
       return msg.channel.send(`Result of rolling a ${times}d${sides}: ${result}`);
     },
     execute_slash(o, interaction, command, args) {
       let sides = (args[0] ? args[0].value : 0) || 6, times = Math.min(Math.max((args[1] ? args[1].value : 0) || 1, 0), 100);
       let result = 0;
       for (var i = 0; i < times; i++)
-        result += 1 + Math.floor(Math.random() * sides);
+        result += 1 + common.randInt(0, sides);
       let emphemeral = args[2] ? (args[2].value ? true : false) : true;
       return common.slashCmdResp(interaction, emphemeral, `Result of rolling a ${times}d${sides}: ${result}`);
     },
@@ -58,13 +58,15 @@ module.exports = [
       { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' },
     ],
     execute(o, msg, rawArgs) {
-      let min = Math.floor(Number(rawArgs[0])) || 0, max = Math.floor(Number(rawArgs[1])) || 1;
-      return msg.channel.send(`Random integer between ${min} and ${max}: ${min + Math.floor(Math.random() * (max - min + 1))}`);
+      let min = 0, max = 1;
+      try { min = BigInt(rawArgs[0]); } catch (e) {}
+      try { max = BigInt(rawArgs[1]); } catch (e) {}
+      return msg.channel.send(`Random integer between ${min} and ${max}: ${common.randInt(min, max + 1n)}`);
     },
     execute_slash(o, interaction, command, args) {
       let min = args[0] && args[0].value || 0, max = args[1] && args[1].value || 1;
       let emphemeral = args[2] ? (args[2].value ? true : false) : true;
-      return common.slashCmdResp(interaction, emphemeral, `Random integer between ${min} and ${max}: ${min + Math.floor(Math.random() * (max - min + 1))}`);
+      return common.slashCmdResp(interaction, emphemeral, `Random integer between ${min} and ${max}: ${common.randInt(min, max + 1)}`);
     },
   },
   {
@@ -79,12 +81,12 @@ module.exports = [
     ],
     execute(o, msg, rawArgs) {
       let min = Number(rawArgs[0]) || 0, max = Number(rawArgs[1]) || 1;
-      return msg.channel.send(`Random real number between ${min} and ${max}: ${min + Math.random() * (max - min)}`);
+      return msg.channel.send(`Random real number between ${min} and ${max}: ${min + common.randFloat() * (max - min)}`);
     },
     execute_slash(o, interaction, command, args) {
       let min = args[0] && args[0].value || 0, max = args[1] && args[1].value || 1;
       let emphemeral = args[2] ? (args[2].value ? true : false) : true;
-      return common.slashCmdResp(interaction, emphemeral, `Random real number between ${min} and ${max}: ${min + Math.random() * (max - min)}`);
+      return common.slashCmdResp(interaction, emphemeral, `Random real number between ${min} and ${max}: ${min + common.randFloat() * (max - min)}`);
     },
   },
   {
@@ -105,13 +107,13 @@ module.exports = [
       { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' },
     ],
     execute(o, msg, rawArgs) {
-      let choice = Math.floor(Math.random() * rawArgs.length);
+      let choice = common.randInt(0, rawArgs.length);
       choice = rawArgs[choice];
       return msg.channel.send(`Random choice: ${choice}`, { allowedMentions: { parse: [] } });
     },
     execute_slash(o, interaction, command, args) {
       let choices = (interaction.data.options || []).filter(x => x.name != 'emphemeral');
-      let choice = Math.floor(Math.random() * choices.length);
+      let choice = common.randInt(0, choices.length);
       choice = choices[choice] && choices[choice].value;
       let emphemeral = args[9] ? (args[9].value ? true : false) : true;
       return common.slashCmdResp(interaction, emphemeral, `Random choice: ${choice}`);
@@ -136,7 +138,7 @@ module.exports = [
       if (!uReply) return msg.channel.send(`Please play with one of these responses: \`${replies.join(', ')}\``);
       if (!replies.includes(uReply)) return msg.channel.send(`Only these responses are accepted: \`${replies.join(', ')}\``);
       
-      let result = replies[Math.floor(Math.random() * replies.length)];
+      let result = replies[common.randInt(0, replies.length)];
       
       let status = common.rps(uReply, result);
       
@@ -153,7 +155,7 @@ module.exports = [
       
       let uReply = args[0].value;
       
-      let result = replies[Math.floor(Math.random() * replies.length)];
+      let result = replies[common.randInt(0, replies.length)];
       
       let status = common.rps(uReply, result);
       

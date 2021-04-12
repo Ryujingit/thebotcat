@@ -4,6 +4,9 @@ var constants = require('./constants');
 
 var { recursiveReaddir } = require('./convenience');
 
+var randomModule = require('./random');
+var { randBytes, randFloat, randInt } = randomModule;
+
 var { msecToHMS, msecToHMSs, fancyDateStringWD, fancyDateStringMD, fancyDateString } = require('./time'); 
 
 var formatPlaybackBar = (frac, numElems) => {
@@ -99,6 +102,9 @@ var { isId, isObject, propsSavedCreateVerifiedCopy, getEmptyGuildObject, getEmpt
 // also an interesting way to make js cleaner is by shortening { e: e } to { e }, and the compiler still understands
 module.exports = {
   constants, recursiveReaddir,
+  get randomBytes() { return randomModule.randomBytes }, set randomBytes(val) { randomModule.randomBytes = val; },
+  get randomOffset() { return randomModule.randomOffset }, set randomOffset(val) { randomModule.randomOffset = val; },
+  randBytes, randFloat, randInt,
   msecToHMS, msecToHMSs, fancyDateStringWD, fancyDateStringMD, fancyDateString, formatPlaybackBar,
   getBotcatUptimeMessage, getBotcatStatusMessage, getBotcatFullStatusMessage,
   explainChannel, stringToBoolean, removePings, onMsgOneArgHelper, slashCmdResp,

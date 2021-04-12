@@ -21,6 +21,7 @@ function isAdmin(msg) {
     return msg.member.hasPermission('ADMINISTRATOR');
   } catch (e) {
     console.error(e);
+    isPositionErrorMsg = msg;
     if (msg instanceof Discord.Message) msg.fetch();
     return false;
   }

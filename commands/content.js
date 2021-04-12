@@ -66,7 +66,7 @@ function contentCommand(obj, o, msg, rawArgs) {
     case 'text_reply': return msg.reply(obj.content);
     case 'text_multi_reply':
       if (rawArgs.length == 0) {
-        return msg.reply(obj.contents[Math.floor(Math.random() * obj.contents.length)]);
+        return msg.reply(obj.contents[common.randInt(0, obj.contents.length)]);
       } else if (rawArgs[0] == 'count') {
         return msg.channel.send(`The command has ${obj.contents.length} entries.`);
       } else {
@@ -80,7 +80,7 @@ function contentCommand(obj, o, msg, rawArgs) {
       return msg.channel.send({ embed: { title: obj.title, description: obj.desc, image: { url: obj.image }, footer: { text: obj.footer } } });
     case 'image_multi':
       if (rawArgs.length == 0) {
-        let embed = obj.embeds[Math.floor(Math.random() * obj.embeds.length)];
+        let embed = obj.embeds[common.randInt(0, obj.embeds.length)];
         return msg.channel.send({ embed: { title: embed.title, description: embed.desc, image: { url: embed.image }, footer: { text: embed.footer } } });
       } else if (rawArgs[0] == 'count') {
         return msg.channel.send(`The command has ${obj.embeds.length} entries.`);

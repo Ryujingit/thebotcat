@@ -52,7 +52,7 @@ module.exports = [
     execute(o, msg, rawArgs) {
       if (!(common.isAdmin(msg) || msg.guild.id == '717268211246301236')) return;
       let members = msg.guild.members.cache.array().filter(x => !x.user.bot);
-      let random_member = members[Math.floor(Math.random() * members.length)];
+      let random_member = members[common.randInt(0, members.length)];
       return msg.channel.send(`Random ping: <@!${random_member.user.id}>`);
     },
   },

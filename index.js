@@ -29,8 +29,9 @@ var Discord = require('discord.js');
 var ytdl;
 try { ytdl = require('ytdl-core-discord'); } catch (e) { ytdl = null; }
 var common = require('./common/index');
-var math = require('./math.min.js');
 var client = new Discord.Client();
+
+var math = require('./math.min.js');
 math.config({ number: 'BigNumber' });
 math.oldimport = math.import.bind(math);
 math.oldcreateUnit = math.createUnit.bind(math);
