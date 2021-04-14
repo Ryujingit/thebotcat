@@ -693,11 +693,14 @@ module.exports = [
           await kickconfirm.react('❌');
           kickreacts = await kickreacts;
           if (kickreacts.keyArray().length == 0 || kickreacts.keyArray()[0] == '❌')
-            return msg.channel.send('Kick cancelled.');
+            return kickconfirm.edit(kickconfirm.content + '\nKick cancelled.');
+          
+          await member.kick(`[By ${msg.author.tag} (id ${msg.author.id})]${kickreason ? ' ' + kickreason : ''}`);
+          return kickconfirm.edit(kickconfirm.content + `\n${member.user.tag} (id ${member.id}) has been successfully kicked`);
+        } else {
+          await member.kick(`[By ${msg.author.tag} (id ${msg.author.id})]${kickreason ? ' ' + kickreason : ''}`);
+          return msg.channel.send(`${member.user.tag} (id ${member.id}) has been successfully kicked`);
         }
-        
-        await member.kick(`[By ${msg.author.tag} (id ${msg.author.id})]${kickreason ? ' ' + kickreason : ''}`);
-        return msg.channel.send(`${member.user.tag} (id ${member.id}) has been successfully kicked`);
       } catch (e) {
         console.error(e);
         return msg.channel.send('Error: something went wrong.');
@@ -778,11 +781,14 @@ module.exports = [
             await banconfirm.react('❌');
             banreacts = await banreacts;
             if (banreacts.keyArray().length == 0 || banreacts.keyArray()[0] == '❌')
-              return msg.channel.send('Ban cancelled.');
+              return banconfirm.edit(banconfirm.content + '\nBan cancelled.');
+            
+            await msg.guild.members.ban(member, { reason: `[By ${msg.author.tag} (id ${msg.author.id})]${banreason ? ' ' + banreason : ''}` });
+            return banconfirm.edit(banconfirm.content + `\nunknown user has been successfully banned`);
+          } else {
+            await msg.guild.members.ban(member, { reason: `[By ${msg.author.tag} (id ${msg.author.id})]${banreason ? ' ' + banreason : ''}` });
+            return msg.channel.send(`unknown user has been successfully banned`);
           }
-          
-          await msg.guild.members.ban(member, { reason: `[By ${msg.author.tag} (id ${msg.author.id})]${banreason ? ' ' + banreason : ''}` });
-          return msg.channel.send(`unknown user has been successfully banned`);
         } catch (e) {
           console.error(e);
           return msg.channel.send('Error: something went wrong.');
@@ -810,11 +816,14 @@ module.exports = [
             await banconfirm.react('❌');
             banreacts = await banreacts;
             if (banreacts.keyArray().length == 0 || banreacts.keyArray()[0] == '❌')
-              return msg.channel.send('Ban cancelled.');
+              return banconfirm.edit(banconfirm.content + '\nBan cancelled.');
+            
+            await msg.guild.members.ban(member, { reason: `[By ${msg.author.tag} (id ${msg.author.id})]${banreason ? ' ' + banreason : ''}` });
+            return banconfirm.edit(banconfirm.content + `\n${member.user.tag} (id ${member.id}) has been successfully banned`);
+          } else {
+            await msg.guild.members.ban(member, { reason: `[By ${msg.author.tag} (id ${msg.author.id})]${banreason ? ' ' + banreason : ''}` });
+            return msg.channel.send(`${member.user.tag} (id ${member.id}) has been successfully banned`);
           }
-          
-          await msg.guild.members.ban(member, { reason: `[By ${msg.author.tag} (id ${msg.author.id})]${banreason ? ' ' + banreason : ''}` });
-          return msg.channel.send(`${member.user.tag} (id ${member.id}) has been successfully banned`);
         } catch (e) {
           console.error(e);
           return msg.channel.send('Error: something went wrong.');
@@ -916,11 +925,14 @@ module.exports = [
           await unbanconfirm.react('❌');
           unbanreacts = await unbanreacts;
           if (unbanreacts.keyArray().length == 0 || unbanreacts.keyArray()[0] == '❌')
-            return msg.channel.send('Unban cancelled.');
+            return unbanconfirm.edit(unbanconfirm.content + '\nUnban cancelled.');
+          
+          await msg.guild.members.unban(memberid, `[By ${msg.author.tag} (id ${msg.author.id})]${unbanreason ? ' ' + unbanreason : ''}`);
+          return unbanconfirm.edit(unbanconfirm.content + `\n${baninfo.user.tag} (id ${baninfo.user.id}) has been successfully unbanned`);
+        } else {
+          await msg.guild.members.unban(memberid, `[By ${msg.author.tag} (id ${msg.author.id})]${unbanreason ? ' ' + unbanreason : ''}`);
+          return msg.channel.send(`${baninfo.user.tag} (id ${baninfo.user.id}) has been successfully unbanned`);
         }
-        
-        await msg.guild.members.unban(memberid, `[By ${msg.author.tag} (id ${msg.author.id})]${unbanreason ? ' ' + unbanreason : ''}`);
-        return msg.channel.send(`${baninfo.user.tag} (id ${baninfo.user.id}) has been successfully unbanned`);
       } catch (e) {
         return msg.channel.send('Error: something went wrong.');
       }
