@@ -1,7 +1,7 @@
 module.exports = [
   {
     name: 'suppressembeds',
-    description: '`!suppressembeds <messageid> <\'suppress\'/\'unsuppress\'> [#channel]` to suppress or unsuppress embeds on a message',
+    description: '`!suppressembeds <messageid> <\'suppress\'/\'unsuppress\'> [#channel]` suppresses or unsuppresses embeds on a message',
     description_slash: 'suppresses or unsuppresses embeds on a message',
     flags: 0b110110,
     options: [
@@ -82,8 +82,8 @@ module.exports = [
   },
   {
     name: 'slowmode',
-    description: '`!slowmode <seconds> [#channel]` to set the slowmode in a text channel to a certain value',
-    description_slash: 'sets slowmode in a channel',
+    description: '`!slowmode <seconds> [#channel]` sets the slowmode in a text channel',
+    description_slash: 'sets slowmode in a text channel',
     flags: 0b110110,
     options: [
       { type: 4, name: 'slowmode', description: 'slowmode in seconds', required: true },
@@ -158,7 +158,7 @@ module.exports = [
   },
   {
     name: 'bitrate',
-    description: '`!bitrate <bytespersec> #channel` to set the bitrate (bps not kbps) in a voice channel to a certain value',
+    description: '`!bitrate <bytespersec> #channel` sets the bitrate (bps not kbps) of a voice channel',
     description_slash: 'sets the bitrate of a voice channel',
     flags: 0b110110,
     options: [
@@ -234,8 +234,8 @@ module.exports = [
   },
   {
     name: 'purge',
-    description: '`!purge <amount> [#channel]` to delete `amount` messages from the channel',
-    description_slash: 'removes messages from a channel',
+    description: '`!purge <amount> [#channel]` deletes `amount` messages from a channel',
+    description_slash: 'deletes messages from a channel',
     flags: 0b111110,
     options: [
       { type: 4, name: 'amount', description: 'amount of messages to purge', required: true },
@@ -285,8 +285,8 @@ module.exports = [
   },
   {
     name: 'lock',
-    description: '`!lock [#channel] [reason]` to lock the channel, preventing anyone other than moderators from talking in it',
-    description_slash: 'used to lock a channel, preventing anyone other than moderators from talking in it',
+    description: '`!lock [#channel] [reason]` locks a channel, preventing anyone other than moderators from sending messages in it',
+    description_slash: 'locks a channel, preventing anyone other than moderators from sending messages in it',
     flags: 0b110110,
     options: [
       { type: 7, name: 'channel', description: 'the channel' },
@@ -427,8 +427,8 @@ module.exports = [
   },
   {
     name: 'unlock',
-    description: '`!unlock [#channel] [reason]` to unlock the channel, resetting permissions to what they were before the lock',
-    description_slash: 'used to unlock a channel, resetting permissions to what they were before the lock',
+    description: '`!unlock [#channel] [reason]` unlocks a channel, resetting permissions to what they were before the lock',
+    description_slash: 'unlocks a channel, resetting permissions to what they were before the lock',
     flags: 0b110110,
     options: [
       { type: 7, name: 'channel', description: 'the channel' },
@@ -513,7 +513,7 @@ module.exports = [
   },
   {
     name: 'mute',
-    description: '`!mute @person [reason]` to mute someone by adding the muted role to them',
+    description: '`!mute @person [reason]` mutes someone by adding the muted role to them',
     description_slash: 'mutes someone by adding the muted role to them',
     flags: 0b110110,
     options: [
@@ -583,7 +583,7 @@ module.exports = [
   },
   {
     name: 'unmute',
-    description: '`!unmute @person` to unmute someone by removing the muted role from them',
+    description: '`!unmute @person` unmutes someone by removing the muted role from them',
     description_slash: 'unmutes someone by removing the muted role from them',
     flags: 0b110110,
     options: [
@@ -651,8 +651,8 @@ module.exports = [
   },
   {
     name: 'kick',
-    description: '`!kick @person [reason]` to kick someone from this guild',
-    description_slash: 'kicks someone from the guild with an optional reason',
+    description: '`!kick @person [reason]` kicks someone from this guild',
+    description_slash: 'kicks someone from this guild',
     flags: 0b110110,
     options: [
       { type: 6, name: 'member', description: 'the member to kick', required: true },
@@ -742,8 +742,8 @@ module.exports = [
   },
   {
     name: 'ban',
-    description: '`!ban @person [reason]` to ban someone from this guild',
-    description_slash: 'bans someone from the guild with an optional reason',
+    description: '`!ban @person [reason]` bans someone from this guild',
+    description_slash: 'bans someone from this guild',
     flags: 0b110110,
     options: [
       { type: 6, name: 'member', description: 'the member to ban', required: true },
@@ -835,8 +835,8 @@ module.exports = [
   },
   {
     name: 'unban',
-    description: '`!unban userid [reason]` to unban someone from this guild',
-    description_slash: 'unbans someone from the guild with an optional reason',
+    description: '`!unban userid [reason]` unbans someone from this guild',
+    description_slash: 'unbans someone from this guild',
     flags: 0b110110,
     options: [
       { type: 6, name: 'member', description: 'the member to unban', required: true },
@@ -916,9 +916,10 @@ module.exports = [
   },
   {
     name: 'emoterole',
-    description: '`!emoterole add <emote|id|name> [<@role|id|name>] ...` to add roles that can use the emoji\n' +
-      '`!emoterole remove <emote|id|name> [<@role|id|name>] ...` to remove roles that can use the emoji\n' +
-      '`!emoterole set <emote|id|name> [<@role|id|name>] ...` to set roles that can use the emoji',
+    description: 'configures which roles can use which emoji\n' +
+      '`!emoterole add <emote|id|name> [<@role|id|name>] ...` adds roles that can use an emoji\n' +
+      '`!emoterole remove <emote|id|name> [<@role|id|name>] ...` removes roles that can use an emoji\n' +
+      '`!emoterole set <emote|id|name> [<@role|id|name>] ...` sets roles that can use an emoji',
     description_slash: 'configures which roles can use which emoji',
     flags: 0b110110,
     options: [

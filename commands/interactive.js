@@ -15,7 +15,7 @@ module.exports = [
   },
   {
     name: 'roll',
-    description: '`!roll # # | #d#` rolls a dice with the given number of sides, the given number of times (for the first form the number of times is last while for the second form the number of times is first), and adds the results together',
+    description: '`!roll [<# of sides> <# of times>] | #d#` rolls a dice with the given number of sides (defaulting to 6), the given number of times (defaulting to 1), and adds the results together',
     description_slash: 'rolls a dice with the given number of sides (defaulting to 6), the given number of times',
     flags: 0b111110,
     options: [
@@ -171,7 +171,7 @@ module.exports = [
   },
   {
     name: 'spoilerbubblewrap',
-    description: '`!spoilerbubblewrap <text>` to produce text that can be copy pasted that contains the original text wrapped in spoilers for every character',
+    description: '`!spoilerbubblewrap <text>` returns text to copy paste that contains the original text wrapped in spoilers for every character',
     description_slash: 'returns text to copy paste that contains the original text wrapped in spoilers for every character',
     flags: 0b111110,
     options: [ { type: 3, name: 'text', description: 'the text', required: true } ],

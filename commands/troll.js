@@ -1,7 +1,7 @@
 module.exports = [
   {
     name: '@_everyone',
-    description: '`!@_everyone members [hidden]` pings everyone ... the manual way\n`!@_everyone roles [hidden]` to ping all roles instead',
+    description: '`!@_everyone members [hidden]` pings everyone ... the manual way\n`!@_everyone roles [hidden]` pings all roles instead',
     flags: 0b010100,
     execute(o, msg, rawArgs) {
       if (!persGuildData.special_guilds_set.has(msg.guild.id)) return;

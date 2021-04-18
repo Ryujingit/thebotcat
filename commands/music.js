@@ -1,10 +1,10 @@
 module.exports = [
   {
     name: 'play',
-    description: '`!play <url>` to play the audio of a youtube url, like every other music bot in existence',
-    description_slash: 'play the audio of a youtube url, like every other music bot in existence',
+    description: '`!play <url>` plays the audio of a YouTube URL, like every other music bot in existence',
+    description_slash: 'plays the audio of a YouTube URL, like every other music bot in existence',
     flags: 0b110110,
-    options: [ { type: 3, name: 'url', description: 'the url of the youtube video to play the audio of', required: true } ],
+    options: [ { type: 3, name: 'url', description: 'the URL of the YouTube video to play the audio of', required: true } ],
     async execute(o, msg, rawArgs) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
       let guilddata = props.saved.guilds[msg.guild.id];
@@ -343,7 +343,7 @@ module.exports = [
   },
   {
     name: 'songslist',
-    description: '`!songslist` to list the currently playing song and the next songs',
+    description: '`!songslist` lists the currently playing song and the next songs',
     description_slash: 'lists the currently playing song and the next songs',
     flags: 0b110110,
     execute(o, msg, rawArgs) {
@@ -379,8 +379,8 @@ module.exports = [
   },
   {
     name: 'currentsong',
-    description: '`!currentsong` to list the currently playing song',
-    description_slash: 'lists the currently playing song',
+    description: '`!currentsong` prints the currently playing song',
+    description_slash: 'prints the currently playing song',
     flags: 0b110110,
     execute(o, msg, rawArgs) {
       if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');

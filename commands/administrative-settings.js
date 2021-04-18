@@ -1,7 +1,7 @@
 module.exports = [
   {
     name: 'settings',
-    description: '`!settings` to see available settings\n`!settings <setting>` for help on a specific setting',
+    description: '`!settings` for available settings\n`!settings <setting>` for help on a specific setting',
     description_slash: 'changes botcat\'s settings for this guild',
     flags: 0b110110,
     options: [
@@ -228,7 +228,7 @@ module.exports = [
         case 'confirmkb':
           if (!fullperms) return silenced ? null : msg.channel.send('You do not have permission to run this command.');
           if (rawArgs.length == 1) {
-            return msg.channel.send(`Confirmation on the kick, ban, and unban commands: ${guilddata.confirm_kb ? '✅' : '❌'}\n\`${guilddata.prefix}settings confirmkb <'true'/'yes'/'false'/'no'>\` to set.`);
+            return msg.channel.send(`Confirmation on the kick, ban, and unban commands: ${guilddata.confirm_kb ? '✅' : '❌'}\n\`${guilddata.prefix}settings confirmkb true|yes|false|no\` to set.`);
           } else {
             switch (rawArgs[1]) {
               case 'true': case 'yes':
@@ -240,7 +240,7 @@ module.exports = [
                 break;
               
               default:
-                return msg.channel.send(`\`${guilddata.prefix}settings confirmkb <'true'/'yes/'false'/'no'>\` to set.`);
+                return msg.channel.send(`\`${guilddata.prefix}settings confirmkb true|yes|false|no\` to set.`);
             }
             schedulePropsSave();
             return msg.channel.send(`Confirmation on the kick, ban, and unban commands set to: ${guilddata.confirm_kb ? '✅' : '❌'}`);

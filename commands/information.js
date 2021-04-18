@@ -1,7 +1,7 @@
 module.exports = [
   {
     name: 'help',
-    description: '`!help` to list my commands\n`!help <command>` to print help for command',
+    description: '`!help` for a list of my commands\n`!help <command>` for help on a specific command',
     description_slash: 'help on commands',
     options: [
       { type: 3, name: 'command', description: 'the command' },
@@ -60,7 +60,7 @@ module.exports = [
   },
   {
     name: 'version',
-    description: '`!version` prints the version of my code',
+    description: '`!version` for the version of my code',
     description_slash: 'prints my version',
     flags: 0b111110,
     options: [ { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' } ],
@@ -74,7 +74,7 @@ module.exports = [
   },
   {
     name: 'uptime',
-    description: '`!uptime` to see my uptime',
+    description: '`!uptime` for my uptime',
     description_slash: 'prints my uptime',
     flags: 0b111110,
     options: [ { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' } ],
@@ -88,7 +88,7 @@ module.exports = [
   },
   {
     name: 'status',
-    description: '`!status` to see my status',
+    description: '`!status` for my status',
     description_slash: 'prints my status',
     flags: 0b111110,
     options: [ { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' } ],
@@ -102,8 +102,8 @@ module.exports = [
   },
   {
     name: 'fullstatus',
-    description: '`!fullstatus` to see my full status',
-    description_slash: 'prints my fullstatus',
+    description: '`!fullstatus` for my full status',
+    description_slash: 'prints my full status',
     flags: 0b111110,
     options: [ { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' } ],
     execute(o, msg, rawArgs) {
@@ -116,8 +116,8 @@ module.exports = [
   },
   {
     name: 'ping',
-    description: '`!ping` checks my ping in the websocket, to the web, and discord',
-    description_slash: 'checks my ping in the websocket, to the web, and discord',
+    description: '`!ping` checks my ping to the WebSocket gateway, the web, and the Discord API',
+    description_slash: 'checks my ping to the WebSocket gateway, the web, and the Discord API',
     flags: 0b111110,
     options: [ { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' } ],
     execute(o, msg, rawArgs) {
@@ -158,8 +158,8 @@ module.exports = [
   },
   {
     name: 'discord',
-    description: '`!discord` for a link to my Discord Server',
-    description_slash: 'sends a link to my support server',
+    description: '`!discord` for a link to my Discord Support Server',
+    description_slash: 'sends a link to my Discord Support Server',
     flags: 0b111110,
     options: [ { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' } ],
     execute(o, msg, rawArgs) {
@@ -175,8 +175,8 @@ module.exports = [
   },
   {
     name: 'github',
-    description: '`!github` for a link to my GitHub repo',
-    description_slash: 'sends a link to my github repo url',
+    description: '`!github` for a link to my GitHub repository',
+    description_slash: 'sends a link to my GitHub repository',
     flags: 0b111110,
     options: [ { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' } ],
     execute(o, msg, rawArgs) {
@@ -192,7 +192,7 @@ module.exports = [
   },
   {
     name: 'invite',
-    description: '`!invite` for my invite link',
+    description: '`!invite` for my server invite link',
     description_slash: 'sends my server invite link',
     flags: 0b111110,
     options: [ { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' } ],
@@ -208,7 +208,7 @@ module.exports = [
   },
   {
     name: 'avatar',
-    description: '`!avatar` displays your avatar\n`!avatar @someone` displays someone\'s avatar',
+    description: '`!avatar [@someone]` displays someone\'s avatar or yours if a user isn\'t provided',
     description_slash: 'displays someone\'s avatar or yours if a user isn\'t provided',
     flags: 0b111110,
     options: [
@@ -340,7 +340,7 @@ module.exports = [
   },
   {
     name: 'icon',
-    description: '`!icon` to view the server\'s icon',
+    description: '`!icon` displays the server\'s icon',
     description_slash: 'displays the server\'s icon',
     flags: 0b110110,
     options: [ { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' } ],
@@ -427,7 +427,7 @@ module.exports = [
   },
   {
     name: 'userinfo',
-    description: '`!userinfo [@someone]` to display information about a user',
+    description: '`!userinfo [@someone]` displays information about a user or you if a user isn\'t provided',
     description_slash: 'displays information about a user or you if a user isn\'t provided',
     flags: 0b111110,
     options: [
@@ -527,7 +527,7 @@ module.exports = [
   },
   {
     name: 'memberinfo',
-    description: '`!memberinfo [@someone]` to display information about a user',
+    description: '`!memberinfo [@someone]` displays information about a member or you if a member isn\'t provided',
     description_slash: 'displays information about a member or you if a member isn\'t provided',
     flags: 0b110110,
     options: [
@@ -584,8 +584,8 @@ module.exports = [
   },
   {
     name: 'serverinfo',
-    description: '`!serverinfo` to view information about the current server',
-    description_slash: 'displays information about the current server',
+    description: '`!serverinfo [all]` displays information about this server',
+    description_slash: 'displays information about this server',
     flags: 0b110110,
     options: [
       { type: 5, name: 'all', description: 'show all server info' },
@@ -686,8 +686,8 @@ module.exports = [
   },
   {
     name: 'firstmsg',
-    description: '`!firstmsg` for a link to the first message in this channel\n`!firstmsg #channel` for a link to the first message in #channel',
-    description_slash: 'sends a link to the first message in this channel or a certain channel',
+    description: '`!firstmsg [#channel]` for a link to the first message in a channel',
+    description_slash: 'sends a link to the first message in a channel',
     flags: 0b111110,
     options: [
       { type: 7, name: 'channel', description: 'the channel' },
@@ -725,8 +725,8 @@ module.exports = [
   },
   {
     name: 'dateid',
-    description: '`!dateid <id>` to get the UTC date and time of an ID in discord',
-    description_slash: 'prints the UTC date and time of an ID in discord',
+    description: '`!dateid <id>` prints the UTC date and time of an ID in Discord',
+    description_slash: 'prints the UTC date and time of an ID in Discord',
     flags: 0b111110,
     options: [
       { type: 3, name: 'id', description: 'the id', required: true },
@@ -752,8 +752,8 @@ module.exports = [
   },
   {
     name: 'idinfo',
-    description: '`!idinfo <id>` to get the fields of an ID in discord',
-    description_slash: 'prints the fields of an ID in discord',
+    description: '`!idinfo <id>` prints the fields of an ID in Discord',
+    description_slash: 'prints the fields of an ID in Discord',
     flags: 0b111110,
     options: [
       { type: 3, name: 'id', description: 'the id', required: true },

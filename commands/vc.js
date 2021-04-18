@@ -1,8 +1,8 @@
 module.exports = [
   {
     name: 'join',
-    description: '`!join` for me to join the voice channel you are in\n`!join #channel` for me to join a voice channel',
-    description_slash: 'for me to join a voice channel, defaults to the one you\'re in',
+    description: '`!join [#channel]` for me to join a voice channel, defaulting to the one you\'re in',
+    description_slash: 'for me to join a voice channel, defaulting to the one you\'re in',
     flags: 0b110110,
     options: [ { type: 7, name: 'channel', description: 'the voice channel' } ],
     async execute(o, msg, rawArgs) {
@@ -195,11 +195,11 @@ module.exports = [
       let joinperms = perms & common.constants.botRolePermBits.JOIN_VC, manageperms = perms & common.constants.botRolePermBits.MANAGE_BOT, remoteperms = perms & common.constants.botRolePermBits.REMOTE_CMDS;
       if (joinperms && manageperms) {
         if (msg.member.voice.channelID != channel.id && !remoteperms)
-          return msg.channel.send('You do not have permission to get me to toggle my selfdeaf status remotely.');
+          return msg.channel.send('You do not have permission to get me to toggle my selfdeafen status remotely.');
         common.clientVCManager.toggleSelfDeaf(guilddata.voice);
         return msg.channel.send(`Set self deaf to ${guilddata.voice.connection.voice.selfDeaf ? 'enabled' : 'disabled'}`);
       } else {
-        return msg.channel.send('You do not have permission to get me to toggle my selfdeaf status.');
+        return msg.channel.send('You do not have permission to get me to toggle my selfdeafen status.');
       }
     },
     execute_slash(o, interaction, command, args) {
@@ -215,11 +215,11 @@ module.exports = [
       let joinperms = perms & common.constants.botRolePermBits.JOIN_VC, manageperms = perms & common.constants.botRolePermBits.MANAGE_BOT, remoteperms = perms & common.constants.botRolePermBits.REMOTE_CMDS;
       if (joinperms && manageperms) {
         if (o.member.voice.channelID != channel.id && !remoteperms)
-          return common.slashCmdResp(interaction, false, 'You do not have permission to get me to toggle my selfdeaf status remotely.');
+          return common.slashCmdResp(interaction, false, 'You do not have permission to get me to toggle my selfdeafen status remotely.');
         common.clientVCManager.toggleSelfDeaf(guilddata.voice);
         return common.slashCmdResp(interaction, false, `Set self deaf to ${guilddata.voice.connection.voice.selfDeaf ? 'enabled' : 'disabled'}`);
       } else {
-        return common.slashCmdResp(interaction, false, 'You do not have permission to get me to toggle my selfdeaf status.');
+        return common.slashCmdResp(interaction, false, 'You do not have permission to get me to toggle my selfdeafen status.');
       }
     },
   },
