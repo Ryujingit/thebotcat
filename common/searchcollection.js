@@ -1,6 +1,8 @@
 // searches a collection with a query
 
 function searchRoles(roles, query) {
+  if (typeof query != 'string') query = '';
+  
   // convert mentions to the inside
   if (/^ *<(?:@!?|@&|#)([0-9]+)> *$/.test(query)) query = /^ *<(?:@!?|@&|#)([0-9]+)> *$/.exec(query)[1];
   
@@ -46,6 +48,8 @@ function searchRoles(roles, query) {
 }
 
 async function searchMembers(members, query) {
+  if (typeof query != 'string') query = '';
+  
   // convert mentions to the inside
   if (/^ *<(?:@!?|@&|#)([0-9]+)> *$/.test(query)) query = /^ *<(?:@!?|@&|#)([0-9]+)> *$/.exec(query)[1];
   
@@ -109,6 +113,8 @@ async function searchMembers(members, query) {
 }
 
 async function searchUsers(users, query, options) {
+  if (typeof query != 'string') query = '';
+  
   // convert mentions to the inside
   if (/^ *<(?:@!?|@&|#)([0-9]+)> *$/.test(query)) query = /^ *<(?:@!?|@&|#)([0-9]+)> *$/.exec(query)[1];
   
