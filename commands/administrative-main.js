@@ -662,6 +662,9 @@ module.exports = [
       if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.KICK))
         return msg.channel.send('You do not have permission to run this command.');
       
+      if (!msg.guild.me.hasPermission('KICK_MEMBERS'))
+        return msg.channel.send('Error: I do not have permission to kick members.');
+      
       let member;
       try {
         member = await common.searchMember(msg.guild.members, rawArgs[0]);
@@ -671,11 +674,6 @@ module.exports = [
         return msg.channel.send('Could not find member.');
       }
       
-      let kickreason = rawArgs.slice(1).join(' ');
-      
-      if (!msg.guild.me.hasPermission('KICK_MEMBERS'))
-        return msg.channel.send('Error: I do not have permission to kick members.');
-      
       if (msg.member.id != msg.guild.ownerID &&
         (member.id == msg.guild.ownerID || msg.member.roles.highest.position <= member.roles.highest.position))
         return msg.channel.send('You cannot kick someone equal or higher than you in the role hierarchy.');
@@ -684,13 +682,14 @@ module.exports = [
         (member.id == msg.guild.ownerID || msg.guild.me.roles.highest.position <= member.roles.highest.position))
         return msg.channel.send('Error: I cannot kick someone equal or higher than me in the role hierarchy.');
       
+      let kickreason = rawArgs.slice(1).join(' ');
+      
       try {
         let guilddata = props.saved.guilds[msg.guild.id];
         if (guilddata && (guilddata.confirm_kb || guilddata.confirm_kb == null) || !guilddata) {
           let kickconfirm = await msg.channel.send(`Are you sure you want to kick user ${member.user.tag} (id ${member.id})${kickreason ? ' with reason ' + util.inspect(kickreason) : ''}?`, { allowedMentions: { parse: [] } });
           let kickreacts = kickconfirm.awaitReactions((react, user) => (react.emoji.name == '✅' || react.emoji.name == '❌') && user.id == msg.author.id, { time: 60000, max: 1 });
-          await kickconfirm.react('✅');
-          await kickconfirm.react('❌');
+          await kickconfirm.react('✅'); await kickconfirm.react('❌');
           kickreacts = await kickreacts;
           if (kickreacts.keyArray().length == 0 || kickreacts.keyArray()[0] == '❌')
             return kickconfirm.edit(kickconfirm.content + '\nKick cancelled.');
@@ -710,6 +709,9 @@ module.exports = [
       if (!common.hasBotPermissions(o, common.constants.botRolePermBits.KICK))
         return common.slashCmdResp(interaction, true, 'You do not have permission to run this command.');
       
+      if (!o.guild.me.hasPermission('KICK_MEMBERS'))
+        return common.slashCmdResp(interaction, true, 'Error: I do not have permission to kick members.');
+      
       let member;
       try {
         member = await o.guild.members.fetch(args[0].value);
@@ -719,11 +721,6 @@ module.exports = [
         return common.slashCmdResp(interaction, true, 'Could not find member.');
       }
       
-      let kickreason = args[1] && args[1].value;
-      
-      if (!o.guild.me.hasPermission('KICK_MEMBERS'))
-        return common.slashCmdResp(interaction, true, 'Error: I do not have permission to kick members.');
-      
       if (o.member.id != o.guild.ownerID &&
         (member.id == o.guild.ownerID || o.member.roles.highest.position <= member.roles.highest.position))
         return common.slashCmdResp(interaction, true, 'You cannot kick someone equal or higher than you in the role hierarchy.');
@@ -731,6 +728,8 @@ module.exports = [
       if (o.guild.me.id != o.guild.ownerID &&
         (member.id == o.guild.ownerID || o.guild.me.roles.highest.position <= member.roles.highest.position))
         return common.slashCmdResp(interaction, true, 'Error: I cannot kick someone equal or higher than me in the role hierarchy.');
+      
+      let kickreason = args[1] && args[1].value;
       
       try {
         await member.kick(`[By ${o.author.tag} (id ${o.author.id})]${kickreason ? ' ' + kickreason : ''}`);
@@ -754,138 +753,89 @@ module.exports = [
       if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.BAN))
         return msg.channel.send('You do not have permission to run this command.');
       
-      let member, nomember;
-      try {
-        member = await common.searchMember(msg.guild.members, rawArgs[0]);
-        if (!member) {
-          if (/[0-9]+/.test(rawArgs[0])) nomember = true;
-          else return msg.channel.send('Could not find member.');
-        }
-      } catch (e) {
-        if (/[0-9]+/.test(rawArgs[0])) nomember = true;
-        else return msg.channel.send('Could not find member.');
+      if (!msg.guild.me.hasPermission('BAN_MEMBERS'))
+        return msg.channel.send('Error: I do not have permission to ban members.');
+      
+      let user = await common.searchMember(msg.guild.members, rawArgs[0]);
+      if (!user) {
+        user = await common.searchUser(rawArgs[0]);
+        if (!user) return msg.channel.send('Could not find member.');
       }
       
-      if (nomember) {
-        let banreason = rawArgs.slice(1).join(' ');
-        
-        if (!msg.guild.me.hasPermission('BAN_MEMBERS'))
-          return msg.channel.send('Error: I do not have permission to ban members.');
-        
-        try {
-          let guilddata = props.saved.guilds[msg.guild.id];
-          if (guilddata && (guilddata.confirm_kb || guilddata.confirm_kb == null) || !guilddata) {
-            let banconfirm = await msg.channel.send(`Are you sure you want to ban unknown user${banreason ? ' with reason ' + util.inspect(banreason) : ''}?`, { allowedMentions: { parse: [] } });
-            let banreacts = banconfirm.awaitReactions((react, user) => (react.emoji.name == '✅' || react.emoji.name == '❌') && user.id == msg.author.id, { time: 60000, max: 1 });
-            await banconfirm.react('✅');
-            await banconfirm.react('❌');
-            banreacts = await banreacts;
-            if (banreacts.keyArray().length == 0 || banreacts.keyArray()[0] == '❌')
-              return banconfirm.edit(banconfirm.content + '\nBan cancelled.');
-            
-            await msg.guild.members.ban(member, { reason: `[By ${msg.author.tag} (id ${msg.author.id})]${banreason ? ' ' + banreason : ''}` });
-            return banconfirm.edit(banconfirm.content + `\nunknown user has been successfully banned`);
-          } else {
-            await msg.guild.members.ban(member, { reason: `[By ${msg.author.tag} (id ${msg.author.id})]${banreason ? ' ' + banreason : ''}` });
-            return msg.channel.send(`unknown user has been successfully banned`);
-          }
-        } catch (e) {
-          console.error(e);
-          return msg.channel.send('Error: something went wrong.');
-        }
-      } else {
-        let banreason = rawArgs.slice(1).join(' ');
-        
-        if (!msg.guild.me.hasPermission('BAN_MEMBERS'))
-          return msg.channel.send('Error: I do not have permission to ban members.');
-        
+      let banreason = rawArgs.slice(1).join(' ');
+      
+      if (user instanceof Discord.GuildMember) {
         if (msg.member.id != msg.guild.ownerID &&
-          (member.id == msg.guild.ownerID || msg.member.roles.highest.position <= member.roles.highest.position))
+          (user.id == msg.guild.ownerID || msg.member.roles.highest.position <= user.roles.highest.position))
           return msg.channel.send('You cannot ban someone equal or higher than you in the role hierarchy.');
         
         if (msg.guild.me.id != msg.guild.ownerID &&
-          (member.id == msg.guild.ownerID || msg.guild.me.roles.highest.position <= member.roles.highest.position))
+          (user.id == msg.guild.ownerID || msg.guild.me.roles.highest.position <= user.roles.highest.position))
           return msg.channel.send('Error: I cannot ban someone equal or higher than me in the role hierarchy.');
         
-        try {
-          let guilddata = props.saved.guilds[msg.guild.id];
-          if (guilddata && (guilddata.confirm_kb || guilddata.confirm_kb == null) || !guilddata) {
-            let banconfirm = await msg.channel.send(`Are you sure you want to ban user ${member.user.tag} (id ${member.id})${banreason ? ' with reason ' + util.inspect(banreason) : ''}?`, { allowedMentions: { parse: [] } });
-            let banreacts = banconfirm.awaitReactions((react, user) => (react.emoji.name == '✅' || react.emoji.name == '❌') && user.id == msg.author.id, { time: 60000, max: 1 });
-            await banconfirm.react('✅');
-            await banconfirm.react('❌');
-            banreacts = await banreacts;
-            if (banreacts.keyArray().length == 0 || banreacts.keyArray()[0] == '❌')
-              return banconfirm.edit(banconfirm.content + '\nBan cancelled.');
-            
-            await msg.guild.members.ban(member, { reason: `[By ${msg.author.tag} (id ${msg.author.id})]${banreason ? ' ' + banreason : ''}` });
-            return banconfirm.edit(banconfirm.content + `\n${member.user.tag} (id ${member.id}) has been successfully banned`);
-          } else {
-            await msg.guild.members.ban(member, { reason: `[By ${msg.author.tag} (id ${msg.author.id})]${banreason ? ' ' + banreason : ''}` });
-            return msg.channel.send(`${member.user.tag} (id ${member.id}) has been successfully banned`);
-          }
-        } catch (e) {
-          console.error(e);
-          return msg.channel.send('Error: something went wrong.');
+        user = user.user;
+      }
+        
+      try {
+        let guilddata = props.saved.guilds[msg.guild.id];
+        if (guilddata && (guilddata.confirm_kb || guilddata.confirm_kb == null) || !guilddata) {
+          let banconfirm = await msg.channel.send(`Are you sure you want to ban user ${user.tag} (id ${user.id})${banreason ? ' with reason ' + util.inspect(banreason) : ''}?`, { allowedMentions: { parse: [] } });
+          let banreacts = banconfirm.awaitReactions((react, user) => (react.emoji.name == '✅' || react.emoji.name == '❌') && user.id == msg.author.id, { time: 60000, max: 1 });
+          await banconfirm.react('✅'); await banconfirm.react('❌');
+          banreacts = await banreacts;
+          if (banreacts.keyArray().length == 0 || banreacts.keyArray()[0] == '❌')
+            return banconfirm.edit(banconfirm.content + '\nBan cancelled.');
+          
+          await msg.guild.members.ban(user, { reason: `[By ${msg.author.tag} (id ${msg.author.id})]${banreason ? ' ' + banreason : ''}` });
+          return banconfirm.edit(banconfirm.content + `\n${user.tag} (id ${user.id}) has been successfully banned`);
+        } else {
+          await msg.guild.members.ban(user, { reason: `[By ${msg.author.tag} (id ${msg.author.id})]${banreason ? ' ' + banreason : ''}` });
+          return msg.channel.send(`${user.tag} (id ${user.id}) has been successfully banned`);
         }
+      } catch (e) {
+        console.error(e);
+        return msg.channel.send('Error: something went wrong.');
       }
     },
     async execute_slash(o, interaction, command, args) {
       if (!common.hasBotPermissions(o, common.constants.botRolePermBits.BAN))
         return common.slashCmdResp(interaction, true, 'You do not have permission to run this command.');
       
-      let member, nomember;
-      try {
-        member = await o.guild.members.fetch(args[0].value);
-        if (!member) {
-          if (/[0-9]+/.test(args[0].value)) nomember = true;
-          else return common.slashCmdResp(interaction, true, 'Could not find member.');
-        }
-      } catch (e) {
-        if (/[0-9]+/.test(args[0].value)) nomember = true;
-        else return common.slashCmdResp(interaction, true, 'Could not find member.');
+      if (!o.guild.me.hasPermission('BAN_MEMBERS'))
+        return common.slashCmdResp(interaction, true, 'Error: I do not have permission to ban members.');
+      
+      let user = await o.guild.members.fetch(args[0].value);
+      if (!user) {
+        user = await client.users.fetch(args[0].value);
+        if (!user) return common.slashCmdResp(interaction, true, 'Could not find member.');
       }
       
-      if (nomember) {
-        let banreason = args[1] && args[1].value;
-        
-        if (!o.guild.me.hasPermission('BAN_MEMBERS'))
-          return common.slashCmdResp(interaction, true, 'Error: I do not have permission to ban members.');
-        
-        try {
-          await o.guild.members.ban(member, { reason: `[By ${o.author.tag} (id ${o.author.id})]${banreason ? ' ' + banreason : ''}` });
-          return common.slashCmdResp(interaction, false, `unknown user has been successfully banned`);
-        } catch (e) {
-          console.error(e);
-          return common.slashCmdResp(interaction, true, 'Error: something went wrong.');
-        }
-      } else {
-        let banreason = args[1] && args[1].value;
-        
-        if (!o.guild.me.hasPermission('BAN_MEMBERS'))
-          return common.slashCmdResp(interaction, true, 'Error: I do not have permission to ban members.');
-        
+      let banreason = args[1] && args[1].value;
+      
+      if (user instanceof Discord.GuildMember) {
         if (o.member.id != o.guild.ownerID &&
-          (member.id == o.guild.ownerID || o.member.roles.highest.position <= member.roles.highest.position))
+          (user.id == o.guild.ownerID || o.member.roles.highest.position <= user.roles.highest.position))
           return common.slashCmdResp(interaction, true, 'You cannot ban someone equal or higher than you in the role hierarchy.');
         
         if (o.guild.me.id != o.guild.ownerID &&
-          (member.id == o.guild.ownerID || o.guild.me.roles.highest.position <= member.roles.highest.position))
+          (user.id == o.guild.ownerID || o.guild.me.roles.highest.position <= user.roles.highest.position))
           return common.slashCmdResp(interaction, true, 'Error: I cannot ban someone equal or higher than me in the role hierarchy.');
         
-        try {
-          await o.guild.members.ban(member, { reason: `[By ${o.author.tag} (id ${o.author.id})]${banreason ? ' ' + banreason : ''}` });
-          return common.slashCmdResp(interaction, false, `${member.user.tag} (id ${member.id}) has been successfully banned`);
-        } catch (e) {
-          console.error(e);
-          return common.slashCmdResp(interaction, true, 'Error: something went wrong.');
-        }
+        user = user.user;
+      }
+      
+      try {
+        await o.guild.members.ban(user, { reason: `[By ${o.author.tag} (id ${o.author.id})]${banreason ? ' ' + banreason : ''}` });
+        return common.slashCmdResp(interaction, false, `${user.tag} (id ${user.id}) has been successfully banned`);
+      } catch (e) {
+        console.error(e);
+        return common.slashCmdResp(interaction, true, 'Error: something went wrong.');
       }
     },
   },
   {
     name: 'unban',
-    description: '`!unban @person [reason]` to unban someone from this guild',
+    description: '`!unban userid [reason]` to unban someone from this guild',
     description_slash: 'unbans someone from the guild with an optional reason',
     flags: 0b110110,
     options: [
@@ -896,25 +846,25 @@ module.exports = [
       if (!common.hasBotPermissions(msg, common.constants.botRolePermBits.BAN))
         return msg.channel.send('You do not have permission to run this command.');
       
-      let memberid;
+      if (!msg.guild.me.hasPermission('BAN_MEMBERS'))
+        return msg.channel.send('Error: I do not have permission to unban members.');
+      
+      let userid;
       if (rawArgs[0]) {
         if (/<@!?[0-9]+>|[0-9]+/.test(rawArgs[0]))
-          memberid = rawArgs[0].replace(/[<@!>]/g, '');
+          userid = rawArgs[0].replace(/[<@!>]/g, '');
       }
-      if (!memberid) return;
+      if (!userid) return msg.channel.send('Could not find user.');
       
       let baninfo;
       try {
-        baninfo = await msg.guild.fetchBan(memberid);
+        baninfo = await msg.guild.fetchBan(userid);
         if (!baninfo) return msg.channel.send('User not banned or nonexistent.');
       } catch (e) {
         return msg.channel.send('User not banned or nonexistent.');
       }
       
       let unbanreason = rawArgs.slice(1).join(' ');
-      
-      if (!msg.guild.me.hasPermission('BAN_MEMBERS'))
-        return msg.channel.send('Error: I do not have permission to unban members.');
       
       try {
         let guilddata = props.saved.guilds[msg.guild.id];
@@ -927,10 +877,10 @@ module.exports = [
           if (unbanreacts.keyArray().length == 0 || unbanreacts.keyArray()[0] == '❌')
             return unbanconfirm.edit(unbanconfirm.content + '\nUnban cancelled.');
           
-          await msg.guild.members.unban(memberid, `[By ${msg.author.tag} (id ${msg.author.id})]${unbanreason ? ' ' + unbanreason : ''}`);
+          await msg.guild.members.unban(userid, `[By ${msg.author.tag} (id ${msg.author.id})]${unbanreason ? ' ' + unbanreason : ''}`);
           return unbanconfirm.edit(unbanconfirm.content + `\n${baninfo.user.tag} (id ${baninfo.user.id}) has been successfully unbanned`);
         } else {
-          await msg.guild.members.unban(memberid, `[By ${msg.author.tag} (id ${msg.author.id})]${unbanreason ? ' ' + unbanreason : ''}`);
+          await msg.guild.members.unban(userid, `[By ${msg.author.tag} (id ${msg.author.id})]${unbanreason ? ' ' + unbanreason : ''}`);
           return msg.channel.send(`${baninfo.user.tag} (id ${baninfo.user.id}) has been successfully unbanned`);
         }
       } catch (e) {
@@ -941,11 +891,14 @@ module.exports = [
       if (!common.hasBotPermissions(o, common.constants.botRolePermBits.BAN))
         return common.slashCmdResp(interaction, true, 'You do not have permission to run this command.');
       
-      let memberid = args[0] && args[0].value;
+      if (!o.guild.me.hasPermission('BAN_MEMBERS'))
+        return common.slashCmdResp(interaction, true, 'Error: I do not have permission to unban members.');
+      
+      let userid = args[0] && args[0].value;
       
       let baninfo;
       try {
-        baninfo = await o.guild.fetchBan(memberid);
+        baninfo = await o.guild.fetchBan(userid);
         if (!baninfo) return common.slashCmdResp(interaction, true, 'User not banned or nonexistent.');
       } catch (e) {
         return common.slashCmdResp(interaction, true, 'User not banned or nonexistent.');
@@ -953,11 +906,8 @@ module.exports = [
       
       let unbanreason = args[1] && args[1].value;
       
-      if (!o.guild.me.hasPermission('BAN_MEMBERS'))
-        return common.slashCmdResp(interaction, true, 'Error: I do not have permission to unban members.');
-      
       try {
-        await o.guild.members.unban(memberid, `[By ${o.author.tag} (id ${o.author.id})]${unbanreason ? ' ' + unbanreason : ''}`);
+        await o.guild.members.unban(userid, `[By ${o.author.tag} (id ${o.author.id})]${unbanreason ? ' ' + unbanreason : ''}`);
         return common.slashCmdResp(interaction, false, `${baninfo.user.tag} (id ${baninfo.user.id}) has been successfully unbanned`);
       } catch (e) {
         return common.slashCmdResp(interaction, true, 'Error: something went wrong.');

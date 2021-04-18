@@ -26,25 +26,25 @@ module.exports = [
     execute(o, msg, rawArgs) {
       let sides, times;
       if (/-?[0-9.e]+ [0-9.e]+/.test(o.argstring)) {
-        sides = Number(rawArgs[0].replace(/[^0-9.e-]/g, '')) || 6;
-        times = Math.min(Math.max(Math.floor(Number(rawArgs[1].replace(/[^0-9.e-]/g, ''))) || 1, 0), 100);
+        sides = Number(rawArgs[0].replace(/[^0-9.e-]/g, ''));
+        times = Math.min(Math.max(Math.floor(Number(rawArgs[1].replace(/[^0-9.e-]/g, ''))), 0), 100);
       } else if (/[0-9.e]+d-?[0-9.e]+/.test(o.argstring)) {
         let split = rawArgs[0].split('d');
-        sides = Number(split[1].replace(/[^0-9.e-]/g, '')) || 6;
-        times = Math.min(Math.max(Math.floor(Number(split[0].replace(/[^0-9.e-]/g, ''))) || 1, 0), 100);
-      } else return msg.channel.send('Invalid arguments.');
-      let result = 0;
+        sides = Number(split[1].replace(/[^0-9.e-]/g, ''));
+        times = Math.min(Math.max(Math.floor(Number(split[0].replace(/[^0-9.e-]/g, ''))), 0), 100);
+      } else { sides = 6; times = 1; }
+      let result = [];
       for (var i = 0; i < times; i++)
-        result += 1 + common.randInt(0, sides);
-      return msg.channel.send(`Result of rolling a ${times}d${sides}: ${result}`);
+        result.push(common.randInt(1, sides + 1));
+      return msg.channel.send(`Result of rolling a ${times}d${sides}: ${result.join(', ')}${result.length > 1 ? '; ' : ''}${result.length > 1 || result.length == 0 ? 'total ' + result.reduce((a, c) => a + c, 0) : ''}`);
     },
     execute_slash(o, interaction, command, args) {
-      let sides = (args[0] ? args[0].value : 0) || 6, times = Math.min(Math.max((args[1] ? args[1].value : 0) || 1, 0), 100);
-      let result = 0;
+      let sides = (args[0] ? args[0].value : 6), times = Math.min(Math.max((args[1] ? args[1].value : 1), 0), 100);
+      let result = [];
       for (var i = 0; i < times; i++)
-        result += 1 + common.randInt(0, sides);
+        result.push(common.randInt(1, sides + 1));
       let emphemeral = args[2] ? (args[2].value ? true : false) : true;
-      return common.slashCmdResp(interaction, emphemeral, `Result of rolling a ${times}d${sides}: ${result}`);
+      return common.slashCmdResp(interaction, emphemeral, `Result of rolling a ${times}d${sides}: ${result.join(', ')}${result.length > 1 ? '; ' : ''}${result.length > 1 || result.length == 0 ? 'total ' + result.reduce((a, c) => a + c, 0) : ''}`);
     },
   },
   {

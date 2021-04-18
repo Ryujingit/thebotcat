@@ -117,13 +117,13 @@ async function searchUsers(users, query, options) {
   if (mentionUser) return mentionUser;
   
   var queryLower = query.toLowerCase(), queryNumbers = query.replace(/[^0-9]+/g, '');
-  var userArr = users.cache.array();
-  
-  // step 1: check if there is only one possibility anyway
-  if (userArr.length == 1) return userArr[0];
+  var userArr = users.cache.array(), minArr = null;
   
   // all these will not be run for non debug circumstances
   if (typeof options == 'object' && options.safeMode != null && !options.safeMode) {
+    // step 1: check if there is only one possibility anyway
+    if (userArr.length == 1) return userArr[0];
+    
     // step 2: run through the array checking every element for various things
     var userLowerIncludes = [], userLowerEqual = [], userIncludes = [], userEqual = [], userID = [];
     for (var i = 0, x; i < userArr.length; i++) {
@@ -144,7 +144,7 @@ async function searchUsers(users, query, options) {
     
     var arrays = [userLowerEqual, userLowerIncludes, userEqual, userIncludes, userID];
     
-    var minSize = Infinity, minArr = null;
+    var minSize = Infinity;
     for (var i = 0; i < arrays.length; i++) {
       if (arrays[i].length < minSize && arrays[i].length != 0) {
         minArr = arrays[i];
