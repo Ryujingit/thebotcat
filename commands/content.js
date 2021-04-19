@@ -108,18 +108,17 @@ exports.push(
     name: 'lamo',
     flags: 0b011110,
     execute(o, msg, rawArgs) {
-      if (!rawArgs[0]) {
+      let len = Math.min(Math.max(Math.floor(Number(rawArgs[0])), 4), 100);
+      if (len != len) {
         return msg.channel.send('lamomamoemao');
       }
-      let len = Number(rawArgs[0]);
-      if (!len || len < 4 || len > 100) return;
       else {
         len -= 4;
         let text = '', lastchar = 'o';
         let options = ['a', 'e', 'm', 'o'];
-        for (; len > 0; len--) {
-          text += lastchar = options.filter(x => x != lastchar)[Math.floor(Math.random() * 3)];
-        }
+        let randints = common.randInts(0, 3, len--);
+        for (; len >= 0; len--)
+          text += lastchar = options.filter(x => x != lastchar)[randints[len]];
         if (text[text.length - 1] != 'o') text += 'o';
         return msg.channel.send(`lamo${text}`);
       }

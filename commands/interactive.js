@@ -49,7 +49,7 @@ module.exports = [
   },
   {
     name: 'randint',
-    description: '`!randint <min> <max>` returns a random integer between min and max (inclusive)',
+    description: '`!randint [[<min>] <max>]` returns a random integer between min and max (inclusive)',
     description_slash: 'returns a random integer between min and max (inclusive)',
     flags: 0b111110,
     options: [
@@ -58,20 +58,23 @@ module.exports = [
       { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' },
     ],
     execute(o, msg, rawArgs) {
-      let min = 0, max = 1;
-      try { min = BigInt(rawArgs[0]); } catch (e) {}
-      try { max = BigInt(rawArgs[1]); } catch (e) {}
+      let min = 0n, max = 1n;
+      if (rawArgs.length == 1) try { max = BigInt(rawArgs[0]); } catch (e) {}
+      else if (rawArgs.length > 1) {
+        try { min = BigInt(rawArgs[0]); } catch (e) {}
+        try { max = BigInt(rawArgs[1]); } catch (e) {}
+      }
       return msg.channel.send(`Random integer between ${min} and ${max}: ${common.randInt(min, max + 1n)}`);
     },
     execute_slash(o, interaction, command, args) {
-      let min = args[0] && args[0].value || 0, max = args[1] && args[1].value || 1;
+      let min = (args[0] && args[0].value) ?? 0, max = (args[1] && args[1].value) ?? 1;
       let emphemeral = args[2] ? (args[2].value ? true : false) : true;
       return common.slashCmdResp(interaction, emphemeral, `Random integer between ${min} and ${max}: ${common.randInt(min, max + 1)}`);
     },
   },
   {
     name: 'randfloat',
-    description: '`!randfloat <min> <max>` returns a random real number between min and max (inclusive lower bound)',
+    description: '`!randfloat [[<min>] <max>]` returns a random real number between min and max (inclusive lower bound)',
     description_slash: 'returns a random real number between min and max (inclusive lower bound)',
     flags: 0b111110,
     options: [
@@ -80,11 +83,16 @@ module.exports = [
       { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' },
     ],
     execute(o, msg, rawArgs) {
-      let min = Number(rawArgs[0]) || 0, max = Number(rawArgs[1]) || 1;
+      let min = 0, max = 1;
+      if (rawArgs.length == 1) max = Number(rawArgs[0]) ?? max;
+      else if (rawArgs.length > 1) {
+        min = Number(rawArgs[0]) ?? min;
+        max = Number(rawArgs[1]) ?? max;
+      }
       return msg.channel.send(`Random real number between ${min} and ${max}: ${min + common.randFloat() * (max - min)}`);
     },
     execute_slash(o, interaction, command, args) {
-      let min = args[0] && args[0].value || 0, max = args[1] && args[1].value || 1;
+      let min = (args[0] && args[0].value) ?? 0, max = (args[1] && args[1].value) ?? 1;
       let emphemeral = args[2] ? (args[2].value ? true : false) : true;
       return common.slashCmdResp(interaction, emphemeral, `Random real number between ${min} and ${max}: ${min + common.randFloat() * (max - min)}`);
     },
@@ -185,9 +193,16 @@ module.exports = [
   {
     name: 'calc',
     description: '`!calc <expression>` calculates the result of a mathematical expression using math.js evaluate (<https://mathjs.org/docs/expressions/index.html> for info)\n' +
-      'Note: a delete function has been added to delete a property from an object:\n' +
-      '  `delete(obj, prop)` to delete `prop` from `obj` or\n' +
-      '  `delete(prop)` to delete `prop` from global scope\n' +
+      'Additional functions:\n' +
+      '  `delete`:\n' +
+      '    `delete(obj, prop)` to delete `prop` from `obj`\n' +
+      '    `delete(prop)` to delete `prop` from global scope\n' +
+      '  `cryptRandom`:\n' +
+      '    `cryptRandom()` for cryptographically-random float between `0` and `1`\n' +
+      '    `cryptRandom(max)` for cryptographically-random float between `0` and `max`\n' +
+      '    `cryptRandom(min, max)` for cryptographically-random float between `min` and `max`\n' +
+      '  `cryptRandomInt`: same as `cryptRandom` but returns integers\n' +
+      '  `cryptRandomBig`: same as `cryptRandom` but returns full precision bignumbers\n' +
       '`!calc :view` to print out serialized JSON of your calc scope\n' +
       '`!calc :clear` to clear your calc scope',
     description_slash: 'calculates an expression using math.js evaluate, do `help calc` for more information',

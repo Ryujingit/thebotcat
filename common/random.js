@@ -99,8 +99,44 @@ function randInt(min, max) {
   return min + res;
 }
 
+function randInts(min, max, amt) {
+  if (!amt || amt < 0) return [];
+  if (typeof min != 'number' && typeof min != 'bigint' || min != min) throw new Error('min must be int or bigint and not nan');
+  if (typeof max != 'number' && typeof max != 'bigint' || max != max) throw new Error('max must be int or bigint and not nan');
+  if (max < min) [max, min] = [min, max];
+  
+  let range = max - min;
+  
+  if (range <= 1) return new Array(amt).fill(min);
+  
+  let array = [], subAmt, bigRandInt;
+  
+  if (typeof range == 'number') {
+    range = BigInt(range);
+    for (; amt > 0; amt -= 128) {
+      subAmt = Math.min(amt, 128);
+      bigRandInt = randInt(0n, range ** BigInt(subAmt));
+      for (var i = 0; i < subAmt; i++) {
+        array.push(min + Number(bigRandInt % range));
+        bigRandInt /= range;
+      }
+    }
+  } else {
+    for (; amt > 0; amt -= 128) {
+      subAmt = Math.min(amt, 128);
+      bigRandInt = randInt(0n, range ** BigInt(subAmt));
+      for (var i = 0; i < subAmt; i++) {
+        array.push(min + bigRandInt % range);
+        bigRandInt /= range;
+      }
+    }
+  }
+  
+  return array;
+}
+
 module.exports = {
   get randomBytes() { return randomBytes }, set randomBytes(val) { randomBytes = val; },
   get randomOffset() { return randomOffset }, set randomOffset(val) { randomOffset = val; },
-  randBytes, randFloat, randInt,
+  randBytes, randFloat, randInt, randInts,
 };
