@@ -405,7 +405,7 @@ async function updateNonPubSlashCommands(endpoint, logfunc) {
   var currCmdsObj = {};
   currCmds.forEach(x => currCmdsObj[x.name] = x);
   
-  var commandsToDelete = currCmds.map(x => x.name).filter(x => (commandColl.get(x).flags & 0b100010) != 0b100000);
+  var commandsToDelete = currCmds.map(x => x.name).filter(x => commandColl.has(x) && (commandColl.get(x).flags & 0b100010) != 0b100000);
   var commandsToUpdate = currCmds.map(x => x.name).filter(x => {
     if (!commandColl.has(x) || (commandColl.get(x).flags & 0b100010) != 0b100000) return false;
     let obj = commandColl.get(x);
