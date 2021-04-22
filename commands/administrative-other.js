@@ -1,10 +1,12 @@
 module.exports = [
   {
     name: 'say',
-    flags: 0b011100,
+    description_slash: 'say.',
+    flags: 0b111100,
+    options: [ { type: 3, name: 'expression', description: 'what to say', required: true } ],
     async execute(o, msg, rawArgs) {
-      if (!(common.isDeveloper(msg) || common.isConfirmDeveloper(msg) || addlbotperms[msg.author.id] & 1)) return;
-      let text = o.cmdstring.slice(4);
+      if (!(common.isDeveloper(msg) || common.isConfirmDeveloper(msg) || addlbotperms[msg.author.id] & 3)) return;
+      let text = o.argstring;
       nonlogmsg(`say from ${msg.author.tag} (id ${msg.author.id}) in ${common.explainChannel(msg.channel)}: ${util.inspect(text)}`);
       if (global.confirmeval && common.isConfirmDeveloper(msg)) {
         if (!(await confirmeval(`say from ${msg.author.tag} (id ${msg.author.id}) in ${common.explainChannel(msg.channel)}: ${util.inspect(text)}`)))
@@ -13,10 +15,22 @@ module.exports = [
       msg.delete();
       return msg.channel.send(text);
     },
+    async execute_slash(o, interaction, command, args) {
+      if (!(common.isDeveloper(o) || addlbotperms[o.author.id] & 3)) return common.slashCmdResp(interaction, true, 'dev only command');
+      let text = args[0].value;
+      nonlogmsg(`say from ${o.author.tag} (id ${o.author.id}) in ${common.explainChannel(o.channel)}: ${util.inspect(text)}`);
+      common.slashCmdResp(interaction, true, 'said');
+      return o.channel.send(text);
+    },
   },
   {
     name: 'sayy',
-    flags: 0b011100,
+    description_slash: 'say.',
+    flags: 0b111100,
+    options: [
+      { type: 7, name: 'channel', description: 'the channel', required: true },
+      { type: 3, name: 'expression', description: 'what to say', required: true },
+    ],
     async execute(o, msg, rawArgs) {
       if (!(common.isDeveloper(msg) || common.isConfirmDeveloper(msg) || addlbotperms[msg.author.id] & 2)) return;
       if (global.confirmeval && common.isConfirmDeveloper(msg)) {
@@ -24,13 +38,19 @@ module.exports = [
           return;
       } else if (common.isConfirmDeveloper(msg) && !common.isDeveloper(msg)) return;
       let argr = o.argstring.split(' ');
-      let channelid = argr[0].slice(2, argr[0].length - 1);
-      let text = argr.slice(1).join(' ');
+      let channelid = argr[0].slice(2, argr[0].length - 1), text = argr.slice(1).join(' ');
       let channel;
       if (channel = client.channels.cache.get(channelid)) {
         nonlogmsg(`sayy from ${msg.author.tag} (id ${msg.author.id}) in ${common.explainChannel(msg.channel)}: ${common.explainChannel(channel, 1)}: ${util.inspect(text)}`);
         return channel.send(text);
       }
+    },
+    async execute_slash(o, interaction, command, args) {
+      if (!(common.isDeveloper(o) || addlbotperms[o.author.id] & 2)) return common.slashCmdResp(interaction, true, 'dev only command');
+      let channel = client.channels.cache.get(args[0].value), text = args[1].value;
+      nonlogmsg(`sayy from ${o.author.tag} (id ${o.author.id}) in ${common.explainChannel(o.channel)}: ${common.explainChannel(channel, 1)}: ${util.inspect(text)}`);
+      common.slashCmdResp(interaction, true, 'said');
+      return channel.send(text);
     },
   },
   {
@@ -138,12 +158,14 @@ module.exports = [
   },
   {
     name: 'eval',
-    flags: 0b011100,
+    description_slash: 'evaluates.',
+    flags: 0b111100,
+    options: [ { type: 3, name: 'expression', description: 'the expression to evaluate' } ],
     async execute(o, msg, rawArgs) {
       if (!(common.isDeveloper(msg) || common.isConfirmDeveloper(msg))) return;
       let cmd = o.argstring, res;
       nonlogmsg(`evaluating from ${msg.author.tag} (id ${msg.author.id}) in ${common.explainChannel(msg.channel)}: ${util.inspect(cmd)}`);
-      if (rawArgs.length == 2 && (rawArgs[0] == 'deez' && rawArgs[1] == 'nuts' || rawArgs[0] == 'goe' && rawArgs[1] == 'mama')) return msg.channel.send('no');
+      if (cmd == 'deez nuts' || cmd == 'goe mama') return msg.channel.send('no');
       if (global.confirmeval && common.isConfirmDeveloper(msg)) {
         if (!(await confirmeval(`evaluating from ${msg.author.tag} (id ${msg.author.id}) in ${common.explainChannel(msg.channel)}: ${util.inspect(cmd)}`))) {
           return msg.channel.send('Eval command failed');
@@ -155,14 +177,29 @@ module.exports = [
         var richres = new Discord.MessageEmbed()
           .setTitle('Eval Result')
           .setDescription(util.inspect(res));
-        return await msg.channel.send(richres);
+        return msg.channel.send(richres);
       } catch (e) {
         console.log('error in eval');
         console.debug(e.stack);
         var richres = new Discord.MessageEmbed()
           .setTitle('Eval Error')
           .setDescription(e.stack);
-        return await msg.channel.send(richres);
+        return msg.channel.send(richres);
+      }
+    },
+    async execute_slash(o, interaction, command, args) {
+      if (!common.isDeveloper(o)) return common.slashCmdResp(interaction, true, 'dev only command');
+      let cmd = args[0] ? args[0].value : '', res;
+      nonlogmsg(`evaluating from ${o.author.tag} (id ${o.author.id}) in ${common.explainChannel(o.channel)}: ${util.inspect(cmd)}`);
+      if (cmd == 'deez nuts' || cmd == 'goe mama') return common.slashCmdResp(interaction, true, 'no');
+      try {
+        res = eval(cmd);
+        console.debug(`-> ${util.inspect(res)}`);
+        return common.slashCmdResp(interaction, true, 'Result: ' + util.inspect(res));
+      } catch (e) {
+        console.log('error in eval');
+        console.debug(e.stack);
+        return common.slashCmdResp(interaction, true, 'Error: ' + e.stack);
       }
     },
   },
@@ -188,7 +225,9 @@ module.exports = [
   },
   {
     name: 'exec',
-    flags: 0b011100,
+    description_slash: 'evaluates.',
+    flags: 0b111100,
+    options: [ { type: 3, name: 'expression', description: 'the expression to evaluate' } ],
     async execute(o, msg, rawArgs) {
       if (!(common.isDeveloper(msg) || common.isConfirmDeveloper(msg))) return;
       let cmd = o.argstring, res;
@@ -218,6 +257,38 @@ module.exports = [
             msg.channel.send(richres).then(x => resolve(x)).catch(e => reject(e));
         });
         procs.push(proc);
+      });
+    },
+    async execute_slash(o, interaction, command, args) {
+      if (!common.isDeveloper(o)) return common.slashCmdResp(interaction, true, 'dev only command');
+      let cmd = args[0] ? args[0].value : '', res;
+      nonlogmsg(`shell exec from ${o.author.tag} (id ${o.author.id}) in ${common.explainChannel(o.channel)}: ${util.inspect(cmd)}`);
+      
+      client.api.interactions(interaction.id, interaction.token).callback.post({ data: { type: 5, data: { flags: 64 } } });
+      
+      return new Promise((resolve, reject) => {
+        try {
+          let proc = cp.exec(cmd, { timeout: 20000, windowsHide: true }, (err, stdout, stderr) => {
+            procs.splice(procs.indexOf(proc), 1);
+            if (err) {
+              console.log('error in shell exec');
+              console.debug(err.stack);
+              client.api.webhooks(client.user.id, interaction.token).messages['@original'].patch({ data: {
+                content: 'Shell Command Error: ' + err.stack, flags: 64,
+              } }).then(x => resolve(x)).catch(e => reject(e));
+              return;
+            }
+            stdout = stdout.toString(); stderr = stderr.toString();
+            console.debug(`shell command result\nstdout:\n${util.inspect(stdout)}\nstderr:\n${util.inspect(stderr)}`);
+            client.api.webhooks(client.user.id, interaction.token).messages['@original'].patch({ data: {
+              content: `Shell Command Result:\n*stdout*:\n${util.inspect(stdout)}\n*stderr*:\n${util.inspect(stderr)}`, flags: 64,
+            } }).then(x => resolve(x)).catch(e => reject(e));
+          });
+          procs.push(proc);
+        } catch (e) {
+          client.api.webhooks(client.user.id, interaction.token).messages['@original'].patch({ data: { content: `Error`, flags: 64 } });
+          reject(e);
+        }
       });
     },
   },

@@ -43,7 +43,7 @@ module.exports = async interaction => {
         }
       }
       
-      if (!(o.cmd && o.cmd.flags & 0b000010)) return;
+      if (!o.cmd) return;
       
       if (o.cmd.execute_slash) {
         if (o.guild ? o.cmd.flags & 0b000100 : o.cmd.flags & 0b001000) {

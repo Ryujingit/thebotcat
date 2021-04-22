@@ -3,7 +3,7 @@ format for addlbotperms:
     <userid> : int (perms) (
         bits:
           0 - say
-          1 - say remote
+          1 - say remote (also automatically grants say)
           2 - getting list of, getting channel for botcat's dms
           3 - global mute and unmute (only for special guilds)
       ),

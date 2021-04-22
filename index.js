@@ -318,62 +318,64 @@ function getCommandsCategorized(guilddata, slashContext) {
   return [commandsList, commandsCategorized];
 }
 
-async function updateSlashCommands(endpoint) {
-  nonlogmsg(`Updating slash commands`);
-  
+global.slashCommandsInequal = function slashCommandsInequal(cmd1, cmd2) {
+  return cmd1.description != cmd2.description ||
+    Array.isArray(cmd1.options) - Array.isArray(cmd2.options) ||
+    Array.isArray(cmd1.options) && (
+      cmd1.options.length != cmd2.options.length || cmd1.options.some((y, i) =>
+        y.type != cmd2.options[i].type ||
+        y.name != cmd2.options[i].name ||
+        y.description != cmd2.options[i].description ||
+        y.required !== cmd2.options[i].required ||
+        Array.isArray(y.options) - Array.isArray(cmd2.options[i].options) ||
+        Array.isArray(y.options) && (
+          y.options.length != cmd2.options[i].options.length || y.options.some((z, j) =>
+            z.type != cmd2.options[i].options[j].type ||
+            z.name != cmd2.options[i].options[j].name ||
+            z.description != cmd2.options[i].options[j].description ||
+            z.required !== cmd2.options[i].options[j].required ||
+            Array.isArray(z.options) - Array.isArray(cmd2.options[i].options[j].options) ||
+            Array.isArray(z.options) && (
+              z.options.length != cmd2.options[i].options[j].options.length || z.options.some((w, k) =>
+                w.type != cmd2.options[i].options[j].options[k].type ||
+                w.name != cmd2.options[i].options[j].options[k].name ||
+                w.description != cmd2.options[i].options[j].options[k].description ||
+                w.required !== cmd2.options[i].options[j].options[k].required
+              )
+            )
+          )
+        )
+      )
+    );
+};
+
+async function updateSlashCommands(endpoint, logfunc) {
   var currCmds = await endpoint().get();
   var currCmdsObj = {};
   currCmds.forEach(x => currCmdsObj[x.name] = x);
   
   var commandsToDelete = currCmds.map(x => x.name).filter(x => !commandColl.has(x) || (commandColl.get(x).flags & 0b100010) != 0b100010);
   var commandsToUpdate = currCmds.map(x => x.name).filter(x => {
-    if (!commandColl.has(x) || (commandColl.get(x).flags & 0b100010) ^ 0b100010) return false;
+    if (!commandColl.has(x) || (commandColl.get(x).flags & 0b100010) != 0b100010) return false;
     let obj = commandColl.get(x);
     obj = {
       description: obj.description_slash || obj.description,
       options: obj.options,
     };
-    return currCmdsObj[x].description != obj.description ||
-      Array.isArray(currCmdsObj[x].options) - Array.isArray(obj.options) ||
-      Array.isArray(currCmdsObj[x].options) && (
-        currCmdsObj[x].options.length != obj.options.length || currCmdsObj[x].options.some((y, i) =>
-          y.type != obj.options[i].type ||
-          y.name != obj.options[i].name ||
-          y.description != obj.options[i].description ||
-          y.required !== obj.options[i].required ||
-          Array.isArray(y.options) - Array.isArray(obj.options[i].options) ||
-          Array.isArray(y.options) && (
-            y.options.length != obj.options[i].options.length || y.options.some((z, j) =>
-              z.type != obj.options[i].options[j].type ||
-              z.name != obj.options[i].options[j].name ||
-              z.description != obj.options[i].options[j].description ||
-              z.required !== obj.options[i].options[j].required ||
-              Array.isArray(z.options) - Array.isArray(obj.options[i].options[j].options) ||
-              Array.isArray(z.options) && (
-                z.options.length != obj.options[i].options[j].options.length || z.options.some((w, k) =>
-                  w.type != obj.options[i].options[j].options[k].type ||
-                  w.name != obj.options[i].options[j].options[k].name ||
-                  w.description != obj.options[i].options[j].options[k].description ||
-                  w.required !== obj.options[i].options[j].options[k].required
-                )
-              )
-            )
-          )
-        )
-      );
+    return slashCommandsInequal(currCmdsObj[x], obj);
   });
   var commandsToAdd = commands.map(x => x.name).filter(x => !(x in currCmdsObj) && (commandColl.get(x).flags & 0b100010) == 0b100010);
   
   var commandsToUpsert = [ ...commandsToUpdate, ...commandsToAdd ];
   
   for (var i = 0; i < commandsToDelete.length; i++) {
-    nonlogmsg(`Deleting ${commandsToDelete[i]}`);
+    logfunc(`Deleting ${commandsToDelete[i]}`);
     await endpoint()(currCmdsObj[commandsToDelete[i]].id).delete();
     await new Promise(r => setTimeout(r, 1000));
   }
   
   for (var i = 0; i < commandsToUpsert.length; i++) {
-    nonlogmsg(`Upserting ${commandsToUpsert[i]}`);
+    logfunc(`Upserting ${commandsToUpsert[i]}`);
     let obj = commandColl.get(commandsToUpsert[i]);
     obj = {
       name: obj.name,
@@ -383,8 +385,6 @@ async function updateSlashCommands(endpoint) {
     await endpoint().post({ data: obj });
     await new Promise(r => setTimeout(r, 1000));
   }
-  
-  nonlogmsg(`Done updating slash commands`);
 }
 async function deleteSlashCommands(endpoint) {
   nonlogmsg(`Deleting slash commands`);
@@ -398,6 +398,44 @@ async function deleteSlashCommands(endpoint) {
   }
   
   nonlogmsg(`Done deleting slash commands`);
+}
+
+async function updateNonPubSlashCommands(endpoint, logfunc) {
+  var currCmds = await endpoint().get();
+  var currCmdsObj = {};
+  currCmds.forEach(x => currCmdsObj[x.name] = x);
+  
+  var commandsToDelete = currCmds.map(x => x.name).filter(x => (commandColl.get(x).flags & 0b100010) != 0b100000);
+  var commandsToUpdate = currCmds.map(x => x.name).filter(x => {
+    if (!commandColl.has(x) || (commandColl.get(x).flags & 0b100010) != 0b100000) return false;
+    let obj = commandColl.get(x);
+    obj = {
+      description: obj.description_slash || obj.description,
+      options: obj.options,
+    };
+    return slashCommandsInequal(currCmdsObj[x], obj);
+  });
+  var commandsToAdd = commands.map(x => x.name).filter(x => !(x in currCmdsObj) && (commandColl.get(x).flags & 0b100010) == 0b100000);
+  
+  var commandsToUpsert = [ ...commandsToUpdate, ...commandsToAdd ];
+  
+  for (var i = 0; i < commandsToDelete.length; i++) {
+    logfunc(`Deleting ${commandsToDelete[i]}`);
+    await endpoint()(currCmdsObj[commandsToDelete[i]].id).delete();
+    await new Promise(r => setTimeout(r, 1000));
+  }
+  
+  for (var i = 0; i < commandsToUpsert.length; i++) {
+    logfunc(`Upserting ${commandsToUpsert[i]}`);
+    let obj = commandColl.get(commandsToUpsert[i]);
+    obj = {
+      name: obj.name,
+      description: obj.description_slash || obj.description,
+      options: obj.options,
+    };
+    await endpoint().post({ data: obj });
+    await new Promise(r => setTimeout(r, 1000));
+  }
 }
 
 addCommands(require('./commands/information.js'), 'Information');
@@ -459,15 +497,55 @@ global.handlers = common.handlers;
   }
 })();
 
-client.on('ready', () => {
+client.on('ready', async () => {
   nonlogmsg(`Logged in as ${client.user.tag}!`);
   
   updateStatus();
   
+  let arr = [];
+  
+  let loggedGlobalBegin = 0, logfunc = v => {
+    if (!loggedGlobalBegin) {
+      nonlogmsg(`Updating global slash commands`);
+      nonlogmsg(v);
+      loggedGlobalBegin = 1;
+    } else nonlogmsg(v);
+  };
   /*deleteSlashCommands(() => client.api.applications(client.user.id).guilds('688806155530534931').commands)
     .then(_ => updateSlashCommands(() => client.api.applications(client.user.id).commands);*/
   //deleteSlashCommands(() => client.api.applications(client.user.id).guilds('688806155530534931').commands);
-  updateSlashCommands(() => client.api.applications(client.user.id).commands);
+  await updateSlashCommands(() => client.api.applications(client.user.id).commands);
+  if (loggedGlobalBegin) nonlogmsg(`Done updating global slash commands`);
+  
+  let loggedGuildsUpdated = [];
+
+  for (var i = 0; i < persGuildData.special_guilds.length; i++) {
+    let guildid = persGuildData.special_guilds[i];
+    if (!client.guilds.cache.has(guildid)) continue;
+    let loggedOneGuildBegin = false, logfunc = v => {
+      if (!loggedOneGuildBegin) {
+        if (!loggedGlobalBegin) {
+          nonlogmsg(`Updated global slash commands`);
+          loggedGuildsUpdated.forEach(x => nonlogmsg(`Updated slash commands for guild ${x}`));
+          loggedGlobalBegin = 2;
+        }
+        nonlogmsg(`Updating guild ${client.guilds.cache.get(guildid).name}`);
+        nonlogmsg(v);
+        loggedOneGuildBegin = true;
+      } else nonlogmsg(v);
+    };
+    await updateNonPubSlashCommands(() => client.api.applications(client.user.id).guilds(guildid).commands, logfunc);
+    if (loggedOneGuildBegin) nonlogmsg(`Done updating slash commands for guild`);
+    else {
+      if (loggedGlobalBegin < 2) loggedGuildsUpdated.push(client.guilds.cache.get(guildid).name);
+      else nonlogmsg(`Updated slash commands for guild ${client.guilds.cache.get(guildid).name}`);
+    }
+  }
+  
+  if (!loggedGlobalBegin) {
+    nonlogmsg(`Updated global slash commands, updated guild slash commands for:`);
+    nonlogmsg(loggedGuildsUpdated.join(', '));
+  }
   
   readytime = new Date();
   
