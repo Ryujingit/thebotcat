@@ -514,7 +514,7 @@ client.on('ready', async () => {
   /*deleteSlashCommands(() => client.api.applications(client.user.id).guilds('688806155530534931').commands)
     .then(_ => updateSlashCommands(() => client.api.applications(client.user.id).commands);*/
   //deleteSlashCommands(() => client.api.applications(client.user.id).guilds('688806155530534931').commands);
-  await updateSlashCommands(() => client.api.applications(client.user.id).commands);
+  await updateSlashCommands(() => client.api.applications(client.user.id).commands, logfunc);
   if (loggedGlobalBegin) nonlogmsg(`Done updating global slash commands`);
   
   let loggedGuildsUpdated = [];
@@ -544,6 +544,9 @@ client.on('ready', async () => {
   
   if (!loggedGlobalBegin) {
     nonlogmsg(`Updated global slash commands, updated guild slash commands for:`);
+    nonlogmsg(loggedGuildsUpdated.join(', '));
+  } else if (loggedGlobalBegin == 1) {
+    nonlogmsg(`Updated guild slash commands for:`);
     nonlogmsg(loggedGuildsUpdated.join(', '));
   }
   

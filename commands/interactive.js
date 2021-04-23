@@ -78,21 +78,25 @@ module.exports = [
     description_slash: 'returns a random real number between min and max (inclusive lower bound)',
     flags: 0b111110,
     options: [
-      { type: 4, name: 'min', description: 'the minimum number that can be returned' },
-      { type: 4, name: 'max', description: 'the maximum number that can be returned' },
+      { type: 3, name: 'min', description: 'the minimum number that can be returned' },
+      { type: 3, name: 'max', description: 'the maximum number that can be returned' },
       { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' },
     ],
     execute(o, msg, rawArgs) {
-      let min = 0, max = 1;
-      if (rawArgs.length == 1) max = Number(rawArgs[0]) ?? max;
-      else if (rawArgs.length > 1) {
-        min = Number(rawArgs[0]) ?? min;
-        max = Number(rawArgs[1]) ?? max;
+      let min, max;
+      if (rawArgs.length == 0) {
+        min = 0; max = 1;
+      } else if (rawArgs.length == 1) {
+        min = 0; max = Number(rawArgs[0]); max = Number.isNaN(max) ? 1 : max;
+      } else if (rawArgs.length > 1) {
+        min = Number(rawArgs[0]); min = Number.isNaN(min) ? 0 : min;
+        max = Number(rawArgs[1]); max = Number.isNaN(max) ? 1 : max;
       }
       return msg.channel.send(`Random real number between ${min} and ${max}: ${min + common.randFloat() * (max - min)}`);
     },
     execute_slash(o, interaction, command, args) {
-      let min = (args[0] && args[0].value) ?? 0, max = (args[1] && args[1].value) ?? 1;
+      let min = Number(args[0] && args[0].value), max = Number(args[1] && args[1].value);
+      min = Number.isNaN(min) ? 0 : min; max = Number.isNaN(max) ? 1 : max;
       let emphemeral = args[2] ? (args[2].value ? true : false) : true;
       return common.slashCmdResp(interaction, emphemeral, `Random real number between ${min} and ${max}: ${min + common.randFloat() * (max - min)}`);
     },

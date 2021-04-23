@@ -140,12 +140,17 @@ module.exports = async msg => {
   if (isCommand >= 2) {
     try {
       let commandObject = commands[isCommand - 2];
+      
+      if (!commandObject.execute) return;
+      
       let o = { msg, cmdstring, command, argstring, rawArgs, args, kwargs, commandObject };
       
       Object.defineProperty(o, 'asOneArg', { configurable: true, enumerable: true, get: common.onMsgOneArgHelper.bind(null, o) });
       
-      if (commandObject.constructor == Function) return commandObject.execute(o, msg, rawArgs);
-      else return await commandObject.execute(o, msg, rawArgs);
+      if (commandObject.execute.constructor == Function)
+        return commandObject.execute(o, msg, rawArgs);
+      else
+        return await commandObject.execute(o, msg, rawArgs);
     } catch (e) {
       if (e instanceof common.BotError) {
         return msg.channel.send(`Error: ${e.message}`, { allowedMentions: { parse: [] } });
