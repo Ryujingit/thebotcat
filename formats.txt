@@ -194,8 +194,9 @@ format for props.saved:
             },
             ...
           ],
-          volume : null,
-          loop : null,
+          volume : null / float,
+          loop : null / boolean,
+          queueloop : null / boolean,
         },
       },
       ...

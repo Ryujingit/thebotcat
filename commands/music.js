@@ -239,7 +239,7 @@ module.exports = [
       if (!((msg.member.voice.channelID == guilddata.voice.channel.id || remoteperms) && (fsperms || vcmembers.length == 2 && vcmembers.includes(msg.author.id) && playperms)))
         return msg.channel.send('Only admins and mods can toggle queue loop, or someone who is alone with me in a voice channel.');
       common.clientVCManager.toggleQueueLoop(guilddata.voice);
-      return msg.channel.send(`Toggled queue loop to ${guilddata.voice.loop ? 'enabled' : 'disabled'}`);
+      return msg.channel.send(`Toggled queue loop to ${guilddata.voice.loopqueue ? 'enabled' : 'disabled'}`);
     },
     execute_slash(o, interaction, command, args) {
       if (!(props.saved.feat.audio & 2)) return common.slashCmdResp(interaction, false, 'Music features are disabled');
@@ -256,7 +256,7 @@ module.exports = [
       if (!((o.member.voice.channelID == guilddata.voice.channel.id || remoteperms) && (fsperms || vcmembers.length == 2 && vcmembers.includes(o.author.id) && playperms)))
         return common.slashCmdResp(interaction, false, 'Only admins and mods can toggle queue loop, or someone who is alone with me in a voice channel.');
       common.clientVCManager.toggleQueueLoop(guilddata.voice);
-      return common.slashCmdResp(interaction, false, `Toggled queue loop to ${guilddata.voice.loop ? 'enabled' : 'disabled'}`);
+      return common.slashCmdResp(interaction, false, `Toggled queue loop to ${guilddata.voice.loopqueue ? 'enabled' : 'disabled'}`);
     },
   },
   {

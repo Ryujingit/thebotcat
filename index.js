@@ -603,7 +603,7 @@ client.ws.on('INTERACTION_CREATE', async (...args) => {
 
 
 // botcat tick function called every 60 seconds
-var ticks = 0;
+var ticks = 0, tickStatUpdInt = 30;
 var tickFuncs = [];
 var tickFunc = () => {
   updateStatus();
@@ -616,9 +616,9 @@ var tickFunc = () => {
   props.CPUUsage = { user: (props.cCPUUsage.user - props.pCPUUsage.user) / (1000000 * frac), system: (props.cCPUUsage.system - props.pCPUUsage.system) / (1000000 * frac) };
   props.memoryUsage = process.memoryUsage();
   
-  if (ticks % 10 == 0 && props.botStatusMsg && props.botStatusMsgResolve == null) {
+  if (ticks % tickStatUpdInt == 0 && props.botStatusMsg && props.botStatusMsgResolve == null) {
     props.botStatusMsgResolve = props.botStatusMsg
-      .edit(common.getBotcatFullStatusMessage())
+      .edit(common.getBotcatFullStatusMessage(true, true))
       .then(x => props.botStatusMsgResolve = null)
       .catch(e => { console.error(e); props.botStatusMsgResolve = null; });
   }
@@ -634,6 +634,7 @@ var tickTimTemp = setTimeout(() => tickFunc(), 5000);
 
 Object.defineProperties(global, {
   ticks: { configurable: true, enumerable: true, get: () => ticks, set: val => ticks = val },
+  tickStatUpdInt: { configurable: true, enumerable: true, get: () => tickStatUpdInt, set: val => tickStatUpdInt = val },
   tickFuncs: { configurable: true, enumerable: true, get: () => tickFuncs, set: val => tickFuncs = val },
   tickFunc: { configurable: true, enumerable: true, get: () => tickFunc, set: val => tickFunc = val },
   tickInt: { configurable: true, enumerable: true, get: () => tickInt, set: val => tickInt = val },

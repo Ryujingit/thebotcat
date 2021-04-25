@@ -58,10 +58,6 @@ var clientVCManager = {
     voice.volume = wantedvolume;
   },
   
-  getLoop: function getLoop(voice) {
-    return voice.loop;
-  },
-  
   toggleLoop: function toggleLoop(voice) {
     voice.loop = !voice.loop;
   },
@@ -125,7 +121,7 @@ var clientVCManager = {
           voice.mainloop = 1;
           if (voice.songslist.length) voice.songslist.splice(0, 1);
         } else if (!voice.loop && voice.songslist.length) {
-          if (voice.queueloop) voice.songslist.push(voice.songslist.splice(0, 1));
+          if (voice.queueloop) voice.songslist.push(voice.songslist.splice(0, 1)[0]);
           else voice.songslist.splice(0, 1);
         }
         voice.dispatcher = null;
