@@ -197,6 +197,7 @@ format for props.saved:
           volume : null / float,
           loop : null / boolean,
           queueloop : null / boolean,
+          voteskip : array [ string (userid), ... ],
         },
       },
       ...

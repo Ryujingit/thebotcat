@@ -11,6 +11,7 @@ var clientVCManager = {
       volume: null,
       loop: null,
       queueloop: null,
+      voteskip: [],
     };
   },
   
@@ -35,10 +36,11 @@ var clientVCManager = {
     voice.connection = null;
     voice.dispatcher = null;
     voice.mainloop = 0;
-    voice.songslist.splice(0, Infinity);
+    voice.songslist.length = 0;
     voice.volume = null;
     voice.loop = null;
     voice.queueloop = null;
+    voice.voteskip.length = 0;
   },
   
   toggleSelfMute: function toggleSelfMute(voice) {
@@ -93,6 +95,16 @@ var clientVCManager = {
     return latestObj;
   },
   
+  voteSkip: function (voice, userid) {
+    var voiceIndex = voice.voteskip.indexOf(userid);
+    if (voiceIndex > -1) voice.voteskip.splice(voiceIndex, 1);
+    else voice.voteskip.push(userid);
+    if (voice.mainloop && voice.voteskip.length / voice.channel.members.array().filter(x => !x.user.bot).length >= 0.5) {
+      voice.mainloop = 2;
+      return 1;
+    } else return voiceIndex > -1 ? 3 : 2;
+  },
+  
   forceSkip: function (voice) {
     if (voice.mainloop) voice.mainloop = 2;
   },
@@ -110,12 +122,14 @@ var clientVCManager = {
           if (voice.dispatcher && voice.dispatcher.streamTime > voice.songslist[0].expectedLength - 2 && voice.mainloop != 3) voice.mainloop = 2;
           if (voice.mainloop == 2) {
             voice.dispatcher.destroy();
+            voice.voteskip.length = 0;
           } else if (voice.mainloop == 3) {
             voice.dispatcher.destroy();
             voice.songslist.length = 0;
+            voice.voteskip.length = 0;
           }
         }
-        if (voice.mainloop != 2 && voice.mainloop != 3 && voice.dispatcher && voice.dispatcher.streamTime < latestObj.expectedLength - 5000)
+        if (voice.mainloop != 2 && voice.mainloop != 3 && voice.dispatcher && voice.dispatcher.streamTime < latestObj.expectedLength - 1700)
           msgchannel.send(`Error: something broke when playing ${voice.songslist[0].desc}`);
         if (voice.mainloop == 2 || voice.mainloop == 3) {
           voice.mainloop = 1;
@@ -125,6 +139,7 @@ var clientVCManager = {
           else voice.songslist.splice(0, 1);
         }
         voice.dispatcher = null;
+        if (!voice.loop) voice.voteskip.length = 0;
       }
     } catch (e) {
       console.error(e);

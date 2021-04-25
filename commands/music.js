@@ -18,7 +18,7 @@ module.exports = [
       if (!((msg.member.voice.channelID == guilddata.voice.channel.id || remoteperms) && playperms))
         return msg.channel.send('You must be in the same voice channel as I\'m in to play a song.  Admins and mods can bypass this though.');
       let latestObj = await common.clientVCManager.addSong(guilddata.voice, rawArgs[0], msg.author.id);
-      let text = `${latestObj.desc} (${common.msecToHMS(Number(latestObj.expectedLength))}) added to queue`;
+      let text = `[${latestObj.desc}](<${latestObj.url}>) (${common.msecToHMS(Number(latestObj.expectedLength))}) added to queue`;
       await msg.channel.send(text, { allowedMentions: { parse: [] } });
       return common.clientVCManager.startMainLoop(guilddata.voice, msg.channel);
     },
@@ -35,7 +35,7 @@ module.exports = [
       if (!((o.member.voice.channelID == guilddata.voice.channel.id || remoteperms) && playperms))
         return common.slashCmdResp(interaction, false, 'You must be in the same voice channel as I\'m in to play a song.  Admins and mods can bypass this though.');
       let latestObj = await common.clientVCManager.addSong(guilddata.voice, args[0].value, o.author.id);
-      let text = `${latestObj.desc} (${common.msecToHMS(Number(latestObj.expectedLength))}) added to queue`;
+      let text = `[${latestObj.desc}](<${latestObj.url}>) (${common.msecToHMS(Number(latestObj.expectedLength))}) added to queue`;
       common.slashCmdResp(interaction, false, text);
       return common.clientVCManager.startMainLoop(guilddata.voice, o.channel);
     },
@@ -260,6 +260,52 @@ module.exports = [
     },
   },
   {
+    name: 'voteskip',
+    description: '`!voteskip` toggles the vote to skip the currently playing song (if 50% or over votes, it will be skipped)',
+    description_slash: 'toggles the vote to skip the currently playing song (if 50% or over votes, it will be skipped)',
+    flags: 0b110110,
+    execute(o, msg, rawArgs) {
+      if (!(props.saved.feat.audio & 2)) return msg.channel.send('Music features are disabled');
+      let guilddata = props.saved.guilds[msg.guild.id];
+      if (!guilddata) {
+        props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);
+        schedulePropsSave();
+      }
+      let channel = guilddata.voice.channel;
+      if (!channel || !channel.permissionsFor(msg.member).has('VIEW_CHANNEL')) return msg.channel.send('I\'m not in a voice channel');
+      if (!guilddata.voice.dispatcher) return msg.channel.send('Error: no song is playing');
+      let perms = common.hasBotPermissions(msg, common.constants.botRolePermBits.PLAY_SONG | common.constants.botRolePermBits.VOTESKIP | common.constants.botRolePermBits.REMOTE_CMDS);
+      let playperms = perms & common.constants.botRolePermBits.PLAY_SONG, vsperms = common.constants.botRolePermBits.VOTESKIP, remoteperms = perms & common.constants.botRolePermBits.REMOTE_CMDS;
+      if (!((msg.member.voice.channelID == guilddata.voice.channel.id || remoteperms) && (vsperms || playperms && channel.members.array().filter(x => !x.user.bot && x.user.id != msg.author.id).length == 0 && msg.member.voice.channelID == channel.id)))
+        return msg.channel.send('You lack permission to voteskip.');
+      switch (common.clientVCManager.voteSkip(guilddata.voice, msg.author.id)) {
+        case 1: return msg.channel.send(`Skipped`);
+        case 2: return msg.channel.send(`Voted`);
+        case 3: return msg.channel.send(`Unvoted`);
+      }
+    },
+    execute_slash(o, interaction, command, args) {
+      if (!(props.saved.feat.audio & 2)) return common.slashCmdResp(interaction, false, 'Music features are disabled');
+      let guilddata = props.saved.guilds[o.guild.id];
+      if (!guilddata) {
+        props.saved.guilds[o.guild.id] = common.getEmptyGuildObject(o.guild.id);
+        schedulePropsSave();
+      }
+      let channel = guilddata.voice.channel;
+      if (!channel || !channel.permissionsFor(o.member).has('VIEW_CHANNEL')) return common.slashCmdResp(interaction, false, 'I\'m not in a voice channel');
+      if (!guilddata.voice.dispatcher) return common.slashCmdResp(interaction, false, 'Error: no song is playing');
+      let perms = common.hasBotPermissions(o, common.constants.botRolePermBits.PLAY_SONG | common.constants.botRolePermBits.VOTESKIP | common.constants.botRolePermBits.REMOTE_CMDS);
+      let playperms = perms & common.constants.botRolePermBits.PLAY_SONG, vsperms = common.constants.botRolePermBits.VOTESKIP, remoteperms = perms & common.constants.botRolePermBits.REMOTE_CMDS;
+      if (!((o.member.voice.channelID == guilddata.voice.channel.id || remoteperms) && (vsperms || playperms && channel.members.array().filter(x => !x.user.bot && x.user.id != o.author.id).length == 0 && o.member.voice.channelID == channel.id)))
+        return common.slashCmdResp(interaction, false, 'You lack permission to voteskip.');
+      switch (common.clientVCManager.voteSkip(guilddata.voice, o.author.id)) {
+        case 1: return common.slashCmdResp(interaction, false, `Skipped`);
+        case 2: return common.slashCmdResp(interaction, false, `Voted`);
+        case 3: return common.slashCmdResp(interaction, false, `Unvoted`);
+      }
+    },
+  },
+  {
     name: 'forceskip',
     description: '`!forceskip` skips the currently playing song',
     description_slash: 'skips the currently playing song',
@@ -355,8 +401,9 @@ module.exports = [
       }
       if (!guilddata.voice.channel || !guilddata.voice.channel.permissionsFor(msg.member).has('VIEW_CHANNEL')) return msg.channel.send('I\'m not in a voice channel');
       let songslist = guilddata.voice.songslist;
-      let text = `Currently playing ${songslist.length ? songslist[0].desc + (songslist[0].userid ? ' (requested by ' + (msg.guild.members.cache.get(songslist[0].userid) ? msg.guild.members.cache.get(songslist[0].userid).user.tag : 'null') + ', id ' + songslist[0].userid + ')' : '') : 'No Song'}\n` +
-        (guilddata.voice.dispatcher ? `Time: ${guilddata.voice.dispatcher && songslist.length ? common.formatPlaybackBar(guilddata.voice.dispatcher.streamTime / songslist[0].expectedLength) : '---'} (${guilddata.voice.dispatcher ? common.msecToHMS(guilddata.voice.dispatcher.streamTime) : '-:--.---'} / ${songslist.length ? common.msecToHMS(songslist[0].expectedLength) : '-:--.---'})\n` : '') +
+      let text = `Currently playing ${songslist.length ? `[${songslist[0].desc}](<${songslist[0].url}>)` + (songslist[0].userid ? ' (requested by ' + (msg.guild.members.cache.get(songslist[0].userid) ? msg.guild.members.cache.get(songslist[0].userid).user.tag : 'null') + ', id ' + songslist[0].userid + ')' : '') : 'No Song'}\n` +
+        (guilddata.voice.dispatcher ? `Time: ${guilddata.voice.dispatcher && songslist.length ? common.formatPlaybackBar(guilddata.voice.dispatcher.streamTime / songslist[0].expectedLength) : '---'} (${guilddata.voice.dispatcher ? common.msecToHMS(guilddata.voice.dispatcher.streamTime) : '-:--.---'} / ${songslist.length ? common.msecToHMS(songslist[0].expectedLength) : '-:--.---'})\n` +
+          (guilddata.voice.voteskip.length ? `Voteskippers: ${guilddata.voice.voteskip.map(x => `${client.users.cache.get(x)?.tag} (id ${x})`).join(', ')}\n` : '') : '') +
         `Queue${songslist.length > 1 ? ':\n' + songslist.slice(1).map((x, i) => (i + 1) + '. ' + x.desc + ' (' + common.msecToHMS(x.expectedLength) + (x.userid ? ', requested by ' + (msg.guild.members.cache.get(x.userid) ? msg.guild.members.cache.get(x.userid).user.tag : 'null') + ', id ' + x.userid : '') + ')').join('\n') : ' empty'}\n` +
         `Status: ${guilddata.voice.dispatcher ? (guilddata.voice.dispatcher.paused ? 'Paused' : 'Playing') : ['Stopped', 'Running', 'Pending Skip', 'Pending Stop'][guilddata.voice.mainloop]}, Volume: ${guilddata.voice.volume}, Loop: ${guilddata.voice.loop ? '✅' : '❌'}, Queue Loop: ${guilddata.voice.queueloop ? '✅' : '❌'}, Self Muted: ${guilddata.voice.connection.voice.selfMute ? '✅' : '❌'}, Self Deafened: ${guilddata.voice.connection.voice.selfDeaf ? '✅' : '❌'}`;
       return msg.channel.send(text, { allowedMentions: { parse: [] } });
@@ -370,8 +417,9 @@ module.exports = [
       }
       if (!guilddata.voice.channel || !guilddata.voice.channel.permissionsFor(o.member).has('VIEW_CHANNEL')) return common.slashCmdResp(interaction, false, 'I\'m not in a voice channel');
       let songslist = guilddata.voice.songslist;
-      let text = `Currently playing ${songslist.length ? songslist[0].desc + (songslist[0].userid ? ' (requested by ' + (o.guild.members.cache.get(songslist[0].userid) ? o.guild.members.cache.get(songslist[0].userid).user.tag : 'null') + ', id ' + songslist[0].userid + ')' : '') : 'No Song'}\n` +
-        (guilddata.voice.dispatcher ? `Time: ${guilddata.voice.dispatcher && songslist.length ? common.formatPlaybackBar(guilddata.voice.dispatcher.streamTime / songslist[0].expectedLength) : '---'} (${guilddata.voice.dispatcher ? common.msecToHMS(guilddata.voice.dispatcher.streamTime) : '-:--.---'} / ${songslist.length ? common.msecToHMS(songslist[0].expectedLength) : '-:--.---'})\n` : '') +
+      let text = `Currently playing ${songslist.length ? `[${songslist[0].desc}](<${songslist[0].url}>)` + (songslist[0].userid ? ' (requested by ' + (o.guild.members.cache.get(songslist[0].userid) ? o.guild.members.cache.get(songslist[0].userid).user.tag : 'null') + ', id ' + songslist[0].userid + ')' : '') : 'No Song'}\n` +
+        (guilddata.voice.dispatcher ? `Time: ${guilddata.voice.dispatcher && songslist.length ? common.formatPlaybackBar(guilddata.voice.dispatcher.streamTime / songslist[0].expectedLength) : '---'} (${guilddata.voice.dispatcher ? common.msecToHMS(guilddata.voice.dispatcher.streamTime) : '-:--.---'} / ${songslist.length ? common.msecToHMS(songslist[0].expectedLength) : '-:--.---'})\n` +
+          (guilddata.voice.voteskip.length ? `Voteskippers: ${guilddata.voice.voteskip.map(x => `${client.users.cache.get(x)?.tag} (id ${x})`).join(', ')}\n` : '') : '') +
         `Queue${songslist.length > 1 ? ':\n' + songslist.slice(1).map((x, i) => (i + 1) + '. ' + x.desc + ' (' + common.msecToHMS(x.expectedLength) + (x.userid ? ', requested by ' + (o.guild.members.cache.get(x.userid) ? o.guild.members.cache.get(x.userid).user.tag : 'null') + ', id ' + x.userid : '') + ')').join('\n') : ' empty'}\n` +
         `Status: ${guilddata.voice.dispatcher ? (guilddata.voice.dispatcher.paused ? 'Paused' : 'Playing') : ['Stopped', 'Running', 'Pending Skip', 'Pending Stop'][guilddata.voice.mainloop]}, Volume: ${guilddata.voice.volume}, Loop: ${guilddata.voice.loop ? '✅' : '❌'}, Queue Loop: ${guilddata.voice.queueloop ? '✅' : '❌'}, Self Muted: ${guilddata.voice.connection.voice.selfMute ? '✅' : '❌'}, Self Deafened: ${guilddata.voice.connection.voice.selfDeaf ? '✅' : '❌'}`;
       return common.slashCmdResp(interaction, false, text);
@@ -391,8 +439,9 @@ module.exports = [
       }
       if (!guilddata.voice.channel || !guilddata.voice.channel.permissionsFor(msg.member).has('VIEW_CHANNEL')) return msg.channel.send('I\'m not in a voice channel');
       let songslist = guilddata.voice.songslist;
-      let text = `Currently playing ${songslist.length ? songslist[0].desc + (songslist[0].userid ? ' (requested by ' + (msg.guild.members.cache.get(songslist[0].userid) ? msg.guild.members.cache.get(songslist[0].userid).user.tag : 'null') + ', id ' + songslist[0].userid + ')' : '') : 'No Song'}\n` +
-        (guilddata.voice.dispatcher ? `Time: ${guilddata.voice.dispatcher && songslist.length ? common.formatPlaybackBar(guilddata.voice.dispatcher.streamTime / songslist[0].expectedLength) : '---'} (${guilddata.voice.dispatcher ? common.msecToHMS(guilddata.voice.dispatcher.streamTime) : '-:--.---'} / ${songslist.length ? common.msecToHMS(songslist[0].expectedLength) : '-:--.---'})\n` : '') +
+      let text = `Currently playing ${songslist.length ? `[${songslist[0].desc}](<${songslist[0].url}>)` + (songslist[0].userid ? ' (requested by ' + (msg.guild.members.cache.get(songslist[0].userid) ? msg.guild.members.cache.get(songslist[0].userid).user.tag : 'null') + ', id ' + songslist[0].userid + ')' : '') : 'No Song'}\n` +
+        (guilddata.voice.dispatcher ? `Time: ${guilddata.voice.dispatcher && songslist.length ? common.formatPlaybackBar(guilddata.voice.dispatcher.streamTime / songslist[0].expectedLength) : '---'} (${guilddata.voice.dispatcher ? common.msecToHMS(guilddata.voice.dispatcher.streamTime) : '-:--.---'} / ${songslist.length ? common.msecToHMS(songslist[0].expectedLength) : '-:--.---'})\n` +
+          (guilddata.voice.voteskip.length ? `Voteskippers: ${guilddata.voice.voteskip.map(x => `${client.users.cache.get(x)?.tag} (id ${x})`).join(', ')}\n` : '') : '') +
         `Status: ${guilddata.voice.dispatcher ? (guilddata.voice.dispatcher.paused ? 'Paused' : 'Playing') : ['Stopped', 'Running', 'Pending Skip', 'Pending Stop'][guilddata.voice.mainloop]}, Volume: ${guilddata.voice.volume}, Loop: ${guilddata.voice.loop ? '✅' : '❌'}, Queue Loop: ${guilddata.voice.queueloop ? '✅' : '❌'}, Self Muted: ${guilddata.voice.connection.voice.selfMute ? '✅' : '❌'}, Self Deafened: ${guilddata.voice.connection.voice.selfDeaf ? '✅' : '❌'}`;
       return msg.channel.send(text, { allowedMentions: { parse: [] } });
     },
@@ -405,8 +454,9 @@ module.exports = [
       }
       if (!guilddata.voice.channel || !guilddata.voice.channel.permissionsFor(o.member).has('VIEW_CHANNEL')) return common.slashCmdResp(interaction, false, 'I\'m not in a voice channel');
       let songslist = guilddata.voice.songslist;
-      let text = `Currently playing ${songslist.length ? songslist[0].desc + (songslist[0].userid ? ' (requested by ' + (o.guild.members.cache.get(songslist[0].userid) ? o.guild.members.cache.get(songslist[0].userid).user.tag : 'null') + ', id ' + songslist[0].userid + ')' : '') : 'No Song'}\n` +
-        (guilddata.voice.dispatcher ? `Time: ${guilddata.voice.dispatcher && songslist.length ? common.formatPlaybackBar(guilddata.voice.dispatcher.streamTime / songslist[0].expectedLength) : '---'} (${guilddata.voice.dispatcher ? common.msecToHMS(guilddata.voice.dispatcher.streamTime) : '-:--.---'} / ${songslist.length ? common.msecToHMS(songslist[0].expectedLength) : '-:--.---'})\n` : '') +
+      let text = `Currently playing ${songslist.length ? `[${songslist[0].desc}](<${songslist[0].url}>)` + (songslist[0].userid ? ' (requested by ' + (o.guild.members.cache.get(songslist[0].userid) ? o.guild.members.cache.get(songslist[0].userid).user.tag : 'null') + ', id ' + songslist[0].userid + ')' : '') : 'No Song'}\n` +
+        (guilddata.voice.dispatcher ? `Time: ${guilddata.voice.dispatcher && songslist.length ? common.formatPlaybackBar(guilddata.voice.dispatcher.streamTime / songslist[0].expectedLength) : '---'} (${guilddata.voice.dispatcher ? common.msecToHMS(guilddata.voice.dispatcher.streamTime) : '-:--.---'} / ${songslist.length ? common.msecToHMS(songslist[0].expectedLength) : '-:--.---'})\n` +
+          (guilddata.voice.voteskip.length ? `Voteskippers: ${guilddata.voice.voteskip.map(x => `${client.users.cache.get(x)?.tag} (id ${x})`).join(', ')}\n` : '') : '') +
         `Status: ${guilddata.voice.dispatcher ? (guilddata.voice.dispatcher.paused ? 'Paused' : 'Playing') : ['Stopped', 'Running', 'Pending Skip', 'Pending Stop'][guilddata.voice.mainloop]}, Volume: ${guilddata.voice.volume}, Loop: ${guilddata.voice.loop ? '✅' : '❌'}, Queue Loop: ${guilddata.voice.queueloop ? '✅' : '❌'}, Self Muted: ${guilddata.voice.connection.voice.selfMute ? '✅' : '❌'}, Self Deafened: ${guilddata.voice.connection.voice.selfDeaf ? '✅' : '❌'}`;
       return common.slashCmdResp(interaction, false, text);
     },

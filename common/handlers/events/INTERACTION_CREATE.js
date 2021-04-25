@@ -54,10 +54,16 @@ module.exports = async interaction => {
               props.saved.guilds[o.guild.id].enabled_commands.commands[o.command] == false))
             return common.slashCmdResp(interaction, true, 'Command is disabled in this server.');
           
-          if (o.cmd.execute_slash.constructor == Function)
-            return o.cmd.execute_slash(o, interaction, o.command, o.args);
-          else
-            return await o.cmd.execute_slash(o, interaction, o.command, o.args);
+          try {
+            if (o.cmd.execute_slash.constructor == Function)
+              return o.cmd.execute_slash(o, interaction, o.command, o.args);
+            else
+              return await o.cmd.execute_slash(o, interaction, o.command, o.args);
+          } catch (e) {
+            if (e instanceof common.BotError) {
+              return common.slashCmdResp(interaction, true, `Error: ${e.message}`);
+            } else throw e;
+          }
         } else {
           return common.slashCmdResp(interaction, true, o.guild ? 'Command not for guilds.' : 'Command not for dms.');
         }
