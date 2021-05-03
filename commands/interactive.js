@@ -15,7 +15,7 @@ module.exports = [
   },
   {
     name: 'roll',
-    description: '`!roll [<# of sides> <# of times>] | #d#` rolls a dice with the given number of sides (defaulting to 6), the given number of times (defaulting to 1), and adds the results together',
+    description: '`!roll [<# of sides> [<# of times>]] | #d#` rolls a dice with the given number of sides (defaulting to 6), the given number of times (defaulting to 1), and adds the results together',
     description_slash: 'rolls a dice with the given number of sides (defaulting to 6), the given number of times',
     flags: 0b111110,
     options: [
@@ -26,12 +26,15 @@ module.exports = [
     execute(o, msg, rawArgs) {
       let sides, times;
       if (/-?[0-9.e]+ [0-9.e]+/.test(o.argstring)) {
-        sides = Number(rawArgs[0].replace(/[^0-9.e-]/g, ''));
+        sides = Number(rawArgs[0]);
         times = Math.min(Math.max(Math.floor(Number(rawArgs[1].replace(/[^0-9.e-]/g, ''))), 0), 100);
       } else if (/[0-9.e]+d-?[0-9.e]+/.test(o.argstring)) {
         let split = rawArgs[0].split('d');
-        sides = Number(split[1].replace(/[^0-9.e-]/g, ''));
+        sides = Number(split[1]);
         times = Math.min(Math.max(Math.floor(Number(split[0].replace(/[^0-9.e-]/g, ''))), 0), 100);
+      } else if (/-?[0-9.e]+/.test(o.argstring)) {
+        sides = Number(rawArgs[0]);
+        times = 1;
       } else { sides = 6; times = 1; }
       let result = [];
       for (var i = 0; i < times; i++)
@@ -39,7 +42,7 @@ module.exports = [
       return msg.channel.send(`Result of rolling a ${times}d${sides}: ${result.join(', ')}${result.length > 1 ? '; ' : ''}${result.length > 1 || result.length == 0 ? 'total ' + result.reduce((a, c) => a + c, 0) : ''}`);
     },
     execute_slash(o, interaction, command, args) {
-      let sides = (args[0] ? args[0].value : 6), times = Math.min(Math.max((args[1] ? args[1].value : 1), 0), 100);
+      let sides = args[0] ? args[0].value : 6, times = Math.min(Math.max(args[1] ? args[1].value : 1, 0), 100);
       let result = [];
       for (var i = 0; i < times; i++)
         result.push(common.randInt(1, sides + 1));
