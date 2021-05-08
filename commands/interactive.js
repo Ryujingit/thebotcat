@@ -15,39 +15,69 @@ module.exports = [
   },
   {
     name: 'roll',
-    description: '`!roll [<# of sides> [<# of times>]] | [d]<# of sides> | #d#` rolls a dice with the given number of sides (defaulting to 6), the given number of times (defaulting to 1), and adds the results together',
+    description: '`!roll [<# of sides> [<# of times>]] | [d]<# of sides>[(+|-)<modifier>] | #d#[(+|-)<modifier>]` rolls a dice with the given number of sides (defaulting to 6), the given number of times (defaulting to 1), and adds the results together (with an optional modifier)',
     description_slash: 'rolls a dice with the given number of sides (defaulting to 6), the given number of times',
     flags: 0b111110,
     options: [
-      { type: 4, name: 'sides', description: 'the number of sides of the die' },
+      { type: 3, name: 'sides', description: 'the number of sides of the die, or dnd notation' },
       { type: 4, name: 'times', description: 'the number of times to roll' },
+      { type: 4, name: 'modifier', description: 'the modifier to add at the end' },
       { type: 5, name: 'emphemeral', description: 'whether the command and result are visible to only you, defaults to true' },
     ],
     execute(o, msg, rawArgs) {
-      let sides, times;
-      if (/-?[0-9.e]+ +[0-9.e]+/.test(o.argstring)) {
-        sides = Number(rawArgs[0]);
-        times = Math.min(Math.max(Math.floor(Number(rawArgs[1].replace(/[^0-9.e-]/g, ''))), 0), 100);
-      } else if (/[0-9.e]+d-?[0-9.e]+/.test(o.argstring)) {
-        let split = rawArgs[0].split('d');
-        sides = Number(split[1]);
-        times = Math.min(Math.max(Math.floor(Number(split[0].replace(/[^0-9.e-]/g, ''))), 0), 100);
-      } else if (/d?-?[0-9.e]+/.test(o.argstring)) {
-        sides = Number(rawArgs[0].replace('d', ''));
+      let match, sides, times, modifier;
+      if (match = /d?(-?[0-9.e]+) +([0-9.e]+)(?: +(-?[0-9.e]+))?/.exec(o.argstring)) {
+        sides = Number(match[1]);
+        times = Math.min(Math.max(Math.floor(Number(match[2])), 0), 100);
+        modifier = match[3] && Number(match[3]);
+      } else if (match = /([0-9.e]+)d(-?[0-9.e]+)(?:\+?(-?[0-9.e]+))?/.exec(o.argstring)) {
+        sides = Number(match[2]);
+        times = Math.min(Math.max(Math.floor(Number(match[1])), 0), 100);
+        modifier = match[3] && Number(match[3]);
+      } else if (match = /d?(-?[0-9.e]+)(?:\+?(-?[0-9.e]+))?/.exec(o.argstring)) {
+        sides = Number(match[1]);
         times = 1;
+        modifier = match[2] && Number(match[2]);
       } else { sides = 6; times = 1; }
       let result = [];
-      for (var i = 0; i < times; i++)
-        result.push(common.randInt(1, sides + 1));
-      return msg.channel.send(`Result of rolling a ${times}d${sides}: ${result.join(', ')}${result.length > 1 ? '; ' : ''}${result.length > 1 || result.length == 0 ? 'total ' + result.reduce((a, c) => a + c, 0) : ''}`);
+      if (Number.isFinite(times) && times <= 100) {
+        if (Number.isFinite(sides))
+          for (var i = 0; i < times; i++)
+            result.push(common.randInt(1, sides + 1));
+        else
+          result = new Array(times).fill(NaN);
+      }
+      return msg.channel.send(`Result of rolling a ${times}d${sides}${modifier != null ? (modifier < 0 ? modifier : '+' + modifier) : ''}: ${result.join(', ')}${result.length > 1 || modifier != null && result.length == 1 ? '; ' : ''}${result.length > 1 || result.length == 0 || modifier != null ? 'total ' + (result.reduce((a, c) => a + c, 0) + (modifier != null ? modifier : 0)) : ''}`);
     },
     execute_slash(o, interaction, command, args) {
-      let sides = args[0] ? args[0].value : 6, times = Math.min(Math.max(args[1] ? args[1].value : 1, 0), 100);
+      let match, sides = args[0] ? args[0].value : 6, times, modifier;
+      if (match = /^d?(-?[0-9.e]+)$/.exec(sides)) {
+        sides = Number(match[1]);
+        times = Math.min(Math.max(args[1] ? args[1].value : 1, 0), 100);
+        modifier = args[2] ? args[2].value : undefined;
+      } else if (match = /([0-9.e]+)d(-?[0-9.e]+)(?:\+?(-?[0-9.e]+))?/.exec(sides)) {
+        sides = Number(match[2]);
+        times = Math.min(Math.max(Math.floor(Number(match[1])), 0), 100);
+        modifier = match[3] && Number(match[3]);
+      } else if (match = /d?(-?[0-9.e]+)(?:\+?(-?[0-9.e]+))?/.exec(sides)) {
+        sides = Number(match[1]);
+        times = 1;
+        modifier = match[2] && Number(match[2]);
+      } else {
+        sides = 6;
+        times = Math.min(Math.max(args[1] ? args[1].value : 0, 0), 100);
+        modifier = args[2] ? args[2].value : undefined;
+      }
       let result = [];
-      for (var i = 0; i < times; i++)
-        result.push(common.randInt(1, sides + 1));
-      let emphemeral = args[2] ? (args[2].value ? true : false) : true;
-      return common.slashCmdResp(interaction, emphemeral, `Result of rolling a ${times}d${sides}: ${result.join(', ')}${result.length > 1 ? '; ' : ''}${result.length > 1 || result.length == 0 ? 'total ' + result.reduce((a, c) => a + c, 0) : ''}`);
+      if (Number.isFinite(times) && times <= 100) {
+        if (Number.isFinite(sides))
+          for (var i = 0; i < times; i++)
+            result.push(common.randInt(1, sides + 1));
+        else
+          result = new Array(times).fill(NaN);
+      }
+      let emphemeral = args[3] ? (args[3].value ? true : false) : true;
+      return common.slashCmdResp(interaction, emphemeral, `Result of rolling a ${times}d${sides}${modifier != null ? (modifier < 0 ? modifier : '+' + modifier) : ''}: ${result.join(', ')}${result.length > 1 || modifier != null && result.length == 1 ? '; ' : ''}${result.length > 1 || result.length == 0 || modifier != null ? 'total ' + (result.reduce((a, c) => a + c, 0) + (modifier != null ? modifier : 0)) : ''}`);
     },
   },
   {

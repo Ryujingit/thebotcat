@@ -5,7 +5,7 @@ var constants = require('./constants');
 var { recursiveReaddir } = require('./convenience');
 
 var randomModule = require('./random');
-var { randBytes, randFloat, randInt, randInts } = randomModule;
+var { fastIntLog2, randBytes, randFloat, randInt, randInts } = randomModule;
 
 var { msecToHMS, msecToHMSs, fancyDateStringWD, fancyDateStringMD, fancyDateString } = require('./time'); 
 
@@ -101,7 +101,7 @@ var { isId, isObject, propsSavedCreateVerifiedCopy, getEmptyGuildObject, getEmpt
 // module.exports is the default object that a node.js module uses to export functions and such, when you do require(), you get this object
 // also an interesting way to make js cleaner is by shortening { e: e } to { e }, and the compiler still understands
 module.exports = {
-  constants, recursiveReaddir,
+  constants, recursiveReaddir, fastIntLog2,
   get randomBytes() { return randomModule.randomBytes }, set randomBytes(val) { randomModule.randomBytes = val; },
   get randomOffset() { return randomModule.randomOffset }, set randomOffset(val) { randomModule.randomOffset = val; },
   randBytes, randFloat, randInt, randInts,

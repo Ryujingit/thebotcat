@@ -136,6 +136,7 @@ function randInts(min, max, amt) {
 }
 
 module.exports = {
+  fastIntLog2,
   get randomBytes() { return randomBytes }, set randomBytes(val) { randomBytes = val; },
   get randomOffset() { return randomOffset }, set randomOffset(val) { randomOffset = val; },
   randBytes, randFloat, randInt, randInts,
