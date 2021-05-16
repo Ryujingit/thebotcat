@@ -32,7 +32,8 @@ function hasBotPermissions(msg, permMask, channel) {
   if (typeof permMask == 'string') permMask = commonConstants.botRolePermBits[permMask];
   else if (Array.isArray(permMask)) permMask = permMask.map(x => commonConstants.botRolePermBits[x]).reduce((a, c) => a | c, 0);
   
-  if (!msg.guild || !msg.member) return 0;
+  if (!msg.guild) return permMask & commonConstants.botRolePermBits.NORMAL;
+  if (!msg.member) return 0;
   
   if (!props.saved.guilds[msg.guild.id]) {
     props.saved.guilds[msg.guild.id] = common.getEmptyGuildObject(msg.guild.id);

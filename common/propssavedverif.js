@@ -23,6 +23,7 @@ module.exports = {
         let newGuild = {
           prefix: guildIsObj && typeof guild.prefix == 'string' ? guild.prefix : defaultprefix,
           confirm_kb: true,
+          vc_disconnect_timeout: -1,
           enabled_commands: {
             global: true,
             categories: (() => {
@@ -184,6 +185,7 @@ module.exports = {
         let newGuild = {
           prefix: guildIsObj && typeof guild.prefix == 'string' ? guild.prefix : defaultprefix,
           confirm_kb: guildIsObj && typeof guild.confirm_kb == 'boolean' ? guild.confirm_kb : true,
+          vc_disconnect_timeout: guildIsObj && Number.isSafeInteger(guild.vc_disconnect_timeout) && guild.vc_disconnect_timeout >= -1 ? guild.vc_disconnect_timeout : -1,
           enabled_commands: (() => {
             let enabledcmds = {
               _global: null,

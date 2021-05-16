@@ -137,7 +137,7 @@ module.exports = async msg => {
     }
   }
   
-  if (isCommand >= 2) {
+  if (isCommand >= 2 && common.hasBotPermissions(msg, common.constants.botRolePermBits.NORMAL)) {
     try {
       let commandObject = commands[isCommand - 2];
       

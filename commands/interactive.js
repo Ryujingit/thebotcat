@@ -27,57 +27,77 @@ module.exports = [
     execute(o, msg, rawArgs) {
       let match, sides, times, modifier;
       if (match = /d?(-?[0-9.e]+) +([0-9.e]+)(?: +(-?[0-9.e]+))?/.exec(o.argstring)) {
-        sides = Number(match[1]);
-        times = Math.min(Math.max(Math.floor(Number(match[2])), 0), 100);
-        modifier = match[3] && Number(match[3]);
+        sides = match[1];
+        times = match[2];
+        modifier = match[3];
       } else if (match = /([0-9.e]+)d(-?[0-9.e]+)(?:\+?(-?[0-9.e]+))?/.exec(o.argstring)) {
-        sides = Number(match[2]);
-        times = Math.min(Math.max(Math.floor(Number(match[1])), 0), 100);
-        modifier = match[3] && Number(match[3]);
+        sides = match[2];
+        times = match[1];
+        modifier = match[3];
       } else if (match = /d?(-?[0-9.e]+)(?:\+?(-?[0-9.e]+))?/.exec(o.argstring)) {
-        sides = Number(match[1]);
+        sides = match[1];
         times = 1;
-        modifier = match[2] && Number(match[2]);
-      } else { sides = 6; times = 1; }
-      let result = [];
-      if (Number.isFinite(times) && times <= 100) {
-        if (Number.isFinite(sides))
-          for (var i = 0; i < times; i++)
-            result.push(common.randInt(1, sides + 1));
-        else
-          result = new Array(times).fill(NaN);
+        modifier = match[2];
+      } else { sides = 6n; times = 1; }
+      
+      if (typeof sides != 'bigint') {
+        try { sides = BigInt(sides); } catch (e) { try { sides = BigInt(Math.floor(Number(sides))); } catch (e) { sides = 6n; } }
       }
-      return msg.channel.send(`Result of rolling a ${times}d${sides}${modifier != null ? (modifier < 0 ? modifier : '+' + modifier) : ''}: ${result.join(', ')}${result.length > 1 || modifier != null && result.length == 1 ? '; ' : ''}${result.length > 1 || result.length == 0 || modifier != null ? 'total ' + (result.reduce((a, c) => a + c, 0) + (modifier != null ? modifier : 0)) : ''}`);
+      if (typeof times != 'number') {
+        times = Math.max(Math.floor(Number(times)), 0);
+      }
+      if (modifier != null) try { modifier = BigInt(modifier); } catch (e) { try { modifier = BigInt(Math.floor(Number(modifier))); } catch (e) { modifier = null; } }
+      
+      let size = (sides.toString().length + 2) * (times + 1);
+      if (size > 1960) return msg.channel.send(`Limit on times for the given sides value is ${Math.floor(1960 / (sides.toString().length + 2) - 1)}`);
+      
+      let result = [];
+      if (Number.isFinite(times) && times <= 10000) {
+        for (var i = 0; i < times; i++)
+          result.push(common.randInt(1n, sides + 1n));
+      }
+      
+      return msg.channel.send(`Result of rolling a ${times}d${sides}${modifier != null ? (modifier < 0 ? modifier : '+' + modifier) : ''}: ${result.join(', ')}${result.length > 1 || modifier != null && result.length == 1 ? '; ' : ''}${result.length > 1 || result.length == 0 || modifier != null ? 'total ' + (result.reduce((a, c) => a + c, 0n) + (modifier != null ? modifier : 0n)) : ''}`);
     },
     execute_slash(o, interaction, command, args) {
       let match, sides = args[0] ? args[0].value : 6, times, modifier;
       if (match = /^d?(-?[0-9.e]+)$/.exec(sides)) {
-        sides = Number(match[1]);
-        times = Math.min(Math.max(args[1] ? args[1].value : 1, 0), 100);
+        sides = match[1];
+        times = args[1] ? args[1].value : 1;
         modifier = args[2] ? args[2].value : undefined;
       } else if (match = /([0-9.e]+)d(-?[0-9.e]+)(?:\+?(-?[0-9.e]+))?/.exec(sides)) {
-        sides = Number(match[2]);
-        times = Math.min(Math.max(Math.floor(Number(match[1])), 0), 100);
-        modifier = match[3] && Number(match[3]);
+        sides = match[2];
+        times = match[1];
+        modifier = match[3];
       } else if (match = /d?(-?[0-9.e]+)(?:\+?(-?[0-9.e]+))?/.exec(sides)) {
-        sides = Number(match[1]);
+        sides = match[1];
         times = 1;
-        modifier = match[2] && Number(match[2]);
+        modifier = match[2];
       } else {
-        sides = 6;
-        times = Math.min(Math.max(args[1] ? args[1].value : 0, 0), 100);
+        sides = 6n;
+        times = args[1] ? args[1].value : 1;
         modifier = args[2] ? args[2].value : undefined;
       }
-      let result = [];
-      if (Number.isFinite(times) && times <= 100) {
-        if (Number.isFinite(sides))
-          for (var i = 0; i < times; i++)
-            result.push(common.randInt(1, sides + 1));
-        else
-          result = new Array(times).fill(NaN);
+      
+      if (typeof sides != 'bigint') {
+        try { sides = BigInt(sides); } catch (e) { try { sides = BigInt(Math.floor(Number(sides))); } catch (e) { sides = 6n; } }
       }
+      if (typeof times != 'number') {
+        times = Math.max(Math.floor(Number(times)), 0);
+      }
+      if (modifier != null) try { modifier = BigInt(modifier); } catch (e) { try { modifier = BigInt(Math.floor(Number(modifier))); } catch (e) { modifier = null; } }
+      
+      let size = (sides.toString().length + 2) * (times + 1);
+      if (size > 1960) return common.slashCmdResp(interaction, true, `Limit on times for the given sides value is ${Math.floor(1960 / (sides.toString().length + 2) - 1)}`);
+      
+      let result = [];
+      if (Number.isFinite(times) && times <= 10000) {
+        for (var i = 0; i < times; i++)
+          result.push(common.randInt(1n, sides + 1n));
+      }
+      
       let emphemeral = args[3] ? (args[3].value ? true : false) : true;
-      return common.slashCmdResp(interaction, emphemeral, `Result of rolling a ${times}d${sides}${modifier != null ? (modifier < 0 ? modifier : '+' + modifier) : ''}: ${result.join(', ')}${result.length > 1 || modifier != null && result.length == 1 ? '; ' : ''}${result.length > 1 || result.length == 0 || modifier != null ? 'total ' + (result.reduce((a, c) => a + c, 0) + (modifier != null ? modifier : 0)) : ''}`);
+      return common.slashCmdResp(interaction, emphemeral, `Result of rolling a ${times}d${sides}${modifier != null ? (modifier < 0 ? modifier : '+' + modifier) : ''}: ${result.join(', ')}${result.length > 1 || modifier != null && result.length == 1 ? '; ' : ''}${result.length > 1 || result.length == 0 || modifier != null ? 'total ' + (result.reduce((a, c) => a + c, 0n) + (modifier != null ? modifier : 0n)) : ''}`);
     },
   },
   {
@@ -97,10 +117,18 @@ module.exports = [
         try { min = BigInt(rawArgs[0]); } catch (e) {}
         try { max = BigInt(rawArgs[1]); } catch (e) {}
       }
+      
+      let minStrLen = min.toString().length, maxStrLen = max.toString().length;
+      if (minStrLen + maxStrLen + Math.max(minStrLen, maxStrLen) > 1960) return msg.channel.send('Integers too large.');
+      
       return msg.channel.send(`Random integer between ${min} and ${max}: ${common.randInt(min, max + 1n)}`);
     },
     execute_slash(o, interaction, command, args) {
       let min = (args[0] && args[0].value) ?? 0, max = (args[1] && args[1].value) ?? 1;
+      
+      let minStrLen = min.toString().length, maxStrLen = max.toString().length;
+      if (minStrLen + maxStrLen + Math.max(minStrLen, maxStrLen) > 1960) return msg.channel.send('Integers too large.');
+      
       let emphemeral = args[2] ? (args[2].value ? true : false) : true;
       return common.slashCmdResp(interaction, emphemeral, `Random integer between ${min} and ${max}: ${common.randInt(min, max + 1)}`);
     },

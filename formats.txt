@@ -56,6 +56,7 @@ format for props.saved:
       <guildid> : object {
         prefix : string (default <defaultprefix>),
         confirm_kb : bool (default true),
+        vc_disconnect_timeout : int (default -1, range x >= -1),
         enabled_commands : object {
           global : bool (default true),
           categories : object {

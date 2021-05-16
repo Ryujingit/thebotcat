@@ -46,6 +46,8 @@ module.exports = async interaction => {
       if (!o.cmd) return;
       
       if (o.cmd.execute_slash) {
+        if (!common.hasBotPermissions(o, common.constants.botRolePermBits.NORMAL))
+          return common.slashCmdResp(interaction, true, 'You lack permission to use this command.');
         if (o.guild ? o.cmd.flags & 0b000100 : o.cmd.flags & 0b001000) {
           if (!(o.cmd.flags & 0b000010) && (!o.guild || !persGuildData.special_guilds_set.has(o.guild.id)))
             return common.slashCmdResp(interaction, true, 'Command invalid.');

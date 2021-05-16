@@ -531,7 +531,7 @@ client.on('ready', async () => {
         }
         nonlogmsg(`Updating guild ${client.guilds.cache.get(guildid).name}`);
         nonlogmsg(v);
-        loggedOneGuildBegin = true;
+        loggedOneGuildBegin = 3;
       } else nonlogmsg(v);
     };
     await updateNonPubSlashCommands(() => client.api.applications(client.user.id).guilds(guildid).commands, logfunc);
