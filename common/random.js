@@ -1,5 +1,6 @@
 var crypto = require('crypto');
 
+// i promise that this is a 100% legal algorythm to get a fast integer logarythm of a bigint
 function fastIntLog2(num) {
   if (typeof num != 'number' && typeof num != 'bigint') throw new Error('log2 must be num or bigint');
   if (num != num) throw new Error('log2 of nan');

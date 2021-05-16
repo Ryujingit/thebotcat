@@ -195,17 +195,19 @@ module.exports = [
       try {
         res = eval(cmd);
         console.debug(`-> ${util.inspect(res)}`);
-        return common.slashCmdResp(interaction, true, 'Result: ' + util.inspect(res));
+        return await common.slashCmdResp(interaction, true, 'Result: ' + util.inspect(res));
       } catch (e) {
         console.log('error in eval');
         console.debug(e.stack);
-        return common.slashCmdResp(interaction, true, 'Error: ' + e.stack);
+        return await common.slashCmdResp(interaction, true, 'Error: ' + e.stack);
       }
     },
   },
   {
     name: 'evalv',
-    flags: 0b011100,
+    description_slash: 'evaluates.',
+    flags: 0b111100,
+    options: [ { type: 3, name: 'expression', description: 'the expression to evaluate' } ],
     async execute(o, msg, rawArgs) {
       if (!(common.isDeveloper(msg) || common.isConfirmDeveloper(msg))) return;
       let cmd = o.argstring, res;
@@ -216,7 +218,20 @@ module.exports = [
       } else if (common.isConfirmDeveloper(msg) && !common.isDeveloper(msg)) return;
       try {
         res = eval(cmd);
-        console.debug(res);
+        console.debug(`-> ${util.inspect(res)}`);
+      } catch (e) {
+        console.log('error in eval');
+        console.debug(e.stack);
+      }
+    },
+    async execute_slash(o, interaction, command, args) {
+      if (!common.isDeveloper(o)) return common.slashCmdResp(interaction, true, 'dev only command');
+      let cmd = args[0] ? args[0].value : '', res;
+      nonlogmsg(`evaluating from ${o.author.tag} (id ${o.author.id}) in ${common.explainChannel(o.channel)}: ${util.inspect(cmd)}`);
+      if (cmd == 'deez nuts' || cmd == 'goe mama') return common.slashCmdResp(interaction, true, 'no');
+      try {
+        res = eval(cmd);
+        console.debug(`-> ${util.inspect(res)}`);
       } catch (e) {
         console.log('error in eval');
         console.debug(e.stack);
