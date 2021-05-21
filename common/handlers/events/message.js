@@ -33,7 +33,7 @@ module.exports = async msg => {
     }
   }
   
-  if (msg.author.id == client.user.id) return;
+  if (msg.author.bot) return;
   
   if (msg.guild && props.saved.disallowed_guilds.includes(msg.guild.id)) return;
   
@@ -89,7 +89,9 @@ module.exports = async msg => {
           props.saved.guilds[msg.guild.id] && (
             !props.saved.guilds[msg.guild.id].enabled_commands.global ||
             props.saved.guilds[msg.guild.id].enabled_commands.categories[commands[i].category] == false ||
-            props.saved.guilds[msg.guild.id].enabled_commands.commands[command] == false)) ||
+            props.saved.guilds[msg.guild.id].enabled_commands.commands[command] == false ||
+            command == 'join' && props.saved.guilds[msg.guild.id].enabled_commands.commands['leave'] == false ||
+            command == 'play' && props.saved.guilds[msg.guild.id].enabled_commands.commands['stop'] == false)) ||
         !(commands[i].flags & 2) && !persGuildData.special_guilds_set.has(msg.guild.id))) continue;
       argstring = cmdstring.slice(command.length).trim();
       ({ rawArgs, args, kwargs } = common.parseArgs(argstring));

@@ -206,8 +206,7 @@ module.exports = {
                       enumerable: true,
                       get: () => catObj['_' + x],
                       set: val => {
-                        if (!val)
-                          common.clientVCManager.leave(newGuild.voice);
+                        if (!val) common.clientVCManager.leave(newGuild.voice);
                         catObj['_' + x] = val;
                       },
                     });
@@ -223,8 +222,10 @@ module.exports = {
                       enumerable: true,
                       get: () => catObj['_' + x],
                       set: val => {
-                        if (!val)
+                        if (!val) {
                           common.clientVCManager.stopMainLoop(newGuild.voice);
+                          newGuild.voice.loop = false; newGuild.voice.queueloop = false;
+                        }
                         catObj['_' + x] = val;
                       },
                     });
@@ -244,20 +245,67 @@ module.exports = {
                       configurable: true,
                       enumerable: false,
                       writable: true,
-                      value: ecco && typeof guild.enabled_commands.commands[x] == 'boolean' ? guild.enabled_commands.commands[x] : true,
+                      value: ecco && typeof guild.enabled_commands.commands[x.name] == 'boolean' ? guild.enabled_commands.commands[x.name] : true,
                     });
                     Object.defineProperty(cmdObj, x.name, {
                       configurable: true,
                       enumerable: true,
                       get: () => cmdObj['_' + x.name],
                       set: val => {
-                        if (!val)
-                          common.clientVCManager.leave(newGuild.voice);
+                        if (!val) common.clientVCManager.leave(newGuild.voice);
+                        cmdObj['_' + x.name] = val;
+                      },
+                    });
+                  } else if (x.name == 'stop') {
+                    Object.defineProperty(cmdObj, '_' + x.name, {
+                      configurable: true,
+                      enumerable: false,
+                      writable: true,
+                      value: ecco && typeof guild.enabled_commands.commands[x.name] == 'boolean' ? guild.enabled_commands.commands[x.name] : true,
+                    });
+                    Object.defineProperty(cmdObj, x.name, {
+                      configurable: true,
+                      enumerable: true,
+                      get: () => cmdObj['_' + x.name],
+                      set: val => {
+                        if (!val) common.clientVCManager.stopMainLoop(newGuild.voice);
+                        cmdObj['_' + x.name] = val;
+                      },
+                    });
+                  } else if (x.name == 'loop') {
+                    Object.defineProperty(cmdObj, '_' + x.name, {
+                      configurable: true,
+                      enumerable: false,
+                      writable: true,
+                      value: ecco && typeof guild.enabled_commands.commands[x.name] == 'boolean' ? guild.enabled_commands.commands[x.name] : true,
+                    });
+                    Object.defineProperty(cmdObj, x.name, {
+                      configurable: true,
+                      enumerable: true,
+                      get: () => cmdObj['_' + x.name],
+                      set: val => {
+                        if (!val) newGuild.voice.loop = false;
+                        cmdObj['_' + x.name] = val;
+                      },
+                    });
+                  } else if (x.name == 'loopqueue') {
+                    Object.defineProperty(cmdObj, '_' + x.name, {
+                      configurable: true,
+                      enumerable: false,
+                      writable: true,
+                      value: ecco && typeof guild.enabled_commands.commands[x.name] == 'boolean' ? guild.enabled_commands.commands[x.name] : true,
+                    });
+                    Object.defineProperty(cmdObj, x.name, {
+                      configurable: true,
+                      enumerable: true,
+                      get: () => cmdObj['_' + x.name],
+                      set: val => {
+                        if (!val) newGuild.voice.queueloop = false;
                         cmdObj['_' + x.name] = val;
                       },
                     });
                   } else {
-                    cmdObj[x.name] = ecco && typeof guild.enabled_commands.commands[x] == 'boolean' ? guild.enabled_commands.commands[x] : true;
+                    cmdObj[x.name] = ecco && typeof guild.enabled_commands.commands[x.name] == 'boolean' ? guild.enabled_commands.commands[x.name] : true;
                   }
                 });
                 return cmdObj;
@@ -275,7 +323,7 @@ module.exports = {
                 enumerable: true,
                 get: () => enabledcmds._global,
                 set: val => {
-                  common.clientVCManager.leave(newGuild.voice);
+                  if (!val) common.clientVCManager.leave(newGuild.voice);
                   enabledcmds._global = val;
                 },
               },

@@ -55,7 +55,9 @@ module.exports = async interaction => {
             props.saved.guilds[o.guild.id] && (
               !props.saved.guilds[o.guild.id].enabled_commands.global ||
               props.saved.guilds[o.guild.id].enabled_commands.categories[o.cmd.category] == false ||
-              props.saved.guilds[o.guild.id].enabled_commands.commands[o.command] == false))
+              props.saved.guilds[o.guild.id].enabled_commands.commands[o.command] == false ||
+              o.command == 'join' && props.saved.guilds[o.guild.id].enabled_commands.commands['leave'] == false ||
+              o.command == 'play' && props.saved.guilds[o.guild.id].enabled_commands.commands['stop'] == false))
             return common.slashCmdResp(interaction, true, 'Command is disabled in this server.');
           
           try {

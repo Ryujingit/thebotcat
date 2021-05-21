@@ -132,7 +132,7 @@ var props = {
     repl: true,
     savedms: true,
     loaddms: false,
-    status: '{prefix} | {guilds} servers | biden won 2020',
+    status: '{prefix} | {guilds} servers | .gg/NamrBZc for support server',
   },
   saved: null,
   savedstringify: null,

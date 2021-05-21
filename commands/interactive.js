@@ -156,7 +156,7 @@ module.exports = [
       return msg.channel.send(`Random real number between ${min} and ${max}: ${min + common.randFloat() * (max - min)}`);
     },
     execute_slash(o, interaction, command, args) {
-      let min = Number(args[0] && args[0].value), max = Number(args[1] && args[1].value);
+      let min = args[0] == null ? 0 : Number(args[0].value), max = args[1] == null ? 1 : Number(args[1].value);
       min = Number.isNaN(min) ? 0 : min; max = Number.isNaN(max) ? 1 : max;
       let emphemeral = args[2] ? (args[2].value ? true : false) : true;
       return common.slashCmdResp(interaction, emphemeral, `Random real number between ${min} and ${max}: ${min + common.randFloat() * (max - min)}`);
