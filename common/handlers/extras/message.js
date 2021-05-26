@@ -8,7 +8,7 @@ module.exports = [
       schedulePropsSave();
     }
     if (msg.channel.id == '738602247549616170' && (props.saved.lastnum == null || props.saved.lastnum < 5000)) {
-      if (msg.embeds.length || props.saved.lastnum != null && Number(msg.content) != props.saved.lastnum + 1) { msg.delete(); console.log(`[${new Date().toISOString()}] count to 5000, deleted ${msg.author.tag}: ${msg.content}`); }
+      if (msg.embeds.length || props.saved.lastnum != null && Number(msg.content) != props.saved.lastnum + 1) { msg.delete(); nonlogmsg(`count to 5000, deleted ${msg.author.tag}: ${msg.content}`); }
       else props.saved.lastnum = Number(msg.content);
       if (props.saved.lastnum >= 5000)
         msg.channel.send('The goal of 5000 has been reached, this channel has now been freed.');

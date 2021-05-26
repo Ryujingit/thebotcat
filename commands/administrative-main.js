@@ -59,7 +59,7 @@ module.exports = [
         if (args[2]) channel = args[2].value;
       } else if (match = /^https:\/\/(?:canary.)?discord(?:app)?.com\/channels\/[0-9]+\/([0-9]+)\/([0-9]+)$/.exec(args[1].value)) {
         channel = match[1];
-        targetMsg = match[2];console.log(targetMsg);
+        targetMsg = match[2];
       }
       
       channel = channel ? o.guild.channels.cache.get(channel) : o.channel;
