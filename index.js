@@ -132,7 +132,7 @@ var props = {
     repl: true,
     savedms: true,
     loaddms: false,
-    status: '{prefix} | {guilds} servers | .gg/NamrBZc for support server',
+    status: '{prefix} | {guilds} servers | !discord for support server',
   },
   saved: null,
   savedstringify: null,
