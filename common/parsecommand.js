@@ -42,7 +42,7 @@ module.exports = {
               if (/[0-9a-f]/.test(chr.toLowerCase())) escapechr += chr.toLowerCase();
               else escapechr += '0';
               if (escape != 3) escape++;
-              else { console.log(parseInt(escapechr, 16)); part += String.fromCharCode(parseInt(escapechr, 16)); escapechr = ''; escape = 0; }
+              else { part += String.fromCharCode(parseInt(escapechr, 16)); escapechr = ''; escape = 0; }
               break;
             
             case 4: // u escape sequence
